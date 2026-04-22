@@ -59,13 +59,13 @@ The following non-essential artifacts were removed to keep the repository clean 
 
 Use the following credential set for controlled local API testing.
 
-| Role | Email | Password |
-| --- | --- | --- |
-| CUSTOMER_STAFF | customer.staff@mesob.local | Mesob@2026! |
-| NURSE_OFFICER | nurse.officer@mesob.local | Mesob@2026! |
-| MANAGER | manager@mesob.local | Mesob@2026! |
+| Role            | Email                       | Password    |
+| --------------- | --------------------------- | ----------- |
+| CUSTOMER_STAFF  | customer.staff@mesob.local  | Mesob@2026! |
+| NURSE_OFFICER   | nurse.officer@mesob.local   | Mesob@2026! |
+| MANAGER         | manager@mesob.local         | Mesob@2026! |
 | REGIONAL_OFFICE | regional.office@mesob.local | Mesob@2026! |
-| FEDERAL_ADMIN | federal.admin@mesob.local | Mesob@2026! |
+| FEDERAL_ADMIN   | federal.admin@mesob.local   | Mesob@2026! |
 
 If these users do not exist yet, create them using POST /api/v1/auth/register with the matching email and role.
 
@@ -73,28 +73,28 @@ If these users do not exist yet, create them using POST /api/v1/auth/register wi
 
 1. Start backend API from backend: npm run dev
 2. Confirm service readiness:
-	- GET /health
-	- GET /api/health
+   - GET /health
+   - GET /api/health
 3. Register the 5 role accounts if this is a new database:
-	- Endpoint: POST /api/v1/auth/register
-	- Minimum body fields: fullName, email, password, role
+   - Endpoint: POST /api/v1/auth/register
+   - Minimum body fields: fullName, email, password, role
 4. Login each role and capture JWT token:
-	- Endpoint: POST /api/v1/auth/login
+   - Endpoint: POST /api/v1/auth/login
 5. Validate token and authenticated identity for each account:
-	- POST /api/v1/auth/verify-token
-	- GET /api/v1/auth/me (Authorization: Bearer <token>)
+   - POST /api/v1/auth/verify-token
+   - GET /api/v1/auth/me (Authorization: Bearer <token>)
 6. Verify role enforcement on Vitals module:
-	- POST /api/v1/vitals/bmi with CUSTOMER_STAFF token should return 403
-	- POST /api/v1/vitals/bmi with NURSE_OFFICER, MANAGER, REGIONAL_OFFICE, and FEDERAL_ADMIN tokens should return 200
-	- Example body: { "weightKg": 72, "heightCm": 175 }
+   - POST /api/v1/vitals/bmi with CUSTOMER_STAFF token should return 403
+   - POST /api/v1/vitals/bmi with NURSE_OFFICER, MANAGER, REGIONAL_OFFICE, and FEDERAL_ADMIN tokens should return 200
+   - Example body: { "weightKg": 72, "heightCm": 175 }
 7. Verify appointment routes are accessible for authenticated roles:
-	- GET /api/v1/appointments should return 200 for all five roles
-	- POST /api/v1/appointments should return 201 for all five roles
-	- Example body: { "patientId": 1001, "scheduledAt": "2026-04-25T10:00:00.000Z", "reason": "Routine follow-up" }
+   - GET /api/v1/appointments should return 200 for all five roles
+   - POST /api/v1/appointments should return 201 for all five roles
+   - Example body: { "patientId": 1001, "scheduledAt": "2026-04-25T10:00:00.000Z", "reason": "Routine follow-up" }
 8. Run security negative tests:
-	- Missing token on protected route should return 401
-	- Invalid token should return 401
-	- Expired token should return 401
+   - Missing token on protected route should return 401
+   - Invalid token should return 401
+   - Expired token should return 401
 
 ## API Implementation Status
 
