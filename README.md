@@ -107,6 +107,8 @@ Implemented now (available in backend):
 - POST /api/v1/auth/verify-token
 - GET /api/v1/auth/me
 - POST /api/v1/auth/logout
+
+On the way
 - GET /api/v1/vitals/status
 - POST /api/v1/vitals/bmi
 - POST /api/v1/vitals/blood-pressure
