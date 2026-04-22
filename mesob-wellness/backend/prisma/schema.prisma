@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// User Roles Enum - Defines access levels in the system
+enum UserRole {
+  CUSTOMER_STAFF
+  NURSE_OFFICER
+  MANAGER
+  REGIONAL_OFFICE
+  FEDERAL_ADMIN
+}
+
+// Gender Enum
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
+// User Model - Core identity and authentication
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // Hashed password
+  fullName  String
+  role      UserRole @default(CUSTOMER_STAFF)
+  
+  // Demographics
+  dateOfBirth DateTime?
+  gender      Gender?
+  phone       String?
+  
+  // Emergency Contact
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  
+  // Account Status
+  isActive    Boolean  @default(true)
+  isVerified  Boolean  @default(false)
+  lastLoginAt DateTime?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  healthProfile HealthProfile?
+  auditLogs     AuditLog[]
+  
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// Health Profile - One-to-one with User
+model HealthProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  
+  // Basic Health Information
+  bloodType       String?
+  allergies       String?  @db.Text
+  chronicConditions String? @db.Text
+  medications     String?  @db.Text
+  
+  // Vitals History (stored as JSON for flexibility)
+  vitalsHistory   Json?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("health_profiles")
+}
+
+// Audit Log - Compliance with Proclamation 1321/2024
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String   // e.g., "LOGIN", "REGISTER", "UPDATE_PROFILE", "ACCESS_DATA"
+  resource  String?  // What was accessed (e.g., "USER", "HEALTH_PROFILE")
+  details   Json?    // Additional context
+  ipAddress String?
+  userAgent String?  @db.Text
+  
+  timestamp DateTime @default(now())
+  
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
