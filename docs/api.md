@@ -38,9 +38,6 @@ Required backend environment variables:
 - DATABASE_URL
 - JWT_SECRET
 - JWT_EXPIRES_IN
-- MFA_PROVIDER_URL
-- MFA_PROVIDER_API_KEY
-- MFA_PROVIDER_SECRET
 
 Modular backend API composition (for parallel team development):
 
