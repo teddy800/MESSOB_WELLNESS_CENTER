@@ -61,9 +61,6 @@ export const env = Object.freeze({
   DATABASE_URL: getRequiredEnv("DATABASE_URL"),
   JWT_SECRET: getRequiredEnv("JWT_SECRET"),
   JWT_EXPIRES_IN: getRequiredEnv("JWT_EXPIRES_IN"),
-  MFA_PROVIDER_URL: getRequiredEnv("MFA_PROVIDER_URL"),
-  MFA_PROVIDER_API_KEY: getRequiredEnv("MFA_PROVIDER_API_KEY"),
-  MFA_PROVIDER_SECRET: getRequiredEnv("MFA_PROVIDER_SECRET"),
 });
 
 if (!env.DATABASE_URL.startsWith("mysql://")) {

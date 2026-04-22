@@ -4,7 +4,7 @@ import { UserRole, Gender } from "../generated/prisma";
 import { AuthRequest } from "../middleware/auth.middleware";
 
 /**
- * POST /api/auth/register
+ * POST /api/v1/auth/register
  * Register a new user
  */
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -100,7 +100,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * POST /api/auth/login
+ * POST /api/v1/auth/login
  * Login user and return JWT token
  */
 export const login = async (req: Request, res: Response): Promise<void> => {
@@ -157,7 +157,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
- * GET /api/auth/me
+ * GET /api/v1/auth/me
  * Get current user profile
  */
 export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -194,7 +194,7 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
 };
 
 /**
- * POST /api/auth/logout
+ * POST /api/v1/auth/logout
  * Logout user (client-side token removal, server-side audit log)
  */
 export const logout = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -224,7 +224,7 @@ export const logout = async (req: AuthRequest, res: Response): Promise<void> => 
 };
 
 /**
- * POST /api/auth/verify-token
+ * POST /api/v1/auth/verify-token
  * Verify if a token is valid
  */
 export const verifyToken = async (req: Request, res: Response): Promise<void> => {
