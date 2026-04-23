@@ -5,7 +5,7 @@ const TOKEN_KEY = 'mesob_auth_token';
 export const authService = {
   // Login user
   async login(email, password) {
-    const response = await api.post('/auth/login', { email, password });
+    const response = await api.post('/api/v1/auth/login', { email, password });
     const { token, user } = response.data.data;
     
     // Store token in localStorage
@@ -19,7 +19,7 @@ export const authService = {
 
   // Register user
   async register(userData) {
-    const response = await api.post('/auth/register', userData);
+    const response = await api.post('/api/v1/auth/register', userData);
     const { token, user } = response.data.data;
     
     localStorage.setItem(TOKEN_KEY, token);
@@ -30,7 +30,7 @@ export const authService = {
 
   // Get current user
   async getCurrentUser() {
-    const response = await api.get('/auth/me');
+    const response = await api.get('/api/v1/auth/me');
     return response.data.data.user;
   },
 

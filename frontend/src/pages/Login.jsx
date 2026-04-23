@@ -146,7 +146,7 @@ function Login() {
             </form>
 
             <div className="auth-footer">
-  
+              <p>Don't have an account? <Link to="/register" className="auth-link">Sign up here</Link></p>
             </div>
           </div>
 

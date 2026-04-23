@@ -1,0 +1,126 @@
+/* ========================================
+   REGISTER PAGE STYLES
+   ======================================== */
+
+.register-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #1e3a8a 0%, #284394 50%, #312e81 100%);
+}
+
+.register-wrapper {
+  grid-template-columns: 1fr 1fr;
+}
+
+.register-form-section {
+  max-height: 90vh;
+  overflow-y: auto;
+  padding-right: 1rem;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.register-form .form-group {
+  margin-bottom: 0.5rem;
+}
+
+.register-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+}
+
+.benefit-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 50%;
+  color: #8b5cf6;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.auth-link {
+  color: #8b5cf6;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.auth-link:hover {
+  color: #7c3aed;
+  text-decoration: underline;
+}
+
+/* Scrollbar styling for register form */
+.register-form-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.register-form-section::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.register-form-section::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.5);
+  border-radius: 10px;
+}
+
+.register-form-section::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.7);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .register-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-right {
+    display: none;
+  }
+
+  .register-form-section {
+    max-height: none;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .register-form {
+    gap: 0.75rem;
+  }
+
+  .register-form .form-group {
+    margin-bottom: 0.25rem;
+  }
+
+  .auth-footer {
+    text-align: center;
+    margin-top: 1rem;
+  }
+
+  .auth-footer p {
+    font-size: 0.9rem;
+  }
+}
