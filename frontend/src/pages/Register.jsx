@@ -50,8 +50,8 @@ function Register() {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
       newErrors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password = 'Password must contain uppercase, lowercase, and numbers';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])/.test(formData.password)) {
+      newErrors.password = 'Password must contain uppercase, lowercase, numbers, and special characters (!@#$%^&*...)';
     }
 
     if (!formData.confirmPassword) {
@@ -221,7 +221,7 @@ function Register() {
                 value={formData.password}
                 onChange={handleChange}
                 error={errors.password}
-                placeholder="Min 8 chars, uppercase, lowercase, numbers"
+                placeholder="Min 8 chars, uppercase, lowercase, numbers, special chars"
                 required
                 disabled={loading}
               />
