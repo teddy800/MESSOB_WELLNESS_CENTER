@@ -104,10 +104,11 @@ export const getWellnessPlans = async (req: AuthRequest, res: Response): Promise
 
     res.status(200).json({
       status: "success",
-      data: plans.map(plan => ({
+      data: plans.map((plan: { id: string; userId: string; planText: string; createdAt: Date; goals?: string | null }) => ({
         id: plan.id,
         userId: plan.userId,
         planText: plan.planText,
+        goals: plan.goals,
         createdAt: plan.createdAt,
       })),
     });

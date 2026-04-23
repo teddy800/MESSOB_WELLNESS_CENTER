@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import {
   createAppointment,
   listAppointments,
@@ -48,18 +48,36 @@ export async function getAppointments(req: AuthRequest, res: Response): Promise<
   }
 }
 
+/**
+ * POST /api/v1/appointments
+ *
+ * FIX: Accept patientId as a UUID string (from frontend user.id),
+ * a positive integer (legacy), or omit it entirely for self-booking.
+ * The old validation rejected anything that wasn't a positive integer,
+ * which broke all frontend appointment creation.
+ */
 export async function postAppointment(req: AuthRequest, res: Response): Promise<void> {
   const { patientId, scheduledAt, reason } =
     req.body as Partial<AppointmentRequestBody>;
 
-  if (
-    typeof patientId !== "number" ||
-    !Number.isInteger(patientId) ||
-    patientId <= 0
-  ) {
+  // Resolve patientId: UUID string | positive integer | omitted (self-booking)
+  const resolvedPatientId: string | null = (() => {
+    if (typeof patientId === "string" && patientId.trim().length > 0) {
+      return patientId.trim();
+    }
+    if (typeof patientId === "number" && Number.isInteger(patientId) && patientId > 0) {
+      return String(patientId);
+    }
+    if (!patientId && req.user) {
+      return req.user.userId; // self-booking: use authenticated user's UUID
+    }
+    return null;
+  })();
+
+  if (!resolvedPatientId) {
     res.status(400).json({
       status: "error",
-      message: "patientId must be a positive integer.",
+      message: "patientId must be a valid user ID.",
     });
     return;
   }
@@ -82,7 +100,7 @@ export async function postAppointment(req: AuthRequest, res: Response): Promise<
 
   try {
     const appointment = await createAppointment({
-      patientId,
+      patientId: resolvedPatientId,
       scheduledAt,
       reason: reason.trim(),
     });
@@ -155,10 +173,9 @@ export async function updateAppointment(req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // Validate status
     const validStatuses = Object.values(AppointmentStatus);
     const upperStatus = status.toUpperCase();
-    
+
     if (!validStatuses.includes(upperStatus as AppointmentStatus)) {
       res.status(400).json({
         status: "error",

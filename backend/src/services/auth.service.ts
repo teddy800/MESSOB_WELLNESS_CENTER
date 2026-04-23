@@ -144,7 +144,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(input.password, SALT_ROUNDS);
 
     // Step D: Atomic Transaction - Create User and HealthProfile
-    const user = await prisma.$transaction(async (tx) => {
+    const user = await prisma.$transaction(async (tx: any) => {
       // Create user
       const newUser = await tx.user.create({
         data: {

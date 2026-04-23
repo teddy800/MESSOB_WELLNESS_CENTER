@@ -1,4 +1,5 @@
-import { PrismaClient, AppointmentStatus } from "../generated/prisma";
+import { AppointmentStatus } from "../generated/prisma";
+import { PrismaClient } from "../generated/prisma";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { env } from "../config/env";
 
@@ -13,21 +14,33 @@ const adapter = new PrismaMariaDb({
 const prisma = new PrismaClient({ adapter });
 
 interface AppointmentInput {
-  patientId: number;
+  patientId: string;
   scheduledAt: string;
   reason: string;
 }
 
-interface Appointment extends AppointmentInput {
-  id: number;
+interface Appointment {
+  id: string;
+  patientId: string;
+  scheduledAt: string;
+  reason: string;
   status: string;
   createdAt: string;
+  notes?: string;
+  diagnosis?: string;
+  prescription?: string;
+  patient?: any;
 }
 
+/**
+ * FIX: patientId is now a UUID string (not a number).
+ * FIX: Returns UUID id (not hex-converted integer).
+ * FIX: Returns status as uppercase enum string (not lowercased).
+ */
 export async function createAppointment(input: AppointmentInput): Promise<Appointment> {
   const appointment = await prisma.appointment.create({
     data: {
-      userId: String(input.patientId), // Convert to string for UUID
+      userId: input.patientId,
       scheduledAt: new Date(input.scheduledAt),
       reason: input.reason,
       status: AppointmentStatus.PENDING,
@@ -35,29 +48,37 @@ export async function createAppointment(input: AppointmentInput): Promise<Appoin
   });
 
   return {
-    id: parseInt(appointment.id.substring(0, 8), 16), // Convert UUID to number for compatibility
-    patientId: input.patientId,
+    id: appointment.id,
+    patientId: appointment.userId,
     scheduledAt: appointment.scheduledAt.toISOString(),
     reason: appointment.reason,
-    status: appointment.status.toLowerCase() as "pending",
+    status: appointment.status, // uppercase: "PENDING"
     createdAt: appointment.createdAt.toISOString(),
   };
 }
 
-export async function listAppointments(userId?: string, status?: string): Promise<Appointment[]> {
+/**
+ * FIX: Returns UUID id (not hex-converted integer).
+ * FIX: Returns status as uppercase enum string (not lowercased).
+ * Frontend filters and badge variants all use uppercase status values.
+ */
+export async function listAppointments(
+  userId?: string,
+  status?: string
+): Promise<Appointment[]> {
   const where: any = {};
-  
+
   if (userId) {
     where.userId = userId;
   }
-  
+
   if (status) {
     where.status = status.toUpperCase() as AppointmentStatus;
   }
 
   const appointments = await prisma.appointment.findMany({
     where,
-    orderBy: { scheduledAt: 'asc' },
+    orderBy: { scheduledAt: "asc" },
     include: {
       user: {
         select: {
@@ -70,12 +91,12 @@ export async function listAppointments(userId?: string, status?: string): Promis
     },
   });
 
-  return appointments.map((apt) => ({
-    id: parseInt(apt.id.substring(0, 8), 16),
-    patientId: parseInt(apt.userId.substring(0, 8), 16),
+  return appointments.map((apt: any) => ({
+    id: apt.id,
+    patientId: apt.userId,
     scheduledAt: apt.scheduledAt.toISOString(),
     reason: apt.reason,
-    status: apt.status.toLowerCase() as any,
+    status: apt.status, // uppercase: "PENDING", "CONFIRMED", etc.
     createdAt: apt.createdAt.toISOString(),
     patient: apt.user,
     notes: apt.notes || undefined,
@@ -113,7 +134,6 @@ export async function updateAppointmentStatus(
     updatedAt: new Date(),
   };
 
-  // Set timestamp based on status
   switch (status) {
     case AppointmentStatus.CONFIRMED:
       updateData.confirmedAt = new Date();

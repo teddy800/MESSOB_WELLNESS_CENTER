@@ -232,9 +232,9 @@ export async function getAllAnalytics() {
   const analyticsPromises = centers.map((center: any) => getCenterAnalytics(center.id));
   const centerAnalytics = await Promise.all(analyticsPromises);
 
-  const regions = [...new Set(centers.map((c: any) => c.region))];
+  const regions = [...new Set(centers.map((c: any) => c.region))] as string[];
   const regionalStats = await Promise.all(
-    regions.map((region: string) => getRegionalAnalytics(region))
+    regions.map((region: string) => getRegionalAnalytics(region as string))
   );
 
   const totalStats = centerAnalytics.reduce(

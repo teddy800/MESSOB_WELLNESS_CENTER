@@ -2,7 +2,6 @@ import { PrismaClient } from "../generated/prisma";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { env } from "../config/env";
 
-// Create Prisma adapter
 const adapter = new PrismaMariaDb({
   host: env.DB_HOST,
   port: env.DB_PORT,
@@ -11,9 +10,12 @@ const adapter = new PrismaMariaDb({
   database: env.DB_NAME,
 });
 
-// Initialize Prisma with adapter
 const prisma = new PrismaClient({ adapter });
 
+/**
+ * FIX: Added centerId and lastLoginAt to the select so the frontend
+ * can display center assignment and last login time on the Profile page.
+ */
 export async function getUserProfile(userId: string) {
   return prisma.user.findUnique({
     where: { id: userId },
@@ -22,6 +24,7 @@ export async function getUserProfile(userId: string) {
       email: true,
       fullName: true,
       role: true,
+      centerId: true,
       dateOfBirth: true,
       gender: true,
       phone: true,
@@ -29,6 +32,7 @@ export async function getUserProfile(userId: string) {
       emergencyContactPhone: true,
       isActive: true,
       isVerified: true,
+      lastLoginAt: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -46,11 +50,10 @@ export async function updateUserProfile(
     emergencyContactPhone?: string;
   }
 ) {
-  // Prepare update data with proper typing
   const updateData: any = {
     updatedAt: new Date(),
   };
-  
+
   if (data.fullName !== undefined) updateData.fullName = data.fullName;
   if (data.dateOfBirth !== undefined) updateData.dateOfBirth = data.dateOfBirth;
   if (data.gender !== undefined) updateData.gender = data.gender;
@@ -66,11 +69,16 @@ export async function updateUserProfile(
       email: true,
       fullName: true,
       role: true,
+      centerId: true,
       dateOfBirth: true,
       gender: true,
       phone: true,
       emergencyContactName: true,
       emergencyContactPhone: true,
+      isActive: true,
+      isVerified: true,
+      lastLoginAt: true,
+      createdAt: true,
       updatedAt: true,
     },
   });
@@ -91,7 +99,6 @@ export async function updateUserHealthProfile(
     medications?: string;
   }
 ) {
-  // Check if health profile exists
   const existing = await prisma.healthProfile.findUnique({
     where: { userId },
   });
@@ -99,18 +106,11 @@ export async function updateUserHealthProfile(
   if (existing) {
     return prisma.healthProfile.update({
       where: { userId },
-      data: {
-        ...data,
-        updatedAt: new Date(),
-      },
+      data: { ...data, updatedAt: new Date() },
     });
   } else {
-    // Create if doesn't exist
     return prisma.healthProfile.create({
-      data: {
-        userId,
-        ...data,
-      },
+      data: { userId, ...data },
     });
   }
 }

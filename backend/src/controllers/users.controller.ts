@@ -5,6 +5,10 @@ import * as UsersService from "../services/users.service";
 /**
  * GET /api/v1/users/me
  * Get current user profile
+ *
+ * FIX: Returns fullName (not name), role (not roleId), plus centerId,
+ * isActive, isVerified, lastLoginAt, createdAt so the frontend
+ * AuthContext can store and use the complete user object.
  */
 export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -30,9 +34,20 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
       status: "success",
       data: {
         id: user.id,
-        name: user.fullName,
+        fullName: user.fullName,
         email: user.email,
-        roleId: user.role,
+        role: user.role,
+        centerId: user.centerId,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
+        phone: user.phone,
+        emergencyContactName: user.emergencyContactName,
+        emergencyContactPhone: user.emergencyContactPhone,
+        isActive: user.isActive,
+        isVerified: user.isVerified,
+        lastLoginAt: user.lastLoginAt,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
     });
   } catch (error) {
@@ -60,9 +75,7 @@ export const updateCurrentUser = async (req: AuthRequest, res: Response): Promis
 
     const { name, dateOfBirth, gender, phone, emergencyContactName, emergencyContactPhone } = req.body;
 
-    // Prepare update data
     const updateData: any = {};
-    
     if (name) updateData.fullName = name;
     if (dateOfBirth) updateData.dateOfBirth = new Date(dateOfBirth);
     if (gender) updateData.gender = gender;
@@ -76,7 +89,7 @@ export const updateCurrentUser = async (req: AuthRequest, res: Response): Promis
       status: "success",
       data: {
         id: updatedUser.id,
-        name: updatedUser.fullName,
+        fullName: updatedUser.fullName,
       },
     });
   } catch (error) {

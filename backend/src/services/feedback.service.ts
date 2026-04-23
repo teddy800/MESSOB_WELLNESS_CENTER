@@ -107,7 +107,7 @@ export async function getFeedbackStats() {
   return {
     total: totalFeedback,
     averageRating: averageRating._avg.rating || 0,
-    ratingDistribution: ratingCounts.map(r => ({
+    ratingDistribution: ratingCounts.map((r: any) => ({
       rating: r.rating,
       count: r._count.rating,
     })),
