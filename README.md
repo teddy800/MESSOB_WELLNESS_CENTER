@@ -243,19 +243,47 @@ bash test-all-endpoints.sh
 
 ## 🧪 Testing
 
-Run the comprehensive test suite:
+### Prerequisites
+Before running tests, seed the test users:
 
 ```bash
 cd backend
+node seed-test-users.js
+```
+
+### Run Comprehensive Test Suite
+
+**All Platforms (Linux, macOS, Windows):**
+```bash
+cd docs
 bash test-all-endpoints.sh
 ```
 
-**Test Coverage:**
-- 30+ test cases
-- All 30 endpoints tested
-- Authorization checks
-- Error handling
-- Multi-role testing
+**Windows Users:**
+- **Recommended:** Use Git Bash (included with Git for Windows)
+- **Alternative:** Use WSL (Windows Subsystem for Linux)
+
+### Test Utilities
+
+**Test Database Connection:**
+```bash
+cd backend
+node test-postgres-connection.js
+```
+
+**Seed Test Users:**
+```bash
+cd backend
+node seed-test-users.js
+```
+
+### Test Coverage
+- ✅ 30+ test cases
+- ✅ All 31 endpoints tested
+- ✅ Authentication & authorization
+- ✅ Role-based access control (RBAC)
+- ✅ Error handling & edge cases
+- ✅ Multi-role testing (5 roles)
 
 ## 📊 Build Status
 
@@ -305,9 +333,10 @@ bash test-all-endpoints.sh
 
 1. **Start Backend:** `cd backend && npm run dev`
 2. **Start Frontend:** `cd frontend && npm run dev`
-3. **Run Tests:** `cd backend && bash test-all-endpoints.sh`
-4. **View Database:** `cd backend && npx prisma studio`
-5. **Create Migration:** `cd backend && npx prisma migrate dev --name description`
+3. **Seed Test Users:** `cd backend && node seed-test-users.js`
+4. **Run Tests:** `cd docs && bash test-all-endpoints.sh`
+5. **View Database:** `cd backend && npx prisma studio`
+6. **Create Migration:** `cd backend && npx prisma migrate dev --name description`
 
 ---
 
