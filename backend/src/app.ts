@@ -1,3 +1,6 @@
+// THIS FILE Configure the Express app (middleware, routes, logic)
+
+
 import cors from "cors";
 import express, { Request, Response } from "express";
 import helmet from "helmet";
@@ -31,10 +34,16 @@ app.get("/api/health", async (_req: Request, res: Response) => {
         timestamp: new Date().toISOString(),
       },
     });
-  } catch (_error) {
-    return res.status(500).json({
-      status: "error",
-      message: "Database connection failed",
+  } catch (error) {
+    // Return partial health status if database is unavailable
+    return res.status(503).json({
+      status: "warning",
+      data: {
+        service: "Mesob Wellness API",
+        database: "disconnected",
+        message: "Database connection failed. Please ensure MySQL is running.",
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 });
