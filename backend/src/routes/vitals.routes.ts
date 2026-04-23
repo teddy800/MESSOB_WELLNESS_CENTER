@@ -3,8 +3,10 @@ import {
   getVitalsModuleStatus,
   postBmi,
   postBloodPressure,
+  getVitalsHistoryHandler,
+  getLatestVitalsHandler,
 } from "../controllers/vitals.controller";
-import { authenticate, authorize } from "../middleware/auth.middleware";
+import { authenticate, authorize, authorizeSelfOrAdmin } from "../middleware/auth.middleware";
 import { UserRole } from "../generated/prisma";
 
 const router = Router();
@@ -36,6 +38,22 @@ router.post(
     UserRole.FEDERAL_ADMIN,
   ),
   postBloodPressure,
+);
+
+// Get vitals history - user can view own history, admins can view any
+router.get(
+  "/history/:userId",
+  authenticate,
+  authorizeSelfOrAdmin("userId"),
+  getVitalsHistoryHandler,
+);
+
+// Get latest vitals - user can view own latest, admins can view any
+router.get(
+  "/latest/:userId",
+  authenticate,
+  authorizeSelfOrAdmin("userId"),
+  getLatestVitalsHandler,
 );
 
 export default router;

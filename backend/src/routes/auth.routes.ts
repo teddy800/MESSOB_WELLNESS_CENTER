@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   register,
+  createUser,
   login,
   getCurrentUser,
   logout,
@@ -14,7 +15,7 @@ const router = Router();
  * Public Routes (No authentication required)
  */
 
-// POST /api/v1/auth/register - Register a new user
+// POST /api/v1/auth/register - Register a new user (CUSTOMER_STAFF only)
 router.post("/register", register);
 
 // POST /api/v1/auth/login - Login user
@@ -26,6 +27,9 @@ router.post("/verify-token", verifyToken);
 /**
  * Protected Routes (Authentication required)
  */
+
+// POST /api/v1/auth/create-user - Create user with specific role (Hierarchical)
+router.post("/create-user", authenticate, createUser);
 
 // GET /api/v1/auth/me - Get current user profile
 router.get("/me", authenticate, getCurrentUser);

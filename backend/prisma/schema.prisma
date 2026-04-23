@@ -27,6 +27,40 @@ enum Gender {
   PREFER_NOT_TO_SAY
 }
 
+// BMI Category Enum
+enum BmiCategory {
+  UNDERWEIGHT
+  NORMAL
+  OVERWEIGHT
+  OBESITY
+}
+
+// Blood Pressure Category Enum
+enum BloodPressureCategory {
+  NORMAL
+  ELEVATED
+  HYPERTENSION_STAGE_1
+  HYPERTENSION_STAGE_2
+  HYPERTENSIVE_CRISIS
+}
+
+// Appointment Status Enum
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+// Center Status Enum
+enum CenterStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
 // User Model - Core identity and authentication
 model User {
   id        String   @id @default(uuid())
@@ -34,6 +68,9 @@ model User {
   password  String   // Hashed password
   fullName  String
   role      UserRole @default(CUSTOMER_STAFF)
+  
+  // Center Assignment
+  centerId  String?
   
   // Demographics
   dateOfBirth DateTime?
@@ -54,11 +91,18 @@ model User {
   updatedAt DateTime @updatedAt
   
   // Relations
+  center        Center? @relation(fields: [centerId], references: [id], onDelete: SetNull)
   healthProfile HealthProfile?
   auditLogs     AuditLog[]
+  vitalsRecords VitalRecord[]
+  appointments  Appointment[]
+  recordedVitals VitalRecord[] @relation("RecordedBy")
+  wellnessPlans WellnessPlan[]
+  feedback      Feedback[]
   
   @@index([email])
   @@index([role])
+  @@index([centerId])
   @@map("users")
 }
 
@@ -105,4 +149,158 @@ model AuditLog {
   @@index([action])
   @@index([timestamp])
   @@map("audit_logs")
+}
+
+// Vital Record - Stores vitals history
+model VitalRecord {
+  id        String   @id @default(uuid())
+  userId    String   // Patient whose vitals are recorded
+  recordedBy String  // Staff member who recorded the vitals
+  
+  // BMI Data
+  weightKg  Float?
+  heightCm  Float?
+  bmi       Float?
+  bmiCategory BmiCategory?
+  
+  // Blood Pressure Data
+  systolic  Int?
+  diastolic Int?
+  bpCategory BloodPressureCategory?
+  
+  // Additional Vitals
+  heartRate Int?      // beats per minute
+  temperature Float?  // celsius
+  oxygenSaturation Int? // percentage
+  
+  // Metadata
+  notes     String?  @db.Text
+  recordedAt DateTime @default(now())
+  
+  // Relations
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recorder  User @relation("RecordedBy", fields: [recordedBy], references: [id], onDelete: Restrict)
+  
+  @@index([userId])
+  @@index([recordedBy])
+  @@index([recordedAt])
+  @@map("vital_records")
+}
+
+// Appointment - Manages patient appointments
+model Appointment {
+  id          String   @id @default(uuid())
+  userId      String   // Patient
+  
+  // Appointment Details
+  scheduledAt DateTime
+  reason      String   @db.Text
+  status      AppointmentStatus @default(PENDING)
+  
+  // Additional Information
+  notes       String?  @db.Text
+  diagnosis   String?  @db.Text
+  prescription String? @db.Text
+  
+  // Status Tracking
+  confirmedAt  DateTime?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  cancellationReason String? @db.Text
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@map("appointments")
+}
+
+// Wellness Plan - Personalized wellness plans for users
+model WellnessPlan {
+  id       String @id @default(uuid())
+  userId   String
+  
+  // Plan Details
+  planText String @db.Text
+  goals    String? @db.Text
+  duration Int?    // Duration in days
+  
+  // Status
+  isActive Boolean @default(true)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([isActive])
+  @@map("wellness_plans")
+}
+
+// Feedback - User feedback and ratings
+model Feedback {
+  id      String @id @default(uuid())
+  userId  String
+  
+  // Feedback Details
+  rating  Int    // 1-5 rating
+  comment String? @db.Text
+  category String? // e.g., "service", "facility", "staff"
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("feedback")
+}
+
+// Center - Health centers/facilities
+model Center {
+  id       String @id @default(uuid())
+  
+  // Basic Information
+  name     String
+  code     String @unique // Unique center code
+  
+  // Location
+  region   String
+  city     String
+  address  String @db.Text
+  
+  // Contact
+  phone    String?
+  email    String?
+  
+  // Status
+  status   CenterStatus @default(ACTIVE)
+  
+  // Capacity
+  capacity Int? // Maximum patients per day
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  staff    User[]
+  
+  @@index([region])
+  @@index([status])
+  @@index([code])
+  @@map("centers")
 }
