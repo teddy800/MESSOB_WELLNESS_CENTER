@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchHealth } from '../services/healthService';
 import Button from '../components/forms/Button';
