@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 function MainLayout({ children }) {
@@ -6,8 +7,16 @@ function MainLayout({ children }) {
   return (
     <div className="layout-shell">
       <header className="app-header">
-        <h1>Mesob Wellness</h1>
-        <p>Day 1 MVP Skeleton</p>
+        <div className="app-header-left">
+          <img src="/Mesob-short-png.png" alt="MESOB Logo" className="mesob-logo-img" />
+        </div>
+        <h1>MESOB</h1>
+        <div className="app-header-right">
+          <select className="language-selector">
+            <option value="en">English</option>
+            <option value="am">አማርኛ</option>
+          </select>
+        </div>
       </header>
 
       <div className="layout-body">
