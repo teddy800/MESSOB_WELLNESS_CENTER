@@ -1,18 +1,5 @@
-import { PrismaClient } from "../generated/prisma";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { prisma } from "../config/prisma";
 import { env } from "../config/env";
-
-// Create Prisma adapter
-const adapter = new PrismaMariaDb({
-  host: env.DB_HOST,
-  port: env.DB_PORT,
-  user: env.DB_USER,
-  password: env.DB_PASS,
-  database: env.DB_NAME,
-});
-
-// Initialize Prisma with adapter
-const prisma = new PrismaClient({ adapter });
 
 export interface CreateFeedbackInput {
   userId: string;
