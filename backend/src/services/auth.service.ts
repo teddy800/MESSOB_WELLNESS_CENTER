@@ -26,6 +26,7 @@ export interface RegisterInput {
   password: string;
   fullName: string;
   role?: UserRole;
+  centerId?: string;
   dateOfBirth?: Date;
   gender?: Gender;
   phone?: string;
@@ -151,6 +152,7 @@ export class AuthService {
           password: hashedPassword,
           fullName: input.fullName.trim(),
           role: input.role || UserRole.CUSTOMER_STAFF,
+          centerId: input.centerId,
           dateOfBirth: input.dateOfBirth,
           gender: input.gender,
           phone: input.phone,
