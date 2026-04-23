@@ -53,18 +53,13 @@ function getNodeEnv(): NodeEnv {
 export const env = Object.freeze({
   NODE_ENV: getNodeEnv(),
   PORT: getRequiredPort("PORT"),
-  DB_HOST: getRequiredEnv("DB_HOST"),
-  DB_PORT: getRequiredPort("DB_PORT"),
-  DB_USER: getRequiredEnv("DB_USER"),
-  DB_PASS: getRequiredEnv("DB_PASS"),
-  DB_NAME: getRequiredEnv("DB_NAME"),
   DATABASE_URL: getRequiredEnv("DATABASE_URL"),
   JWT_SECRET: getRequiredEnv("JWT_SECRET"),
   JWT_EXPIRES_IN: getRequiredEnv("JWT_EXPIRES_IN"),
 });
 
-if (!env.DATABASE_URL.startsWith("mysql://")) {
-  throw new Error("DATABASE_URL must use the mysql:// connection protocol.");
+if (!env.DATABASE_URL.startsWith("postgresql://")) {
+  throw new Error("DATABASE_URL must use the postgresql:// connection protocol.");
 }
 
 const isLocalDatabase =
@@ -73,6 +68,6 @@ const isLocalDatabase =
 
 if (!isLocalDatabase) {
   throw new Error(
-    "DATABASE_URL must point to a local MySQL instance (localhost or 127.0.0.1).",
+    "DATABASE_URL must point to a local PostgreSQL instance (localhost or 127.0.0.1).",
   );
 }

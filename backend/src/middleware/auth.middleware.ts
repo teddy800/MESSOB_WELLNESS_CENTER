@@ -181,7 +181,7 @@ export const authorizeSelfOrAdmin = (userIdParam: string = "userId") => {
     }
 
     const targetUserId = req.params[userIdParam];
-    const adminRoles: UserRole[] = [UserRole.MANAGER, UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_ADMIN];
+    const adminRoles: UserRole[] = [UserRole.NURSE_OFFICER, UserRole.MANAGER, UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_ADMIN];
     const isAdmin = adminRoles.includes(req.user.role);
     const isSelf = req.user.userId === targetUserId;
 

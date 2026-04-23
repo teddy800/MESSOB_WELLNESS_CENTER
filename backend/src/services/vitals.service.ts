@@ -1,16 +1,5 @@
 import { PrismaClient, BmiCategory as PrismaBmiCategory, BloodPressureCategory as PrismaBloodPressureCategory } from "../generated/prisma";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { env } from "../config/env";
-
-const adapter = new PrismaMariaDb({
-  host: env.DB_HOST,
-  port: env.DB_PORT,
-  user: env.DB_USER,
-  password: env.DB_PASS,
-  database: env.DB_NAME,
-});
-
-const prisma = new PrismaClient({ adapter });
+import { prisma } from "../config/prisma";
 
 type BmiCategory = "underweight" | "normal" | "overweight" | "obesity";
 type BloodPressureCategory = "normal" | "elevated" | "hypertension_stage_1" | "hypertension_stage_2" | "hypertensive_crisis";

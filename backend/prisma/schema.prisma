@@ -1,5 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma Schema for PostgreSQL
+// Refactored from MySQL for full PostgreSQL compatibility
 
 generator client {
   provider = "prisma-client-js"
@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
 }
 
 // User Roles Enum - Defines access levels in the system
@@ -63,33 +63,33 @@ enum CenterStatus {
 
 // User Model - Core identity and authentication
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(uuid()) @db.Uuid
   email     String   @unique
   password  String   // Hashed password
   fullName  String
   role      UserRole @default(CUSTOMER_STAFF)
-  
+
   // Center Assignment
-  centerId  String?
-  
+  centerId  String?  @db.Uuid
+
   // Demographics
-  dateOfBirth DateTime?
+  dateOfBirth DateTime? @db.Date
   gender      Gender?
   phone       String?
-  
+
   // Emergency Contact
   emergencyContactName  String?
   emergencyContactPhone String?
-  
+
   // Account Status
   isActive    Boolean  @default(true)
   isVerified  Boolean  @default(false)
-  lastLoginAt DateTime?
-  
+  lastLoginAt DateTime? @db.Timestamptz(3)
+
   // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
   // Relations
   center        Center? @relation(fields: [centerId], references: [id], onDelete: SetNull)
   healthProfile HealthProfile?
@@ -99,208 +99,216 @@ model User {
   recordedVitals VitalRecord[] @relation("RecordedBy")
   wellnessPlans WellnessPlan[]
   feedback      Feedback[]
-  
+
   @@index([email])
   @@index([role])
   @@index([centerId])
+  @@index([createdAt])
   @@map("users")
 }
 
 // Health Profile - One-to-one with User
 model HealthProfile {
-  id     String @id @default(uuid())
-  userId String @unique
-  
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @db.Uuid
+
   // Basic Health Information
-  bloodType       String?
-  allergies       String?  @db.Text
-  chronicConditions String? @db.Text
-  medications     String?  @db.Text
-  
-  // Vitals History (stored as JSON for flexibility)
-  vitalsHistory   Json?
-  
+  bloodType         String?
+  allergies         String?
+  chronicConditions String?
+  medications       String?
+
+  // Vitals History (stored as JSONB for flexibility and performance)
+  vitalsHistory Json? @db.JsonB
+
   // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
+  @@index([userId])
   @@map("health_profiles")
 }
 
 // Audit Log - Compliance with Proclamation 1321/2024
 model AuditLog {
-  id        String   @id @default(uuid())
-  userId    String?
-  action    String   // e.g., "LOGIN", "REGISTER", "UPDATE_PROFILE", "ACCESS_DATA"
-  resource  String?  // What was accessed (e.g., "USER", "HEALTH_PROFILE")
-  details   Json?    // Additional context
+  id        String  @id @default(uuid()) @db.Uuid
+  userId    String? @db.Uuid
+  action    String  // e.g., "LOGIN", "REGISTER", "UPDATE_PROFILE", "ACCESS_DATA"
+  resource  String? // What was accessed (e.g., "USER", "HEALTH_PROFILE")
+  details   Json?   @db.JsonB // Additional context
   ipAddress String?
-  userAgent String?  @db.Text
-  
-  timestamp DateTime @default(now())
-  
+  userAgent String?
+
+  timestamp DateTime @default(now()) @db.Timestamptz(3)
+
   // Relations
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+
   @@index([userId])
   @@index([action])
-  @@index([timestamp])
+  @@index([timestamp(sort: Desc)])
   @@map("audit_logs")
 }
 
 // Vital Record - Stores vitals history
 model VitalRecord {
-  id        String   @id @default(uuid())
-  userId    String   // Patient whose vitals are recorded
-  recordedBy String  // Staff member who recorded the vitals
-  
+  id         String @id @default(uuid()) @db.Uuid
+  userId     String @db.Uuid // Patient whose vitals are recorded
+  recordedBy String @db.Uuid // Staff member who recorded the vitals
+
   // BMI Data
-  weightKg  Float?
-  heightCm  Float?
-  bmi       Float?
+  weightKg    Float?       @db.DoublePrecision
+  heightCm    Float?       @db.DoublePrecision
+  bmi         Float?       @db.DoublePrecision
   bmiCategory BmiCategory?
-  
+
   // Blood Pressure Data
-  systolic  Int?
-  diastolic Int?
+  systolic   Int?
+  diastolic  Int?
   bpCategory BloodPressureCategory?
-  
+
   // Additional Vitals
-  heartRate Int?      // beats per minute
-  temperature Float?  // celsius
-  oxygenSaturation Int? // percentage
-  
+  heartRate        Int?   // beats per minute
+  temperature      Float? @db.DoublePrecision // celsius
+  oxygenSaturation Int?   // percentage
+
   // Metadata
-  notes     String?  @db.Text
-  recordedAt DateTime @default(now())
-  
+  notes      String?
+  recordedAt DateTime @default(now()) @db.Timestamptz(3)
+
   // Relations
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recorder  User @relation("RecordedBy", fields: [recordedBy], references: [id], onDelete: Restrict)
-  
+  user     User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recorder User @relation("RecordedBy", fields: [recordedBy], references: [id], onDelete: Restrict)
+
   @@index([userId])
   @@index([recordedBy])
-  @@index([recordedAt])
+  @@index([recordedAt(sort: Desc)])
+  @@index([userId, recordedAt(sort: Desc)])
   @@map("vital_records")
 }
 
 // Appointment - Manages patient appointments
 model Appointment {
-  id          String   @id @default(uuid())
-  userId      String   // Patient
-  
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid // Patient
+
   // Appointment Details
-  scheduledAt DateTime
-  reason      String   @db.Text
+  scheduledAt DateTime          @db.Timestamptz(3)
+  reason      String
   status      AppointmentStatus @default(PENDING)
-  
+
   // Additional Information
-  notes       String?  @db.Text
-  diagnosis   String?  @db.Text
-  prescription String? @db.Text
-  
+  notes        String?
+  diagnosis    String?
+  prescription String?
+
   // Status Tracking
-  confirmedAt  DateTime?
-  startedAt    DateTime?
-  completedAt  DateTime?
-  cancelledAt  DateTime?
-  cancellationReason String? @db.Text
-  
+  confirmedAt        DateTime? @db.Timestamptz(3)
+  startedAt          DateTime? @db.Timestamptz(3)
+  completedAt        DateTime? @db.Timestamptz(3)
+  cancelledAt        DateTime? @db.Timestamptz(3)
+  cancellationReason String?
+
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([scheduledAt])
   @@index([status])
+  @@index([userId, status])
+  @@index([scheduledAt, status])
   @@map("appointments")
 }
 
 // Wellness Plan - Personalized wellness plans for users
 model WellnessPlan {
-  id       String @id @default(uuid())
-  userId   String
-  
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+
   // Plan Details
-  planText String @db.Text
-  goals    String? @db.Text
+  planText String
+  goals    String?
   duration Int?    // Duration in days
-  
+
   // Status
   isActive Boolean @default(true)
-  
+
   // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([isActive])
+  @@index([userId, isActive])
   @@map("wellness_plans")
 }
 
 // Feedback - User feedback and ratings
 model Feedback {
-  id      String @id @default(uuid())
-  userId  String
-  
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+
   // Feedback Details
-  rating  Int    // 1-5 rating
-  comment String? @db.Text
+  rating   Int     // 1-5 rating
+  comment  String?
   category String? // e.g., "service", "facility", "staff"
-  
+
   // Timestamps
-  createdAt DateTime @default(now())
-  
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([rating])
-  @@index([createdAt])
+  @@index([createdAt(sort: Desc)])
+  @@index([rating, createdAt(sort: Desc)])
   @@map("feedback")
 }
 
 // Center - Health centers/facilities
 model Center {
-  id       String @id @default(uuid())
-  
+  id String @id @default(uuid()) @db.Uuid
+
   // Basic Information
-  name     String
-  code     String @unique // Unique center code
-  
+  name String
+  code String @unique // Unique center code
+
   // Location
-  region   String
-  city     String
-  address  String @db.Text
-  
+  region  String
+  city    String
+  address String
+
   // Contact
-  phone    String?
-  email    String?
-  
+  phone String?
+  email String?
+
   // Status
-  status   CenterStatus @default(ACTIVE)
-  
+  status CenterStatus @default(ACTIVE)
+
   // Capacity
   capacity Int? // Maximum patients per day
-  
+
   // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
   // Relations
-  staff    User[]
-  
+  staff User[]
+
   @@index([region])
   @@index([status])
   @@index([code])
+  @@index([region, status])
   @@map("centers")
 }

@@ -4,14 +4,9 @@
 import cors from "cors";
 import express, { Request, Response } from "express";
 import helmet from "helmet";
-import type { RowDataPacket } from "mysql2";
 import morgan from "morgan";
-import db from "./config/db";
+import { prisma } from "./config/prisma";
 import apiRoutes from "./routes";
-
-interface HealthRow extends RowDataPacket {
-  ok: number;
-}
 
 const app = express();
 
@@ -22,26 +17,23 @@ app.use(express.json());
 
 app.get("/api/health", async (_req: Request, res: Response) => {
   try {
-    const [result] = await db.query<HealthRow[]>("SELECT 1 AS ok");
-    const databaseStatus =
-      result.length > 0 && result[0].ok === 1 ? "connected" : "unknown";
+    await prisma.$queryRaw`SELECT 1`;
 
     return res.status(200).json({
       status: "success",
       data: {
         service: "Mesob Wellness API",
-        database: databaseStatus,
+        database: "connected",
         timestamp: new Date().toISOString(),
       },
     });
   } catch (error) {
-    // Return partial health status if database is unavailable
     return res.status(503).json({
       status: "warning",
       data: {
         service: "Mesob Wellness API",
         database: "disconnected",
-        message: "Database connection failed. Please ensure MySQL is running.",
+        message: "Database connection failed. Please ensure PostgreSQL is running.",
         timestamp: new Date().toISOString(),
       },
     });
