@@ -1,16 +1,6 @@
-import { PrismaClient, CenterStatus } from "../generated/prisma";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { CenterStatus } from "../generated/prisma";
+import { prisma } from "../config/prisma";
 import { env } from "../config/env";
-
-const adapter = new PrismaMariaDb({
-  host: env.DB_HOST,
-  port: env.DB_PORT,
-  user: env.DB_USER,
-  password: env.DB_PASS,
-  database: env.DB_NAME,
-});
-
-const prisma = new PrismaClient({ adapter });
 
 export interface CreateCenterInput {
   name: string;

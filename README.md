@@ -38,6 +38,47 @@ Mesob-Wellness/
 └── README.md            # This file
 ```
 
+## 🗄️ Database
+
+**PostgreSQL 15+** - Production-grade relational database
+
+### Why PostgreSQL?
+- ✅ Native UUID support
+- ✅ JSONB for flexible data storage
+- ✅ Timezone-aware timestamps
+- ✅ Advanced indexing capabilities
+- ✅ Full-text search support
+- ✅ Better performance and scalability
+- ✅ ACID compliance
+- ✅ Active community support
+
+### Setup PostgreSQL
+
+**Ubuntu/Debian:**
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+```
+
+**macOS:**
+```bash
+brew install postgresql@15
+brew services start postgresql@15
+```
+
+**Windows:**
+Download from: https://www.postgresql.org/download/windows/
+
+### Create Database
+```bash
+sudo -u postgres psql
+CREATE DATABASE mesob_wellness;
+\q
+```
+
+---
+
 ## 🚀 Quick Start
 
 ### Backend Setup
@@ -45,6 +86,8 @@ Mesob-Wellness/
 ```bash
 cd backend
 npm install
+# Update .env with PostgreSQL connection string
+npm run prisma:generate
 npm run prisma:migrate:dev
 npm run dev
 ```
@@ -236,17 +279,18 @@ bash test-all-endpoints.sh
 ## 📚 Documentation
 
 - **[Complete API Guide](docs/API_COMPLETE_GUIDE.md)** - Comprehensive API documentation with frontend requirements
+- **[PostgreSQL Migration](docs/POSTGRESQL_MIGRATION.md)** - Complete migration guide from MySQL to PostgreSQL
 - **[API Contract](docs/api.md)** - Original API specification
 
 ---
 
-## 🛠️ Technology Stack
+## 🌟 Key Features
 
 **Backend:**
 - Node.js + Express
 - TypeScript
 - Prisma ORM
-- MySQL Database
+- **PostgreSQL Database** (migrated from MySQL)
 - JWT Authentication
 - bcrypt Password Hashing
 
@@ -255,7 +299,45 @@ bash test-all-endpoints.sh
 - Vite
 - React Router
 
-## 🌟 Key Features
+---
+
+## 📝 Development Workflow
+
+1. **Start Backend:** `cd backend && npm run dev`
+2. **Start Frontend:** `cd frontend && npm run dev`
+3. **Run Tests:** `cd backend && bash test-all-endpoints.sh`
+4. **View Database:** `cd backend && npx prisma studio`
+5. **Create Migration:** `cd backend && npx prisma migrate dev --name description`
+
+---
+
+## 🔄 PostgreSQL Migration
+
+The project has been migrated from MySQL to PostgreSQL for better performance and features.
+
+**Key Changes:**
+- UUID primary keys instead of auto-increment
+- Timezone-aware timestamps
+- JSONB for better JSON performance
+- Advanced indexing capabilities
+
+**Migration Guide:** See `docs/POSTGRESQL_MIGRATION.md` for complete details.
+
+**Quick Migration:**
+```bash
+cd backend
+# Install PostgreSQL and create database
+createdb mesob_wellness
+# Update .env with PostgreSQL connection
+npm install
+npx prisma generate
+npx prisma migrate dev --name init_postgresql
+npm run dev
+```
+
+---
+
+## 📚 Documentation
 
 ### Vitals Management
 - BMI calculation and categorization
@@ -326,18 +408,26 @@ bash test-all-endpoints.sh
 ## 🔧 Environment Variables
 
 **Backend (.env):**
-```
+```env
 NODE_ENV=development
 PORT=5000
+
+# PostgreSQL Configuration
 DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
+DB_PORT=5432
+DB_USER=postgres
 DB_PASS=your_password
 DB_NAME=mesob_wellness
-DATABASE_URL=mysql://root:password@localhost:3306/mesob_wellness
+
+# PostgreSQL Connection String
+DATABASE_URL=postgresql://postgres:your_password@localhost:5432/mesob_wellness?schema=public
+
+# JWT Configuration
 JWT_SECRET=your_secret_key
 JWT_EXPIRES_IN=1h
 ```
+
+---
 
 ## 📝 Development Workflow
 
