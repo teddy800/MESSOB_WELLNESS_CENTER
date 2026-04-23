@@ -36,8 +36,4 @@ tmp/
 temp/
 *.tmp
 
-backend/*.md
-backend/BUILD_STATUS.md
-backend/STARTUP_CHECKLIST.md
-!backend/README.md
-# backend/*.sh
+docs/*.sh
