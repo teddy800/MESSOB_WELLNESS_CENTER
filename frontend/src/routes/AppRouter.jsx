@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import MainLayout from '../components/MainLayout';
 import ProtectedRoute from '../components/ProtectedRoute';
 import Dashboard from '../pages/Dashboard';
+import ManagerDashboard from '../pages/ManagerDashboard';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 
@@ -17,6 +18,16 @@ function AppRouter() {
           <ProtectedRoute>
             <MainLayout>
               <Dashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/manager"
+        element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ManagerDashboard />
             </MainLayout>
           </ProtectedRoute>
         }
