@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 
 function VitalsEntry({ customerId, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [customerIdInput, setCustomerIdInput] = useState(customerId || '');
   const [vitals, setVitals] = useState({
     systolicBP: '',
     diastolicBP: '',
@@ -17,6 +18,10 @@ function VitalsEntry({ customerId, onSuccess }) {
   });
 
   const [alerts, setAlerts] = useState({});
+
+  useEffect(() => {
+    setCustomerIdInput(customerId || '');
+  }, [customerId]);
 
   const getRiskLevel = (value, type) => {
     let level = 'normal';
@@ -74,8 +79,9 @@ function VitalsEntry({ customerId, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const targetCustomerId = customerIdInput.trim() || customerId;
 
-    if (!customerId) {
+    if (!targetCustomerId) {
       setError('Customer ID is required');
       return;
     }
@@ -85,7 +91,7 @@ function VitalsEntry({ customerId, onSuccess }) {
       setError('');
 
       const response = await api.post('/api/v1/vitals', {
-        userId: customerId,
+        userId: targetCustomerId,
         systolicBP: vitals.systolicBP ? parseInt(vitals.systolicBP) : null,
         diastolicBP: vitals.diastolicBP ? parseInt(vitals.diastolicBP) : null,
         heartRate: vitals.heartRate ? parseInt(vitals.heartRate) : null,
@@ -128,6 +134,25 @@ function VitalsEntry({ customerId, onSuccess }) {
       {success && <div className="alert alert-success">{success}</div>}
 
       <form onSubmit={handleSubmit} className="vitals-form">
+        <div className="form-group">
+          <label className="form-label">Customer ID</label>
+          <input
+            type="text"
+            name="customerId"
+            value={customerIdInput}
+            onChange={(e) => {
+              setCustomerIdInput(e.target.value);
+              if (error) {
+                setError('');
+              }
+            }}
+            placeholder="Enter target user ID"
+            disabled={loading}
+            className="form-input"
+            required
+          />
+        </div>
+
         <div className="vitals-grid">
           <div className="form-group">
             <label className="form-label">Systolic BP</label>
