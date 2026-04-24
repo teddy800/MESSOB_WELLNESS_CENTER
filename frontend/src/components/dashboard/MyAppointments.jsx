@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 
+const normalizeAppointments = (items) => {
+  if (!Array.isArray(items)) return [];
+
+  return items.map((appointment) => ({
+    ...appointment,
+    status: typeof appointment.status === 'string' ? appointment.status.toUpperCase() : appointment.status,
+  }));
+};
+
 function MyAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -9,6 +18,28 @@ function MyAppointments() {
 
   useEffect(() => {
     fetchAppointments();
+
+    const onAppointmentsUpdated = (event) => {
+      const incoming = normalizeAppointments([event?.detail?.appointment])[0];
+
+      if (incoming && incoming.id) {
+        setAppointments((prev) => {
+          const exists = prev.some((item) => item.id === incoming.id);
+          if (exists) {
+            return prev.map((item) => (item.id === incoming.id ? incoming : item));
+          }
+          return [...prev, incoming];
+        });
+      }
+
+      // Keep a refetch as fallback to stay in sync with server truth.
+      fetchAppointments();
+    };
+
+    window.addEventListener('appointments-updated', onAppointmentsUpdated);
+    return () => {
+      window.removeEventListener('appointments-updated', onAppointmentsUpdated);
+    };
   }, []);
 
   const fetchAppointments = async () => {
@@ -25,7 +56,7 @@ function MyAppointments() {
         appointmentsList = data.appointments;
       }
       
-      setAppointments(appointmentsList);
+      setAppointments(normalizeAppointments(appointmentsList));
       setError('');
     } catch (err) {
       setAppointments([]);

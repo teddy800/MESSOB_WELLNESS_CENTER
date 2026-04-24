@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 
+const normalizeAppointments = (items) => {
+  if (!Array.isArray(items)) return [];
+
+  return items.map((appointment) => ({
+    ...appointment,
+    status: typeof appointment.status === 'string' ? appointment.status.toUpperCase() : appointment.status,
+  }));
+};
+
 function BookingCalendar() {
   const { user } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -33,7 +42,7 @@ function BookingCalendar() {
         appointmentsList = data.appointments;
       }
       
-      setAppointments(appointmentsList);
+      setAppointments(normalizeAppointments(appointmentsList));
       setError('');
     } catch (err) {
       setAppointments([]);
@@ -76,8 +85,14 @@ function BookingCalendar() {
         scheduledAt: selectedDate.toISOString(),
         reason: bookingReason,
       });
-      
-      setAppointments([...appointments, response.data.data]);
+
+      const createdAppointment = normalizeAppointments([response.data.data])[0];
+      setAppointments((prev) => [...prev, createdAppointment]);
+      window.dispatchEvent(
+        new CustomEvent('appointments-updated', {
+          detail: { appointment: createdAppointment },
+        })
+      );
       setShowBookingForm(false);
       setBookingReason('');
       setSelectedDate(null);
