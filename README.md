@@ -14,6 +14,7 @@ Mesob Wellness provides a complete healthcare management system with:
 - **Feedback System** - Patient feedback and satisfaction ratings
 - **Centers Management** - Multi-center operations and analytics
 - **Analytics Dashboard** - Center, regional, and national-level insights
+- **Manager Dashboard** - Advanced system control and monitoring ⭐ NEW
 
 ## 📁 Repository Structure
 
@@ -113,11 +114,86 @@ bash test-all-endpoints.sh
 |------|-------|----------|--------------|
 | Customer Staff | customer@mesob.et | Customer123! | Basic access |
 | Nurse Officer | nurse@mesob.et | Nurse123! | Record vitals, manage appointments |
-| Manager | manager@mesob.et | Manager123! | Center management, view analytics |
-| Regional Office | regional@mesob.et | Regional123! | Regional analytics |
-| Federal Admin | admin@mesob.et | Admin123! | Full system access, manage centers |
+| Manager | manager@mesob.et | Manager123! | Center management, view analytics, **Manager Dashboard** |
+| Regional Office | regional@mesob.et | Regional123! | Regional analytics, **Manager Dashboard** |
+| Federal Admin | admin@mesob.et | Admin123! | Full system access, manage centers, **Manager Dashboard** |
 
-## 📡 API Endpoints (31 Total)
+## 🏥 Manager Dashboard ⭐ NEW
+
+### Overview
+The Manager Dashboard provides comprehensive system control and monitoring capabilities for MANAGER role and above.
+
+### Key Features
+
+#### 🎛️ System Controls Panel
+- **Daily Slot Capacity Management** - Adjust from 100 to 120+ slots
+- **Appointment Intervals** - Configure time slots (15, 30, 45 minutes)
+- **Walk-in Registration** - Enable/disable on-site bookings
+- **Auto-confirmation** - Automatic appointment confirmation settings
+
+#### 📊 Capacity Management
+- **Real-time Capacity Tracking** - Current daily capacity utilization
+- **Slots Management** - Used vs remaining slots
+- **Historical Data** - Capacity trends over time
+- **Dynamic Adjustment** - Live capacity modification
+
+#### 📈 Booking Statistics
+- **Daily Metrics** - Total appointments, online vs walk-ins
+- **Performance Indicators** - No-show rates, average service time
+- **Comparison Charts** - Online bookings vs walk-in registrations
+- **Trend Analysis** - Booking patterns and forecasting
+
+#### ⏱️ Queue Analytics
+- **Real-time Queue Status** - Current queue size and wait times
+- **Peak Hours Analysis** - Identify busiest periods
+- **Efficiency Metrics** - Completion rates, on-time performance
+- **Queue Optimization** - Data-driven queue management
+
+#### 🏥 Health Trends (Center-Wide)
+- **Risk Assessment** - High/medium/low risk patient distribution
+- **Vital Statistics** - Average BP, glucose levels across center
+- **Health KPIs** - Key performance indicators for health outcomes
+- **Department Analysis** - Health metrics by department
+
+#### 🗺️ Risk Heatmap
+- **Visual Risk Mapping** - Color-coded risk visualization
+- **Department Breakdown** - Risk levels by department
+- **Age Group Analysis** - Risk distribution by demographics
+- **Compliance Tracking** - Health regulation compliance
+
+#### 👥 Staff Performance
+- **Performance Metrics** - Vitals recorded per nurse/officer
+- **Service Time Analysis** - Average service time per staff member
+- **Productivity Tracking** - Appointments handled per staff
+- **Performance Scoring** - Comprehensive staff evaluation
+
+#### 👤 User Management
+- **Create Staff Accounts** - Add new nurses and officers
+- **User Administration** - View all users, assign to centers
+- **Access Control** - Activate/deactivate user accounts
+- **Activity Monitoring** - User login and activity logs
+
+#### 🔒 Audit Trail
+- **Compliance Logging** - Secure log of all health record access
+- **Access Tracking** - Who accessed what data and when
+- **Proclamation 1321/2024 Compliance** - Full regulatory compliance
+- **Export Capabilities** - Audit log export for reporting
+
+#### 📋 Report Generation
+- **Automated Reports** - Monthly, quarterly, and custom reports
+- **Export Options** - PDF and Excel format support
+- **Scheduled Reports** - Automated report generation and delivery
+- **Custom Date Ranges** - Flexible reporting periods
+
+### Access Control
+- **MANAGER** - Full dashboard access for assigned center
+- **REGIONAL_OFFICE** - Regional dashboard with multi-center view
+- **FEDERAL_ADMIN** - National dashboard with all centers
+
+### Navigation
+Access the Manager Dashboard at `/manager` route (requires MANAGER+ role)
+
+## 📡 API Endpoints (45+ Total)
 
 ### Authentication (6)
 - `POST /api/v1/auth/register` - Public registration (CUSTOMER_STAFF only)
@@ -127,9 +203,12 @@ bash test-all-endpoints.sh
 - `GET /api/v1/auth/me` - Get current user
 - `POST /api/v1/auth/logout` - Logout user
 
-### Users (2)
+### Users (5) ⭐ ENHANCED
 - `GET /api/v1/users/me` - Get user profile
 - `PUT /api/v1/users/me` - Update user profile
+- `GET /api/v1/users` - Get all users (Manager+) ⭐ NEW
+- `POST /api/v1/users` - Create new user (Manager+) ⭐ NEW
+- `PUT /api/v1/users/:userId/status` - Update user status (Manager+) ⭐ NEW
 
 ### Vitals (5)
 - `GET /api/v1/vitals/status` - Check vitals module status
@@ -161,6 +240,19 @@ bash test-all-endpoints.sh
 - `GET /api/v1/centers/:id/analytics` - Get center analytics
 - `GET /api/v1/centers/analytics/region/:region` - Get regional analytics
 - `GET /api/v1/centers/analytics/all` - Get all centers analytics (FEDERAL_ADMIN only)
+
+### Analytics & Manager Dashboard (11) ⭐ NEW
+- `GET /api/v1/analytics/settings` - Get system settings
+- `PUT /api/v1/analytics/settings` - Update system settings
+- `GET /api/v1/analytics/capacity` - Get capacity information
+- `GET /api/v1/analytics/appointments/stats` - Get booking statistics
+- `GET /api/v1/analytics/queue/analytics` - Get queue analytics
+- `GET /api/v1/analytics/health/analytics` - Get health trends
+- `GET /api/v1/analytics/staff/performance` - Get staff performance
+- `GET /api/v1/analytics/audit-trail` - Get audit trail
+- `POST /api/v1/analytics/reports/generate` - Generate custom report
+- `GET /api/v1/analytics/reports/monthly/:year/:month` - Generate monthly report
+- `GET /api/v1/analytics/reports/quarterly/:year/:quarter` - Generate quarterly report
 
 ### Health Checks (2)
 - `GET /health` - API health check

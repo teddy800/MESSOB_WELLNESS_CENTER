@@ -7,6 +7,7 @@ import MainLayout from '../components/MainLayout';
 import Login      from '../pages/Login';
 import Register   from '../pages/Register';
 import Dashboard  from '../pages/Dashboard';
+import ManagerDashboard from '../pages/ManagerDashboard';
 import Vitals     from '../pages/Vitals';
 import Appointments from '../pages/Appointments';
 import Wellness   from '../pages/Wellness';
@@ -78,7 +79,12 @@ function AppRouter() {
             </ProtectedRoute>
           } />
 
-          {/* MANAGER and above — user management */}
+          {/* MANAGER and above — user management & manager dashboard */}
+          <Route path="/manager" element={
+            <ProtectedRoute roles={['MANAGER','REGIONAL_OFFICE','FEDERAL_ADMIN']}>
+              <MainLayout><ManagerDashboard /></MainLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/users" element={
             <ProtectedRoute roles={['MANAGER','FEDERAL_ADMIN']}>
               <MainLayout><Users /></MainLayout>

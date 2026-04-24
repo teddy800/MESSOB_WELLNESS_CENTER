@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Activity, Calendar, Heart, Home, LogOut, Menu,
-  MessageSquare, Settings, Users, Building2, BarChart3, ChevronRight,
+  MessageSquare, Settings, Users, Building2, BarChart3, ChevronRight, Shield,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { path: '/centers',      label: 'Centers',        icon: Building2,     roles: ['NURSE_OFFICER','MANAGER','REGIONAL_OFFICE','FEDERAL_ADMIN'] },
   { path: '/analytics',    label: 'Analytics',      icon: BarChart3,     roles: ['NURSE_OFFICER','MANAGER','REGIONAL_OFFICE','FEDERAL_ADMIN'] },
   // MANAGER and above
+  { path: '/manager',      label: 'Manager Dashboard', icon: Shield,     roles: ['MANAGER','REGIONAL_OFFICE','FEDERAL_ADMIN'] },
   { path: '/users',        label: 'Users',          icon: Users,         roles: ['MANAGER','FEDERAL_ADMIN'] },
   { path: '/profile',      label: 'Profile',        icon: Settings,      roles: null },
 ];
