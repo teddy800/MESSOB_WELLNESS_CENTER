@@ -6,7 +6,7 @@ import Button from '../components/forms/Button';
 
 function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, error: authError } = useAuth();
+  const { login, isAuthenticated, user, error: authError } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -16,12 +16,20 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated based on role
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      const roleRoutes = {
+        CUSTOMER_STAFF: '/dashboard',
+        NURSE_OFFICER: '/nurse',
+        MANAGER: '/manager',
+        REGIONAL_OFFICE: '/regional',
+        FEDERAL_ADMIN: '/admin',
+      };
+      const route = roleRoutes[user?.role] || '/dashboard';
+      navigate(route, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user?.role, navigate]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -73,7 +81,8 @@ function Login() {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
-      navigate('/dashboard', { replace: true });
+      // Role-based redirect will happen via useEffect
+      setLoading(false);
     } else {
       setServerError(result.error);
       setLoading(false);
