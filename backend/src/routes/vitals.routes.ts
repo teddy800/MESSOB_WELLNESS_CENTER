@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   getVitalsModuleStatus,
+  postVitals,
   postBmi,
   postBloodPressure,
   getVitalsHistoryHandler,
@@ -16,6 +17,18 @@ router.get("/status", getVitalsModuleStatus);
 
 // Protected routes - require authentication
 // Only NURSE_OFFICER and higher roles can record vitals
+router.post(
+  "/",
+  authenticate,
+  authorize(
+    UserRole.NURSE_OFFICER,
+    UserRole.MANAGER,
+    UserRole.REGIONAL_OFFICE,
+    UserRole.FEDERAL_ADMIN,
+  ),
+  postVitals,
+);
+
 router.post(
   "/bmi",
   authenticate,
