@@ -1,14 +1,14 @@
-import React from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
-import MainLayout from '../components/MainLayout';
-import RoleBasedRoute from '../components/RoleBasedRoute';
-import Dashboard from '../pages/Dashboard';
-import NurseDashboard from '../pages/NurseDashboard';
-import ManagerDashboard from '../pages/ManagerDashboard';
-import RegionalDashboard from '../pages/RegionalDashboard';
-import AdminDashboard from '../pages/AdminDashboard';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
+import React from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import MainLayout from "../components/MainLayout";
+import RoleBasedRoute from "../components/RoleBasedRoute";
+import Dashboard from "../pages/Dashboard";
+import NurseDashboard from "../pages/NurseDashboard";
+import ManagerDashboard from "../pages/ManagerDashboard";
+import RegionalDashboard from "../pages/RegionalDashboard";
+import AdminDashboard from "../pages/AdminDashboard";
+import Login from "../pages/Login";
+import Register from "../pages/Register";
 
 function AppRouter() {
   return (
@@ -18,7 +18,7 @@ function AppRouter() {
       <Route
         path="/dashboard"
         element={
-          <RoleBasedRoute allowedRoles={['CUSTOMER_STAFF']}>
+          <RoleBasedRoute allowedRoles={["CUSTOMER_STAFF"]}>
             <MainLayout>
               <Dashboard />
             </MainLayout>
@@ -28,18 +28,21 @@ function AppRouter() {
       <Route
         path="/nurse"
         element={
-          <RoleBasedRoute allowedRoles={['NURSE_OFFICER']}>
+          <RoleBasedRoute allowedRoles={["NURSE_OFFICER"]}>
             <MainLayout>
               <NurseDashboard />
             </MainLayout>
           </RoleBasedRoute>
         }
       />
-      <Route path="/nurse-dashboard" element={<Navigate to="/nurse" replace />} />
+      <Route
+        path="/nurse-dashboard"
+        element={<Navigate to="/nurse" replace />}
+      />
       <Route
         path="/manager"
         element={
-          <RoleBasedRoute allowedRoles={['MANAGER']}>
+          <RoleBasedRoute allowedRoles={["MANAGER"]}>
             <MainLayout>
               <ManagerDashboard />
             </MainLayout>
@@ -49,7 +52,7 @@ function AppRouter() {
       <Route
         path="/regional"
         element={
-          <RoleBasedRoute allowedRoles={['REGIONAL_OFFICE']}>
+          <RoleBasedRoute allowedRoles={["REGIONAL_OFFICE"]}>
             <MainLayout>
               <RegionalDashboard />
             </MainLayout>
@@ -59,7 +62,7 @@ function AppRouter() {
       <Route
         path="/admin"
         element={
-          <RoleBasedRoute allowedRoles={['FEDERAL_ADMIN']}>
+          <RoleBasedRoute allowedRoles={["FEDERAL_ADMIN"]}>
             <MainLayout>
               <AdminDashboard />
             </MainLayout>
