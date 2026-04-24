@@ -1,59 +1,94 @@
-import React, { useEffect, useState } from 'react';
-import api from '../../services/api';
+import React, { useEffect, useState } from "react";
+import api from "../../services/api";
 
 function VitalsEntry({ customerId, onSuccess }) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [customerIdInput, setCustomerIdInput] = useState(customerId || '');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [customerIdInput, setCustomerIdInput] = useState(customerId || "");
   const [vitals, setVitals] = useState({
-    systolicBP: '',
-    diastolicBP: '',
-    heartRate: '',
-    bmi: '',
-    glucose: '',
-    temperature: '',
-    oxygenSaturation: '',
-    notes: '',
+    systolicBP: "",
+    diastolicBP: "",
+    heartRate: "",
+    bmi: "",
+    glucose: "",
+    temperature: "",
+    oxygenSaturation: "",
+    notes: "",
   });
 
   const [alerts, setAlerts] = useState({});
 
   useEffect(() => {
-    setCustomerIdInput(customerId || '');
+    setCustomerIdInput(customerId || "");
   }, [customerId]);
 
   const getRiskLevel = (value, type) => {
-    let level = 'normal';
-    let color = 'green';
+    let level = "normal";
+    let color = "green";
 
-    if (type === 'systolicBP') {
-      if (value < 120) level = 'normal';
-      else if (value < 140) { level = 'caution'; color = 'yellow'; }
-      else { level = 'high'; color = 'red'; }
-    } else if (type === 'diastolicBP') {
-      if (value < 80) level = 'normal';
-      else if (value < 90) { level = 'caution'; color = 'yellow'; }
-      else { level = 'high'; color = 'red'; }
-    } else if (type === 'heartRate') {
-      if (value >= 60 && value <= 100) level = 'normal';
-      else if (value > 100 || value < 60) { level = 'caution'; color = 'yellow'; }
-    } else if (type === 'bmi') {
-      if (value >= 18.5 && value < 25) level = 'normal';
-      else if (value < 18.5 || value >= 25) { level = 'caution'; color = 'yellow'; }
-      if (value >= 30) { level = 'high'; color = 'red'; }
-    } else if (type === 'glucose') {
-      if (value < 100) level = 'normal';
-      else if (value < 126) { level = 'caution'; color = 'yellow'; }
-      else { level = 'high'; color = 'red'; }
-    } else if (type === 'temperature') {
-      if (value >= 36.5 && value <= 37.5) level = 'normal';
-      else if (value > 37.5 || value < 36.5) { level = 'caution'; color = 'yellow'; }
-      if (value > 38.5) { level = 'high'; color = 'red'; }
-    } else if (type === 'oxygenSaturation') {
-      if (value >= 95) level = 'normal';
-      else if (value >= 90) { level = 'caution'; color = 'yellow'; }
-      else { level = 'high'; color = 'red'; }
+    if (type === "systolicBP") {
+      if (value < 120) level = "normal";
+      else if (value < 140) {
+        level = "caution";
+        color = "yellow";
+      } else {
+        level = "high";
+        color = "red";
+      }
+    } else if (type === "diastolicBP") {
+      if (value < 80) level = "normal";
+      else if (value < 90) {
+        level = "caution";
+        color = "yellow";
+      } else {
+        level = "high";
+        color = "red";
+      }
+    } else if (type === "heartRate") {
+      if (value >= 60 && value <= 100) level = "normal";
+      else if (value > 100 || value < 60) {
+        level = "caution";
+        color = "yellow";
+      }
+    } else if (type === "bmi") {
+      if (value >= 18.5 && value < 25) level = "normal";
+      else if (value < 18.5 || value >= 25) {
+        level = "caution";
+        color = "yellow";
+      }
+      if (value >= 30) {
+        level = "high";
+        color = "red";
+      }
+    } else if (type === "glucose") {
+      if (value < 100) level = "normal";
+      else if (value < 126) {
+        level = "caution";
+        color = "yellow";
+      } else {
+        level = "high";
+        color = "red";
+      }
+    } else if (type === "temperature") {
+      if (value >= 36.5 && value <= 37.5) level = "normal";
+      else if (value > 37.5 || value < 36.5) {
+        level = "caution";
+        color = "yellow";
+      }
+      if (value > 38.5) {
+        level = "high";
+        color = "red";
+      }
+    } else if (type === "oxygenSaturation") {
+      if (value >= 95) level = "normal";
+      else if (value >= 90) {
+        level = "caution";
+        color = "yellow";
+      } else {
+        level = "high";
+        color = "red";
+      }
     }
 
     return { level, color };
@@ -61,7 +96,7 @@ function VitalsEntry({ customerId, onSuccess }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setVitals(prev => ({
+    setVitals((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -70,7 +105,7 @@ function VitalsEntry({ customerId, onSuccess }) {
     if (value) {
       const numValue = parseFloat(value);
       const risk = getRiskLevel(numValue, name);
-      setAlerts(prev => ({
+      setAlerts((prev) => ({
         ...prev,
         [name]: risk,
       }));
@@ -82,15 +117,15 @@ function VitalsEntry({ customerId, onSuccess }) {
     const targetCustomerId = customerIdInput.trim() || customerId;
 
     if (!targetCustomerId) {
-      setError('Customer ID is required');
+      setError("Customer ID is required");
       return;
     }
 
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
-      const response = await api.post('/api/v1/vitals', {
+      const response = await api.post("/api/v1/vitals", {
         userId: targetCustomerId,
         systolicBP: vitals.systolicBP ? parseInt(vitals.systolicBP) : null,
         diastolicBP: vitals.diastolicBP ? parseInt(vitals.diastolicBP) : null,
@@ -98,29 +133,31 @@ function VitalsEntry({ customerId, onSuccess }) {
         bmi: vitals.bmi ? parseFloat(vitals.bmi) : null,
         glucose: vitals.glucose ? parseInt(vitals.glucose) : null,
         temperature: vitals.temperature ? parseFloat(vitals.temperature) : null,
-        oxygenSaturation: vitals.oxygenSaturation ? parseInt(vitals.oxygenSaturation) : null,
+        oxygenSaturation: vitals.oxygenSaturation
+          ? parseInt(vitals.oxygenSaturation)
+          : null,
         notes: vitals.notes,
       });
 
-      setSuccess('Vitals recorded successfully!');
+      setSuccess("Vitals recorded successfully!");
       setVitals({
-        systolicBP: '',
-        diastolicBP: '',
-        heartRate: '',
-        bmi: '',
-        glucose: '',
-        temperature: '',
-        oxygenSaturation: '',
-        notes: '',
+        systolicBP: "",
+        diastolicBP: "",
+        heartRate: "",
+        bmi: "",
+        glucose: "",
+        temperature: "",
+        oxygenSaturation: "",
+        notes: "",
       });
       setAlerts({});
 
       setTimeout(() => {
-        setSuccess('');
+        setSuccess("");
         if (onSuccess) onSuccess();
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to record vitals');
+      setError(err.response?.data?.message || "Failed to record vitals");
     } finally {
       setLoading(false);
     }
@@ -143,7 +180,7 @@ function VitalsEntry({ customerId, onSuccess }) {
             onChange={(e) => {
               setCustomerIdInput(e.target.value);
               if (error) {
-                setError('');
+                setError("");
               }
             }}
             placeholder="Enter target user ID"
@@ -289,7 +326,9 @@ function VitalsEntry({ customerId, onSuccess }) {
                 className="form-input"
               />
               {alerts.oxygenSaturation && (
-                <span className={`risk-alert risk-${alerts.oxygenSaturation.color}`}>
+                <span
+                  className={`risk-alert risk-${alerts.oxygenSaturation.color}`}
+                >
                   {alerts.oxygenSaturation.level}
                 </span>
               )}
@@ -310,12 +349,12 @@ function VitalsEntry({ customerId, onSuccess }) {
           />
         </div>
 
-        <button 
+        <button
           type="submit"
           className="btn btn-primary btn-large"
           disabled={loading}
         >
-          {loading ? 'Recording...' : 'Submit Vitals'}
+          {loading ? "Recording..." : "Submit Vitals"}
         </button>
       </form>
     </div>
