@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api';
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../context/AuthContext";
+import api from "../../services/api";
 
 const normalizeAppointments = (items) => {
   if (!Array.isArray(items)) return [];
 
   return items.map((appointment) => ({
     ...appointment,
-    status: typeof appointment.status === 'string' ? appointment.status.toUpperCase() : appointment.status,
+    status:
+      typeof appointment.status === "string"
+        ? appointment.status.toUpperCase()
+        : appointment.status,
   }));
 };
 
@@ -16,10 +19,10 @@ function BookingCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [bookingReason, setBookingReason] = useState('');
+  const [bookingReason, setBookingReason] = useState("");
   const [bookingLoading, setBookingLoading] = useState(false);
 
   const DAILY_SLOTS = 100;
@@ -31,22 +34,26 @@ function BookingCalendar() {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/v1/appointments');
+      const response = await api.get("/api/v1/appointments");
       const data = response.data.data;
-      
+
       // Handle both array and object responses
       let appointmentsList = [];
       if (Array.isArray(data)) {
         appointmentsList = data;
-      } else if (data && data.appointments && Array.isArray(data.appointments)) {
+      } else if (
+        data &&
+        data.appointments &&
+        Array.isArray(data.appointments)
+      ) {
         appointmentsList = data.appointments;
       }
-      
+
       setAppointments(normalizeAppointments(appointmentsList));
-      setError('');
+      setError("");
     } catch (err) {
       setAppointments([]);
-      setError('Failed to load appointments');
+      setError("Failed to load appointments");
       console.error(err);
     } finally {
       setLoading(false);
@@ -62,7 +69,7 @@ function BookingCalendar() {
   };
 
   const getAppointmentsForDate = (date) => {
-    return appointments.filter(apt => {
+    return appointments.filter((apt) => {
       const aptDate = new Date(apt.scheduledAt).toDateString();
       return aptDate === date.toDateString();
     });
@@ -75,13 +82,13 @@ function BookingCalendar() {
 
   const handleBookAppointment = async () => {
     if (!selectedDate || !bookingReason.trim()) {
-      setError('Please select a date and reason');
+      setError("Please select a date and reason");
       return;
     }
 
     try {
       setBookingLoading(true);
-      const response = await api.post('/api/v1/appointments', {
+      const response = await api.post("/api/v1/appointments", {
         scheduledAt: selectedDate.toISOString(),
         reason: bookingReason,
       });
@@ -89,27 +96,31 @@ function BookingCalendar() {
       const createdAppointment = normalizeAppointments([response.data.data])[0];
       setAppointments((prev) => [...prev, createdAppointment]);
       window.dispatchEvent(
-        new CustomEvent('appointments-updated', {
+        new CustomEvent("appointments-updated", {
           detail: { appointment: createdAppointment },
-        })
+        }),
       );
       setShowBookingForm(false);
-      setBookingReason('');
+      setBookingReason("");
       setSelectedDate(null);
-      setError('');
+      setError("");
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to book appointment');
+      setError(err.response?.data?.message || "Failed to book appointment");
     } finally {
       setBookingLoading(false);
     }
   };
 
   const prevMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() - 1),
+    );
   };
 
   const nextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1),
+    );
   };
 
   const renderCalendar = () => {
@@ -122,7 +133,11 @@ function BookingCalendar() {
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const date = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        day,
+      );
       const available = getAvailableSlots(date);
       const isToday = date.toDateString() === new Date().toDateString();
       const isPast = date < new Date() && !isToday;
@@ -131,14 +146,16 @@ function BookingCalendar() {
       days.push(
         <div
           key={day}
-          className={`calendar-day ${isToday ? 'today' : ''} ${isPast ? 'past' : ''} ${isSelected ? 'selected' : ''} ${available === 0 ? 'full' : ''}`}
+          className={`calendar-day ${isToday ? "today" : ""} ${isPast ? "past" : ""} ${isSelected ? "selected" : ""} ${available === 0 ? "full" : ""}`}
           onClick={() => !isPast && setSelectedDate(date)}
         >
           <div className="day-number">{day}</div>
-          <div className={`slots-badge ${available === 0 ? 'full' : available < 20 ? 'low' : 'available'}`}>
+          <div
+            className={`slots-badge ${available === 0 ? "full" : available < 20 ? "low" : "available"}`}
+          >
             {available}/{DAILY_SLOTS}
           </div>
-        </div>
+        </div>,
       );
     }
 
@@ -148,13 +165,22 @@ function BookingCalendar() {
   return (
     <div className="card booking-calendar">
       <h2>📅 Booking Calendar</h2>
-      
+
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="calendar-header">
-        <button onClick={prevMonth} className="nav-btn">←</button>
-        <h3>{currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h3>
-        <button onClick={nextMonth} className="nav-btn">→</button>
+        <button onClick={prevMonth} className="nav-btn">
+          ←
+        </button>
+        <h3>
+          {currentDate.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          })}
+        </h3>
+        <button onClick={nextMonth} className="nav-btn">
+          →
+        </button>
       </div>
 
       <div className="calendar-weekdays">
@@ -167,9 +193,7 @@ function BookingCalendar() {
         <div>Sat</div>
       </div>
 
-      <div className="calendar-grid">
-        {renderCalendar()}
-      </div>
+      <div className="calendar-grid">{renderCalendar()}</div>
 
       {selectedDate && (
         <div className="booking-form">
@@ -182,18 +206,18 @@ function BookingCalendar() {
             rows="3"
           />
           <div className="form-actions">
-            <button 
+            <button
               className="btn btn-primary"
               onClick={handleBookAppointment}
               disabled={bookingLoading}
             >
-              {bookingLoading ? 'Booking...' : 'Confirm Booking'}
+              {bookingLoading ? "Booking..." : "Confirm Booking"}
             </button>
-            <button 
+            <button
               className="btn btn-secondary"
               onClick={() => {
                 setSelectedDate(null);
-                setBookingReason('');
+                setBookingReason("");
               }}
               disabled={bookingLoading}
             >
