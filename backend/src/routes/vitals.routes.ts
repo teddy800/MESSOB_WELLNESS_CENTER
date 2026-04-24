@@ -7,7 +7,11 @@ import {
   getVitalsHistoryHandler,
   getLatestVitalsHandler,
 } from "../controllers/vitals.controller";
-import { authenticate, authorize, authorizeSelfOrAdmin } from "../middleware/auth.middleware";
+import {
+  authenticate,
+  authorize,
+  authorizeSelfOrAdmin,
+} from "../middleware/auth.middleware";
 import { UserRole } from "../generated/prisma";
 
 const router = Router();

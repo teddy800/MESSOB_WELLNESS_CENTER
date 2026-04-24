@@ -76,8 +76,10 @@ function getBloodPressureCategoryFromValues(
 
   if (result.category === "normal") return BloodPressureCategory.NORMAL;
   if (result.category === "elevated") return BloodPressureCategory.ELEVATED;
-  if (result.category === "hypertension_stage_1") return BloodPressureCategory.HYPERTENSION_STAGE_1;
-  if (result.category === "hypertension_stage_2") return BloodPressureCategory.HYPERTENSION_STAGE_2;
+  if (result.category === "hypertension_stage_1")
+    return BloodPressureCategory.HYPERTENSION_STAGE_1;
+  if (result.category === "hypertension_stage_2")
+    return BloodPressureCategory.HYPERTENSION_STAGE_2;
   return BloodPressureCategory.HYPERTENSIVE_CRISIS;
 }
 
@@ -105,7 +107,10 @@ async function resolvePatientUserId(inputId: string): Promise<string | null> {
   return null;
 }
 
-export async function postVitals(req: AuthRequest, res: Response): Promise<void> {
+export async function postVitals(
+  req: AuthRequest,
+  res: Response,
+): Promise<void> {
   try {
     const {
       userId,
@@ -119,7 +124,8 @@ export async function postVitals(req: AuthRequest, res: Response): Promise<void>
       notes,
     } = req.body as Partial<VitalsRequestBody>;
 
-    const rawIdentifier = typeof userId === "string" && userId.trim() ? userId.trim() : undefined;
+    const rawIdentifier =
+      typeof userId === "string" && userId.trim() ? userId.trim() : undefined;
     if (!rawIdentifier) {
       res.status(400).json({
         status: "error",
@@ -132,7 +138,8 @@ export async function postVitals(req: AuthRequest, res: Response): Promise<void>
     if (!patientId) {
       res.status(400).json({
         status: "error",
-        message: "Invalid customer ID. Enter a valid User ID or Appointment ID.",
+        message:
+          "Invalid customer ID. Enter a valid User ID or Appointment ID.",
       });
       return;
     }
@@ -167,7 +174,8 @@ export async function postVitals(req: AuthRequest, res: Response): Promise<void>
     if ((systolic === null) !== (diastolic === null)) {
       res.status(400).json({
         status: "error",
-        message: "Both systolic and diastolic values are required when recording blood pressure",
+        message:
+          "Both systolic and diastolic values are required when recording blood pressure",
       });
       return;
     }
@@ -204,7 +212,8 @@ export async function postVitals(req: AuthRequest, res: Response): Promise<void>
         bpCategory,
         heartRate: heartRateValue ?? undefined,
         bmi: bmiValue ?? undefined,
-        bmiCategory: bmiValue !== null ? getBmiCategoryFromValue(bmiValue) : undefined,
+        bmiCategory:
+          bmiValue !== null ? getBmiCategoryFromValue(bmiValue) : undefined,
         temperature: temperatureValue ?? undefined,
         oxygenSaturation: oxygenValue ?? undefined,
         notes: combinedNotes || undefined,
@@ -223,7 +232,8 @@ export async function postVitals(req: AuthRequest, res: Response): Promise<void>
     if (error?.code === "P2003") {
       res.status(400).json({
         status: "error",
-        message: "Invalid customer reference. Please verify the ID and try again.",
+        message:
+          "Invalid customer reference. Please verify the ID and try again.",
       });
       return;
     }
@@ -245,7 +255,8 @@ export async function postVitals(req: AuthRequest, res: Response): Promise<void>
 }
 
 export async function postBmi(req: AuthRequest, res: Response): Promise<void> {
-  const { weightKg, heightCm, userId, notes } = req.body as Partial<BmiRequestBody>;
+  const { weightKg, heightCm, userId, notes } =
+    req.body as Partial<BmiRequestBody>;
   const weight = toNumber(weightKg);
   const height = toNumber(heightCm);
 
@@ -274,7 +285,7 @@ export async function postBmi(req: AuthRequest, res: Response): Promise<void> {
       recordedBy,
       { weightKg: weight, heightCm: height },
       result,
-      notesStr
+      notesStr,
     );
 
     res.status(200).json({
@@ -294,8 +305,12 @@ export async function postBmi(req: AuthRequest, res: Response): Promise<void> {
   }
 }
 
-export async function postBloodPressure(req: AuthRequest, res: Response): Promise<void> {
-  const { systolic, diastolic, userId, notes } = req.body as Partial<BloodPressureRequestBody>;
+export async function postBloodPressure(
+  req: AuthRequest,
+  res: Response,
+): Promise<void> {
+  const { systolic, diastolic, userId, notes } =
+    req.body as Partial<BloodPressureRequestBody>;
   const systolicValue = toNumber(systolic);
   const diastolicValue = toNumber(diastolic);
 
@@ -324,7 +339,7 @@ export async function postBloodPressure(req: AuthRequest, res: Response): Promis
       recordedBy,
       { systolic: systolicValue, diastolic: diastolicValue },
       result,
-      notesStr
+      notesStr,
     );
 
     res.status(200).json({
@@ -347,10 +362,15 @@ export async function postBloodPressure(req: AuthRequest, res: Response): Promis
   }
 }
 
-export async function getVitalsHistoryHandler(req: AuthRequest, res: Response): Promise<void> {
+export async function getVitalsHistoryHandler(
+  req: AuthRequest,
+  res: Response,
+): Promise<void> {
   try {
     const userId = req.params.userId;
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+    const limit = req.query.limit
+      ? parseInt(req.query.limit as string, 10)
+      : 50;
 
     if (!userId || typeof userId !== "string") {
       res.status(400).json({
@@ -378,7 +398,10 @@ export async function getVitalsHistoryHandler(req: AuthRequest, res: Response): 
   }
 }
 
-export async function getLatestVitalsHandler(req: AuthRequest, res: Response): Promise<void> {
+export async function getLatestVitalsHandler(
+  req: AuthRequest,
+  res: Response,
+): Promise<void> {
   try {
     const userId = req.params.userId;
 
