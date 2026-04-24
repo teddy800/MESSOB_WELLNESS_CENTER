@@ -28,9 +28,6 @@ function MainLayout({ children }) {
             >
               Dashboard
             </Link>
-            <Link className={location.pathname === '/login' ? 'active' : ''} to="/login">
-              Login
-            </Link>
           </nav>
         </aside>
 
