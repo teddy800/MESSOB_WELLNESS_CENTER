@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Input from '../components/forms/Input';
@@ -6,7 +6,7 @@ import Button from '../components/forms/Button';
 
 function Login() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user, error: authError } = useAuth();
+  const { login } = useAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -15,21 +15,6 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
-
-  // Redirect if already authenticated based on role
-  useEffect(() => {
-    if (isAuthenticated) {
-      const roleRoutes = {
-        CUSTOMER_STAFF: '/dashboard',
-        NURSE_OFFICER: '/nurse',
-        MANAGER: '/manager',
-        REGIONAL_OFFICE: '/regional',
-        FEDERAL_ADMIN: '/admin',
-      };
-      const route = roleRoutes[user?.role] || '/dashboard';
-      navigate(route, { replace: true });
-    }
-  }, [isAuthenticated, user?.role, navigate]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -81,7 +66,15 @@ function Login() {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
-      // Role-based redirect will happen via useEffect
+      const roleRoutes = {
+        CUSTOMER_STAFF: '/dashboard',
+        NURSE_OFFICER: '/nurse',
+        MANAGER: '/manager',
+        REGIONAL_OFFICE: '/regional',
+        FEDERAL_ADMIN: '/admin',
+      };
+      const route = roleRoutes[result?.user?.role] || '/dashboard';
+      navigate(route, { replace: true });
       setLoading(false);
     } else {
       setServerError(result.error);

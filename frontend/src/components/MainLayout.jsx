@@ -1,14 +1,20 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function MainLayout({ children }) {
   const location = useLocation();
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   // Check if user has manager access
   const hasManagerAccess = () => {
     return user && ['MANAGER', 'REGIONAL_OFFICE', 'FEDERAL_ADMIN'].includes(user.role);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -23,6 +29,11 @@ function MainLayout({ children }) {
             <option value="en">English</option>
             <option value="am">አማርኛ</option>
           </select>
+          {user && (
+            <button type="button" className="logout-button" onClick={handleLogout}>
+              Logout
+            </button>
+          )}
         </div>
       </header>
 

@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authService.login(email, password);
       setUser(response.user);
-      return { success: true };
+      return { success: true, user: response.user };
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
       setError(errorMessage);

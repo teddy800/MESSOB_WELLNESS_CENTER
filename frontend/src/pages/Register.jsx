@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import Input from '../components/forms/Input';
 import Button from '../components/forms/Button';
 
 function Register() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -24,12 +22,6 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
 
   const validateForm = () => {
     const newErrors = {};
