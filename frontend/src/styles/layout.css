@@ -68,6 +68,24 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.logout-button {
+  background: #ef4444;
+  color: #ffffff;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-button:hover {
+  background: #dc2626;
+  border-color: #b91c1c;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
 .layout-body {
   display: grid;
   grid-template-columns: 220px 1fr;

@@ -1,0 +1,161 @@
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+
+function CustomerHistoryView({ customerId }) {
+  const [vitalsHistory, setVitalsHistory] = useState([]);
+  const [wellnessPlans, setWellnessPlans] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('vitals');
+
+  useEffect(() => {
+    if (customerId) {
+      fetchCustomerHistory();
+    }
+  }, [customerId]);
+
+  const fetchCustomerHistory = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      // Fetch vitals history
+      const vitalsResponse = await api.get(`/api/v1/vitals/${customerId}`);
+      const vitalsData = vitalsResponse.data.data;
+      setVitalsHistory(Array.isArray(vitalsData) ? vitalsData : []);
+
+      // Fetch wellness plans
+      const plansResponse = await api.get(`/api/v1/plans/${customerId}`);
+      const plansData = plansResponse.data.data;
+      setWellnessPlans(Array.isArray(plansData) ? plansData : []);
+    } catch (err) {
+      setError('Failed to load customer history');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!customerId) {
+    return (
+      <div className="card customer-history">
+        <h3>📋 Customer History</h3>
+        <p className="empty-text">Select a customer to view history</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card customer-history">
+      <h3>📋 Customer History</h3>
+
+      {error && <div className="alert alert-error">{error}</div>}
+
+      <div className="history-tabs">
+        <button
+          className={`tab-btn ${activeTab === 'vitals' ? 'active' : ''}`}
+          onClick={() => setActiveTab('vitals')}
+        >
+          💉 Vitals ({vitalsHistory.length})
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'plans' ? 'active' : ''}`}
+          onClick={() => setActiveTab('plans')}
+        >
+          🎯 Plans ({wellnessPlans.length})
+        </button>
+      </div>
+
+      {loading ? (
+        <p className="loading-text">Loading history...</p>
+      ) : activeTab === 'vitals' ? (
+        <div className="vitals-history-list">
+          {vitalsHistory.length === 0 ? (
+            <p className="empty-text">No vitals recorded</p>
+          ) : (
+            vitalsHistory.map((vital, idx) => (
+              <div key={idx} className="history-item">
+                <div className="history-item-header">
+                  <span className="history-date">
+                    {new Date(vital.recordedAt).toLocaleDateString()}
+                  </span>
+                  <span className="history-time">
+                    {new Date(vital.recordedAt).toLocaleTimeString()}
+                  </span>
+                </div>
+                <div className="history-item-content">
+                  <div className="vital-row">
+                    {vital.systolicBP && (
+                      <span>BP: {vital.systolicBP}/{vital.diastolicBP}</span>
+                    )}
+                    {vital.heartRate && (
+                      <span>HR: {vital.heartRate} bpm</span>
+                    )}
+                    {vital.bmi && (
+                      <span>BMI: {vital.bmi.toFixed(1)}</span>
+                    )}
+                  </div>
+                  <div className="vital-row">
+                    {vital.glucose && (
+                      <span>Glucose: {vital.glucose} mg/dL</span>
+                    )}
+                    {vital.temperature && (
+                      <span>Temp: {vital.temperature}°C</span>
+                    )}
+                    {vital.oxygenSaturation && (
+                      <span>O₂: {vital.oxygenSaturation}%</span>
+                    )}
+                  </div>
+                  {vital.notes && (
+                    <p className="vital-notes"><strong>Notes:</strong> {vital.notes}</p>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      ) : (
+        <div className="wellness-plans-list">
+          {wellnessPlans.length === 0 ? (
+            <p className="empty-text">No wellness plans created</p>
+          ) : (
+            wellnessPlans.map((plan, idx) => (
+              <div key={idx} className="history-item">
+                <div className="history-item-header">
+                  <span className="plan-title">{plan.title}</span>
+                  <span className={`status-badge ${plan.isActive ? 'status-active' : 'status-inactive'}`}>
+                    {plan.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className="history-item-content">
+                  {plan.nutritionRecommendations && (
+                    <p><strong>🥗 Nutrition:</strong> {plan.nutritionRecommendations}</p>
+                  )}
+                  {plan.exerciseRecommendations && (
+                    <p><strong>🏃 Exercise:</strong> {plan.exerciseRecommendations}</p>
+                  )}
+                  {plan.stressManagementAdvice && (
+                    <p><strong>🧘 Stress:</strong> {plan.stressManagementAdvice}</p>
+                  )}
+                  {plan.duration && (
+                    <p><strong>Duration:</strong> {plan.duration} days</p>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      <button
+        className="btn btn-secondary btn-small"
+        onClick={fetchCustomerHistory}
+        disabled={loading}
+      >
+        🔄 Refresh
+      </button>
+    </div>
+  );
+}
+
+export default CustomerHistoryView;

@@ -5,7 +5,7 @@ import { AuthRequest } from "../middleware/auth.middleware";
 
 /**
  * POST /api/v1/auth/register
- * Register a new user
+ * Register a new user (Public - only creates CUSTOMER_STAFF)
  */
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -13,7 +13,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       email,
       password,
       fullName,
-      role,
       dateOfBirth,
       gender,
       phone,
@@ -30,15 +29,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Validate role if provided
-    if (role && !Object.values(UserRole).includes(role)) {
-      res.status(400).json({
-        status: "error",
-        message: "Invalid role specified",
-      });
-      return;
-    }
-
     // Validate gender if provided
     if (gender && !Object.values(Gender).includes(gender)) {
       res.status(400).json({
@@ -48,12 +38,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Prepare registration input
+    // Public registration always creates CUSTOMER_STAFF
     const registerInput: RegisterInput = {
       email,
       password,
       fullName,
-      role,
+      role: UserRole.CUSTOMER_STAFF,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       gender,
       phone,
@@ -77,7 +67,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
   } catch (error) {
     if (error instanceof Error) {
-      // Handle known errors
       if (
         error.message.includes("email") ||
         error.message.includes("password") ||
@@ -95,6 +84,146 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({
       status: "error",
       message: "Registration failed. Please try again later.",
+    });
+  }
+};
+
+/**
+ * POST /api/v1/auth/create-user
+ * Create user with specific role (Hierarchical - requires authentication)
+ */
+export const createUser = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const {
+      email,
+      password,
+      fullName,
+      role,
+      centerId,
+      dateOfBirth,
+      gender,
+      phone,
+      emergencyContactName,
+      emergencyContactPhone,
+    } = req.body;
+
+    // Validate required fields
+    if (!email || !password || !fullName || !role) {
+      res.status(400).json({
+        status: "error",
+        message: "Email, password, full name, and role are required",
+      });
+      return;
+    }
+
+    // Validate role
+    if (!Object.values(UserRole).includes(role)) {
+      res.status(400).json({
+        status: "error",
+        message: "Invalid role specified",
+      });
+      return;
+    }
+
+    // Hierarchical role creation rules
+    const creatorRole = req.user.role;
+    
+    // FEDERAL_ADMIN can create any role
+    if (creatorRole === UserRole.FEDERAL_ADMIN) {
+      // Can create any role
+    }
+    // MANAGER can only create NURSE_OFFICER and CUSTOMER_STAFF
+    else if (creatorRole === UserRole.MANAGER) {
+      if (role !== UserRole.NURSE_OFFICER && role !== UserRole.CUSTOMER_STAFF) {
+        res.status(403).json({
+          status: "error",
+          message: "Managers can only create Nurse Officers and Customer Staff",
+        });
+        return;
+      }
+      // Manager must assign users to their own center
+      if (!centerId) {
+        res.status(400).json({
+          status: "error",
+          message: "Center ID is required when creating users",
+        });
+        return;
+      }
+    }
+    // Other roles cannot create users
+    else {
+      res.status(403).json({
+        status: "error",
+        message: "Insufficient permissions to create users",
+      });
+      return;
+    }
+
+    // Validate gender if provided
+    if (gender && !Object.values(Gender).includes(gender)) {
+      res.status(400).json({
+        status: "error",
+        message: "Invalid gender specified",
+      });
+      return;
+    }
+
+    // Prepare registration input
+    const registerInput: RegisterInput = {
+      email,
+      password,
+      fullName,
+      role,
+      centerId,
+      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+      gender,
+      phone,
+      emergencyContactName,
+      emergencyContactPhone,
+    };
+
+    // Audit context
+    const auditContext = {
+      ipAddress: req.ip,
+      userAgent: req.get("user-agent"),
+      createdBy: req.user.userId,
+    };
+
+    // Create user
+    const result = await AuthService.register(registerInput, auditContext);
+
+    res.status(201).json({
+      status: "success",
+      message: "User created successfully",
+      data: result,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (
+        error.message.includes("email") ||
+        error.message.includes("password") ||
+        error.message.includes("exists")
+      ) {
+        res.status(400).json({
+          status: "error",
+          message: error.message,
+        });
+        return;
+      }
+    }
+
+    console.error("Create user error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "User creation failed. Please try again later.",
     });
   }
 };

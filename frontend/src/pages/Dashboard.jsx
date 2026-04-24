@@ -1,111 +1,72 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { fetchHealth } from '../services/healthService';
 import Button from '../components/forms/Button';
+import Input from '../components/forms/Input';
+import BookingCalendar from '../components/dashboard/BookingCalendar';
+import MyAppointments from '../components/dashboard/MyAppointments';
+import HealthJourney from '../components/dashboard/HealthJourney';
+import WellnessPlan from '../components/dashboard/WellnessPlan';
+import ProfileSection from '../components/dashboard/ProfileSection';
 
 function Dashboard() {
   const { user, logout } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [health, setHealth] = useState(null);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    async function loadHealth() {
-      try {
-        setLoading(true);
-        const result = await fetchHealth();
-        setHealth(result);
-      } catch (err) {
-        setError('Failed to reach backend /api/health endpoint.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadHealth();
-  }, []);
-
-  const handleLogout = () => {
-    logout();
-  };
-
-  const getRoleBadgeClass = (role) => {
-    const roleMap = {
-      CUSTOMER_STAFF: 'badge-blue',
-      NURSE_OFFICER: 'badge-green',
-      MANAGER: 'badge-purple',
-      REGIONAL_OFFICE: 'badge-orange',
-      FEDERAL_ADMIN: 'badge-red',
-    };
-    return roleMap[role] || 'badge-gray';
-  };
-
-  const formatRole = (role) => {
-    return role.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-  };
+  const [activeTab, setActiveTab] = useState('appointments');
+  const [loading, setLoading] = useState(false);
 
   return (
     <div className="dashboard-container">
-      <section className="card user-profile-card">
-        <div className="user-profile-header">
-          <div className="user-avatar">
-            {user?.fullName?.charAt(0).toUpperCase() || 'U'}
-          </div>
-          <div className="user-info">
-            <h2>{user?.fullName || 'User'}</h2>
-            <p className="user-email">{user?.email}</p>
-            <span className={`badge ${getRoleBadgeClass(user?.role)}`}>
-              {formatRole(user?.role || 'USER')}
-            </span>
-          </div>
-          <div className="user-actions">
-            <Button variant="secondary" onClick={handleLogout}>
-              Logout
-            </Button>
-          </div>
-        </div>
-      </section>
+      <div className="dashboard-header">
+        <h1>Welcome, {user?.fullName}</h1>
+        <p className="dashboard-subtitle">Manage your health and appointments</p>
+      </div>
 
-      <section className="card">
-        <h3>System Status</h3>
-        
-        {loading && <p className="status-text">Checking backend health...</p>}
+      <div className="dashboard-tabs">
+        <button 
+          className={`tab-btn ${activeTab === 'appointments' ? 'active' : ''}`}
+          onClick={() => setActiveTab('appointments')}
+        >
+          📅 Appointments
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'health' ? 'active' : ''}`}
+          onClick={() => setActiveTab('health')}
+        >
+          💪 Health Journey
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'wellness' ? 'active' : ''}`}
+          onClick={() => setActiveTab('wellness')}
+        >
+          🎯 Wellness Plan
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
+          onClick={() => setActiveTab('profile')}
+        >
+          👤 Profile
+        </button>
+      </div>
 
-        {!loading && error && <p className="error-text">{error}</p>}
-
-        {!loading && health && (
-          <div className="status-box">
-            <h4>Backend Health Response</h4>
-            <pre>{JSON.stringify(health, null, 2)}</pre>
-          </div>
+      <div className="dashboard-content">
+        {activeTab === 'appointments' && (
+          <>
+            <BookingCalendar />
+            <MyAppointments />
+          </>
         )}
-      </section>
 
-      <section className="card">
-        <h3>Quick Actions</h3>
-        <div className="quick-actions-grid">
-          <button className="quick-action-card" disabled>
-            <span className="quick-action-icon">📊</span>
-            <span className="quick-action-label">Record Vitals</span>
-            <span className="quick-action-badge">Coming Soon</span>
-          </button>
-          <button className="quick-action-card" disabled>
-            <span className="quick-action-icon">📅</span>
-            <span className="quick-action-label">Book Appointment</span>
-            <span className="quick-action-badge">Coming Soon</span>
-          </button>
-          <button className="quick-action-card" disabled>
-            <span className="quick-action-icon">💪</span>
-            <span className="quick-action-label">Wellness Plans</span>
-            <span className="quick-action-badge">Coming Soon</span>
-          </button>
-          <button className="quick-action-card" disabled>
-            <span className="quick-action-icon">💬</span>
-            <span className="quick-action-label">Feedback</span>
-            <span className="quick-action-badge">Coming Soon</span>
-          </button>
-        </div>
-      </section>
+        {activeTab === 'health' && (
+          <HealthJourney />
+        )}
+
+        {activeTab === 'wellness' && (
+          <WellnessPlan />
+        )}
+
+        {activeTab === 'profile' && (
+          <ProfileSection onLogout={logout} />
+        )}
+      </div>
     </div>
   );
 }

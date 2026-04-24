@@ -1,20 +1,8 @@
 import bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
-import { PrismaClient, UserRole, Gender } from "../generated/prisma";
+import { UserRole, Gender } from "../generated/prisma";
 import { env } from "../config/env";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-
-// Create Prisma adapter
-const adapter = new PrismaMariaDb({
-  host: env.DB_HOST,
-  port: env.DB_PORT,
-  user: env.DB_USER,
-  password: env.DB_PASS,
-  database: env.DB_NAME,
-});
-
-// Initialize Prisma with adapter
-const prisma = new PrismaClient({ adapter });
+import { prisma } from "../config/prisma";
 
 // Constants
 const SALT_ROUNDS = 12;
@@ -26,6 +14,7 @@ export interface RegisterInput {
   password: string;
   fullName: string;
   role?: UserRole;
+  centerId?: string;
   dateOfBirth?: Date;
   gender?: Gender;
   phone?: string;
@@ -151,6 +140,7 @@ export class AuthService {
           password: hashedPassword,
           fullName: input.fullName.trim(),
           role: input.role || UserRole.CUSTOMER_STAFF,
+          centerId: input.centerId,
           dateOfBirth: input.dateOfBirth,
           gender: input.gender,
           phone: input.phone,

@@ -63,8 +63,8 @@ export const env = Object.freeze({
   JWT_EXPIRES_IN: getRequiredEnv("JWT_EXPIRES_IN"),
 });
 
-if (!env.DATABASE_URL.startsWith("mysql://")) {
-  throw new Error("DATABASE_URL must use the mysql:// connection protocol.");
+if (!env.DATABASE_URL.startsWith("postgresql://")) {
+  throw new Error("DATABASE_URL must use the postgresql:// connection protocol.");
 }
 
 const isLocalDatabase =
@@ -73,6 +73,6 @@ const isLocalDatabase =
 
 if (!isLocalDatabase) {
   throw new Error(
-    "DATABASE_URL must point to a local MySQL instance (localhost or 127.0.0.1).",
+    "DATABASE_URL must point to a local PostgreSQL instance (localhost or 127.0.0.1).",
   );
 }
