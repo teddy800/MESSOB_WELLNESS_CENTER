@@ -1,70 +1,123 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import LiveQueuePanel from '../components/nurse/LiveQueuePanel';
+import CapacityTracker from '../components/nurse/CapacityTracker';
+import RegisterWalkIn from '../components/nurse/RegisterWalkIn';
+import VitalsEntry from '../components/nurse/VitalsEntry';
+import CallNextControl from '../components/nurse/CallNextControl';
+import WellnessPlanCreation from '../components/nurse/WellnessPlanCreation';
+import CustomerHistoryView from '../components/nurse/CustomerHistoryView';
 
 function NurseDashboard() {
   const { user } = useAuth();
-  const [queue, setQueue] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('queue');
+  const [capacity, setCapacity] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    // Fetch queue data
-    const fetchQueue = async () => {
-      try {
-        const response = await fetch('/api/v1/appointments/queue', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setQueue(Array.isArray(data) ? data : []);
-        }
-      } catch (error) {
-        console.error('Error fetching queue:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleCapacityUpdate = (newCapacity) => {
+    setCapacity(newCapacity);
+  };
 
-    fetchQueue();
-  }, []);
+  const handleWalkInSuccess = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleVitalsSuccess = () => {
+    setSelectedCustomer(null);
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleWellnessSuccess = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   return (
-    <div className="nurse-dashboard">
-      <div className="dashboard-header">
-        <h1>Nurse Dashboard</h1>
-        <p>Welcome, {user?.fullName}</p>
+    <div className="nurse-dashboard-container">
+      <div className="nurse-dashboard-header">
+        <h1>👨‍⚕️ Nurse Dashboard</h1>
+        <p className="dashboard-subtitle">Manage queue, record vitals, and serve customers</p>
+        <p className="dashboard-subtitle">Welcome, {user?.fullName}</p>
       </div>
 
-      <div className="dashboard-content">
-        <div className="queue-section">
-          <h2>Live Queue</h2>
-          {loading ? (
-            <p>Loading queue...</p>
-          ) : queue.length === 0 ? (
-            <p>No appointments in queue</p>
-          ) : (
-            <div className="queue-list">
-              {queue.map((appointment) => (
-                <div key={appointment.id} className="queue-item">
-                  <p><strong>{appointment.customerName}</strong></p>
-                  <p>ID: {appointment.id}</p>
-                  <p>Status: {appointment.status}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      <div className="nurse-dashboard-tabs">
+        <button 
+          className={`tab-btn ${activeTab === 'queue' ? 'active' : ''}`}
+          onClick={() => setActiveTab('queue')}
+        >
+          📋 Queue
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'vitals' ? 'active' : ''}`}
+          onClick={() => setActiveTab('vitals')}
+        >
+          💉 Vitals
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'walkin' ? 'active' : ''}`}
+          onClick={() => setActiveTab('walkin')}
+        >
+          🚶 Walk-in
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'wellness' ? 'active' : ''}`}
+          onClick={() => setActiveTab('wellness')}
+        >
+          🎯 Wellness
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => setActiveTab('history')}
+        >
+          📊 History
+        </button>
+      </div>
 
-        <div className="capacity-section">
-          <h2>Daily Capacity</h2>
-          <div className="capacity-info">
-            <p>Slots remaining: 100/100</p>
-            <div className="capacity-bar">
-              <div className="capacity-fill" style={{ width: '100%' }}></div>
+      <div className="nurse-dashboard-content">
+        {activeTab === 'queue' && (
+          <div className="queue-section">
+            <div className="queue-main">
+              <LiveQueuePanel key={refreshKey} />
+            </div>
+            <div className="queue-sidebar">
+              <CapacityTracker onCapacityUpdate={handleCapacityUpdate} />
+              <CallNextControl />
             </div>
           </div>
-        </div>
+        )}
+
+        {activeTab === 'vitals' && (
+          <div className="vitals-section">
+            <VitalsEntry 
+              customerId={selectedCustomer}
+              onSuccess={handleVitalsSuccess}
+            />
+          </div>
+        )}
+
+        {activeTab === 'walkin' && (
+          <div className="walkin-section">
+            <RegisterWalkIn 
+              onSuccess={handleWalkInSuccess}
+              capacityAvailable={capacity?.available > 0}
+            />
+          </div>
+        )}
+
+        {activeTab === 'wellness' && (
+          <div className="wellness-section">
+            <WellnessPlanCreation 
+              customerId={selectedCustomer}
+              onSuccess={handleWellnessSuccess}
+            />
+          </div>
+        )}
+
+        {activeTab === 'history' && (
+          <div className="history-section">
+            <CustomerHistoryView customerId={selectedCustomer} />
+          </div>
+        )}
       </div>
     </div>
   );

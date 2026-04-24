@@ -35,6 +35,7 @@ function AppRouter() {
           </RoleBasedRoute>
         }
       />
+      <Route path="/nurse-dashboard" element={<Navigate to="/nurse" replace />} />
       <Route
         path="/manager"
         element={
