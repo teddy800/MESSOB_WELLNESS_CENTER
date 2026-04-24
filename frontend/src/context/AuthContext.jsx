@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../services/authService';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { authService } from "../services/authService";
 
 const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 };
@@ -43,7 +43,8 @@ export const AuthProvider = ({ children }) => {
       setUser(response.user);
       return { success: true, user: response.user };
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
+      const errorMessage =
+        err.response?.data?.message || "Login failed. Please try again.";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {

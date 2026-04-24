@@ -1,36 +1,36 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Input from '../components/forms/Input';
-import Button from '../components/forms/Button';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import Input from "../components/forms/Input";
+import Button from "../components/forms/Button";
 
 function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  
+
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [serverError, setServerError] = useState('');
+  const [serverError, setServerError] = useState("");
 
   const validateForm = () => {
     const newErrors = {};
 
     // Email validation
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     // Password validation
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = "Password must be at least 8 characters";
     }
 
     setErrors(newErrors);
@@ -39,41 +39,41 @@ function Login() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
     // Clear error for this field when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: '',
+        [name]: "",
       }));
     }
-    setServerError('');
+    setServerError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setLoading(true);
-    setServerError('');
+    setServerError("");
 
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
       const roleRoutes = {
-        CUSTOMER_STAFF: '/dashboard',
-        NURSE_OFFICER: '/nurse',
-        MANAGER: '/manager',
-        REGIONAL_OFFICE: '/regional',
-        FEDERAL_ADMIN: '/admin',
+        CUSTOMER_STAFF: "/dashboard",
+        NURSE_OFFICER: "/nurse",
+        MANAGER: "/manager",
+        REGIONAL_OFFICE: "/regional",
+        FEDERAL_ADMIN: "/admin",
       };
-      const route = roleRoutes[result?.user?.role] || '/dashboard';
+      const route = roleRoutes[result?.user?.role] || "/dashboard";
       navigate(route, { replace: true });
       setLoading(false);
     } else {
@@ -86,7 +86,11 @@ function Login() {
     <div className="login-page-wrapper">
       <header className="app-header">
         <div className="app-header-left">
-          <img src="/Mesob-short-png.png" alt="MESOB Logo" className="mesob-logo-img" />
+          <img
+            src="/Mesob-short-png.png"
+            alt="MESOB Logo"
+            className="mesob-logo-img"
+          />
         </div>
         <h1>MESOB</h1>
         <div className="app-header-right">
@@ -148,19 +152,25 @@ function Login() {
             </form>
 
             <div className="auth-footer">
-              <p>Don't have an account? <Link to="/register" className="auth-link">Sign up here</Link></p>
+              <p>
+                Don't have an account?{" "}
+                <Link to="/register" className="auth-link">
+                  Sign up here
+                </Link>
+              </p>
             </div>
           </div>
 
           <div className="auth-right">
             <div className="auth-branding">
               <div className="auth-logo-container">
-                <div className="auth-logo">
-                  🏥
-                </div>
+                <div className="auth-logo">🏥</div>
               </div>
               <h2>MESOB Wellness Center</h2>
-              <p>Secure, official digital wellness management for MESOB staff and customers.</p>
+              <p>
+                Secure, official digital wellness management for MESOB staff and
+                customers.
+              </p>
             </div>
           </div>
         </div>

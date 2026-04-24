@@ -1,84 +1,92 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import Input from '../components/forms/Input';
-import Button from '../components/forms/Button';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Input from "../components/forms/Input";
+import Button from "../components/forms/Button";
 
 function Register() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    phone: '',
-    dateOfBirth: '',
-    gender: '',
-    emergencyContactName: '',
-    emergencyContactPhone: '',
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    dateOfBirth: "",
+    gender: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
   });
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [serverError, setServerError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [serverError, setServerError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+      newErrors.fullName = "Full name is required";
     } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = 'Full name must be at least 2 characters';
+      newErrors.fullName = "Full name must be at least 2 characters";
     }
 
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = "Please enter a valid email address";
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])/.test(formData.password)) {
-      newErrors.password = 'Password must contain uppercase, lowercase, numbers, and special characters (!@#$%^&*...)';
+      newErrors.password = "Password must be at least 8 characters";
+    } else if (
+      !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])/.test(
+        formData.password,
+      )
+    ) {
+      newErrors.password =
+        "Password must contain uppercase, lowercase, numbers, and special characters (!@#$%^&*...)";
     }
 
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = "Please confirm your password";
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = "Passwords do not match";
     }
 
     if (!formData.phone) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^\d{10,}$/.test(formData.phone.replace(/\D/g, ''))) {
-      newErrors.phone = 'Please enter a valid phone number';
+      newErrors.phone = "Phone number is required";
+    } else if (!/^\d{10,}$/.test(formData.phone.replace(/\D/g, ""))) {
+      newErrors.phone = "Please enter a valid phone number";
     }
 
     if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = 'Date of birth is required';
+      newErrors.dateOfBirth = "Date of birth is required";
     } else {
-      const age = new Date().getFullYear() - new Date(formData.dateOfBirth).getFullYear();
+      const age =
+        new Date().getFullYear() - new Date(formData.dateOfBirth).getFullYear();
       if (age < 18) {
-        newErrors.dateOfBirth = 'You must be at least 18 years old';
+        newErrors.dateOfBirth = "You must be at least 18 years old";
       }
     }
 
     if (!formData.gender) {
-      newErrors.gender = 'Gender is required';
+      newErrors.gender = "Gender is required";
     }
 
     if (!formData.emergencyContactName.trim()) {
-      newErrors.emergencyContactName = 'Emergency contact name is required';
+      newErrors.emergencyContactName = "Emergency contact name is required";
     }
 
     if (!formData.emergencyContactPhone) {
-      newErrors.emergencyContactPhone = 'Emergency contact phone is required';
-    } else if (!/^\d{10,}$/.test(formData.emergencyContactPhone.replace(/\D/g, ''))) {
-      newErrors.emergencyContactPhone = 'Please enter a valid phone number';
+      newErrors.emergencyContactPhone = "Emergency contact phone is required";
+    } else if (
+      !/^\d{10,}$/.test(formData.emergencyContactPhone.replace(/\D/g, ""))
+    ) {
+      newErrors.emergencyContactPhone = "Please enter a valid phone number";
     }
 
     setErrors(newErrors);
@@ -87,17 +95,17 @@ function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: '',
+        [name]: "",
       }));
     }
-    setServerError('');
+    setServerError("");
   };
 
   const handleSubmit = async (e) => {
@@ -108,39 +116,44 @@ function Register() {
     }
 
     setLoading(true);
-    setServerError('');
-    setSuccessMessage('');
+    setServerError("");
+    setSuccessMessage("");
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/v1/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fullName: formData.fullName,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone,
+            dateOfBirth: formData.dateOfBirth,
+            gender: formData.gender,
+            emergencyContactName: formData.emergencyContactName,
+            emergencyContactPhone: formData.emergencyContactPhone,
+          }),
         },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-          dateOfBirth: formData.dateOfBirth,
-          gender: formData.gender,
-          emergencyContactName: formData.emergencyContactName,
-          emergencyContactPhone: formData.emergencyContactPhone,
-        }),
-      });
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Registration failed. Please try again.');
+        throw new Error(
+          data.message || "Registration failed. Please try again.",
+        );
       }
 
-      setSuccessMessage('Registration successful! Redirecting to login...');
+      setSuccessMessage("Registration successful! Redirecting to login...");
       setTimeout(() => {
-        navigate('/login', { replace: true });
+        navigate("/login", { replace: true });
       }, 2000);
     } catch (err) {
-      setServerError(err.message || 'Registration failed. Please try again.');
+      setServerError(err.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -150,7 +163,11 @@ function Register() {
     <div className="register-page-wrapper">
       <header className="app-header">
         <div className="app-header-left">
-          <img src="/Mesob-short-png.png" alt="MESOB Logo" className="mesob-logo-img" />
+          <img
+            src="/Mesob-short-png.png"
+            alt="MESOB Logo"
+            className="mesob-logo-img"
+          />
         </div>
         <h1>MESOB</h1>
         <div className="app-header-right">
@@ -169,7 +186,11 @@ function Register() {
               <p>Join MESOB Wellness Center System</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="auth-form register-form" noValidate>
+            <form
+              onSubmit={handleSubmit}
+              className="auth-form register-form"
+              noValidate
+            >
               {serverError && (
                 <div className="alert alert-error" role="alert">
                   {serverError}
@@ -263,14 +284,16 @@ function Register() {
                   value={formData.gender}
                   onChange={handleChange}
                   disabled={loading}
-                  className={`form-input ${errors.gender ? 'form-input-error' : ''}`}
+                  className={`form-input ${errors.gender ? "form-input-error" : ""}`}
                 >
                   <option value="">Select Gender</option>
                   <option value="MALE">Male</option>
                   <option value="FEMALE">Female</option>
                   <option value="OTHER">Other</option>
                 </select>
-                {errors.gender && <span className="form-error">{errors.gender}</span>}
+                {errors.gender && (
+                  <span className="form-error">{errors.gender}</span>
+                )}
               </div>
 
               <Input
@@ -309,19 +332,25 @@ function Register() {
             </form>
 
             <div className="auth-footer">
-              <p>Already have an account? <Link to="/login" className="auth-link">Sign in here</Link></p>
+              <p>
+                Already have an account?{" "}
+                <Link to="/login" className="auth-link">
+                  Sign in here
+                </Link>
+              </p>
             </div>
           </div>
 
           <div className="auth-right">
             <div className="auth-branding">
               <div className="auth-logo-container">
-                <div className="auth-logo">
-                  🏥
-                </div>
+                <div className="auth-logo">🏥</div>
               </div>
               <h2>MESOB Wellness Center</h2>
-              <p>Join thousands of MESOB staff and customers tracking their health and wellness journey.</p>
+              <p>
+                Join thousands of MESOB staff and customers tracking their
+                health and wellness journey.
+              </p>
               <div className="register-benefits">
                 <div className="benefit-item">
                   <span className="benefit-icon">✓</span>
