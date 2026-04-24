@@ -117,6 +117,8 @@ bash test-all-endpoints.sh
 | Regional Office | regional@mesob.et | Regional123! | Regional analytics |
 | Federal Admin | admin@mesob.et | Admin123! | Full system access, manage centers |
 
+**⚠️ Important**: These users must be seeded first. See [SEED_TEST_USERS.md](docs/SEED_TEST_USERS.md) for instructions.
+
 ## 📡 API Endpoints (31 Total)
 
 ### Authentication (6)
