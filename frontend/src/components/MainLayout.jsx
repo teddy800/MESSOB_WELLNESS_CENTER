@@ -1,8 +1,15 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function MainLayout({ children }) {
   const location = useLocation();
+  const { user } = useAuth();
+
+  // Check if user has manager access
+  const hasManagerAccess = () => {
+    return user && ['MANAGER', 'REGIONAL_OFFICE', 'FEDERAL_ADMIN'].includes(user.role);
+  };
 
   return (
     <div className="layout-shell">
@@ -28,6 +35,14 @@ function MainLayout({ children }) {
             >
               Dashboard
             </Link>
+            {hasManagerAccess() && (
+              <Link
+                className={location.pathname === '/manager' ? 'active' : ''}
+                to="/manager"
+              >
+                Manager Dashboard
+              </Link>
+            )}
           </nav>
         </aside>
 
