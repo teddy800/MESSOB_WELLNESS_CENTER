@@ -28,7 +28,7 @@ function isNonEmptyString(value: unknown): value is string {
 
 export async function getAppointments(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const userId = req.query.userId as string | undefined;
+    const userId = req.user?.userId; // Get authenticated user's ID
     const status = req.query.status as string | undefined;
 
     const appointments = await listAppointments(userId, status);
@@ -52,14 +52,13 @@ export async function postAppointment(req: AuthRequest, res: Response): Promise<
   const { patientId, scheduledAt, reason } =
     req.body as Partial<AppointmentRequestBody>;
 
-  if (
-    typeof patientId !== "number" ||
-    !Number.isInteger(patientId) ||
-    patientId <= 0
-  ) {
-    res.status(400).json({
+  // Use authenticated user's ID if patientId is not provided or is invalid
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    res.status(401).json({
       status: "error",
-      message: "patientId must be a positive integer.",
+      message: "Authentication required",
     });
     return;
   }
@@ -82,7 +81,7 @@ export async function postAppointment(req: AuthRequest, res: Response): Promise<
 
   try {
     const appointment = await createAppointment({
-      patientId,
+      patientId: userId, // Use authenticated user's ID
       scheduledAt,
       reason: reason.trim(),
     });
@@ -92,6 +91,7 @@ export async function postAppointment(req: AuthRequest, res: Response): Promise<
       data: appointment,
     });
   } catch (error) {
+    console.error("Appointment creation error:", error);
     res.status(500).json({
       status: "error",
       message: "Failed to create appointment",
