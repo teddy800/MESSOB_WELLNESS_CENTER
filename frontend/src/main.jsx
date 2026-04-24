@@ -9,6 +9,8 @@ import './styles/login.css'
 import './styles/register.css'
 import './styles/dashboard.css'
 import './styles/dashboard-priority2.css'
+import './styles/manager-dashboard.css'
+import './styles/nurse-dashboard.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
