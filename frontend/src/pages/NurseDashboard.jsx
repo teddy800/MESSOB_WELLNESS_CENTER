@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import LiveQueuePanel from "../components/nurse/LiveQueuePanel";
 import CapacityTracker from "../components/nurse/CapacityTracker";
@@ -10,10 +11,21 @@ import CustomerHistoryView from "../components/nurse/CustomerHistoryView";
 
 function NurseDashboard() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("queue");
   const [capacity, setCapacity] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    const allowedTabs = ["queue", "vitals", "walkin", "wellness", "history"];
+    if (tab && allowedTabs.includes(tab)) {
+      setActiveTab(tab);
+      return;
+    }
+    setActiveTab("queue");
+  }, [searchParams]);
 
   const handleCapacityUpdate = (newCapacity) => {
     setCapacity(newCapacity);
@@ -40,39 +52,6 @@ function NurseDashboard() {
           Manage queue, record vitals, and serve customers
         </p>
         <p className="dashboard-subtitle">Welcome, {user?.fullName}</p>
-      </div>
-
-      <div className="nurse-dashboard-tabs">
-        <button
-          className={`tab-btn ${activeTab === "queue" ? "active" : ""}`}
-          onClick={() => setActiveTab("queue")}
-        >
-          📋 Queue
-        </button>
-        <button
-          className={`tab-btn ${activeTab === "vitals" ? "active" : ""}`}
-          onClick={() => setActiveTab("vitals")}
-        >
-          💉 Vitals
-        </button>
-        <button
-          className={`tab-btn ${activeTab === "walkin" ? "active" : ""}`}
-          onClick={() => setActiveTab("walkin")}
-        >
-          🚶 Walk-in
-        </button>
-        <button
-          className={`tab-btn ${activeTab === "wellness" ? "active" : ""}`}
-          onClick={() => setActiveTab("wellness")}
-        >
-          🎯 Wellness
-        </button>
-        <button
-          className={`tab-btn ${activeTab === "history" ? "active" : ""}`}
-          onClick={() => setActiveTab("history")}
-        >
-          📊 History
-        </button>
       </div>
 
       <div className="nurse-dashboard-content">
