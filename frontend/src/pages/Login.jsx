@@ -23,7 +23,6 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
   const validateForm = () => {
     const newErrors = {};
 
@@ -54,7 +53,8 @@ function Login() {
     };
 
     if (name === "email") {
-      const suggestedPassword = SUGGESTED_CREDENTIALS[value.trim().toLowerCase()];
+      const suggestedPassword =
+        SUGGESTED_CREDENTIALS[value.trim().toLowerCase()];
       if (suggestedPassword) {
         nextFormData.password = suggestedPassword;
       }
@@ -172,14 +172,18 @@ function Login() {
                     autoComplete="current-password"
                     className={`form-input ${errors.password ? "form-input-error" : ""}`}
                     aria-invalid={errors.password ? "true" : "false"}
-                    aria-describedby={errors.password ? "password-error" : undefined}
+                    aria-describedby={
+                      errors.password ? "password-error" : undefined
+                    }
                   />
                   <button
                     type="button"
                     className="password-toggle-btn"
                     onClick={() => setShowPassword((prev) => !prev)}
                     disabled={loading}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
                     {showPassword ? "🙈" : "👁"}
                   </button>
