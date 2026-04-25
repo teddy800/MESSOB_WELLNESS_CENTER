@@ -102,7 +102,10 @@ function MainLayout({ children }) {
             )}
 
             {isNurseDashboard && (
-              <div className="sidebar-subnav" aria-label="Nurse dashboard sections">
+              <div
+                className="sidebar-subnav"
+                aria-label="Nurse dashboard sections"
+              >
                 <Link
                   className={nurseTab === "queue" ? "active" : ""}
                   to="/nurse?tab=queue"
