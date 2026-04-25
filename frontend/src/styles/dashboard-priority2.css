@@ -486,6 +486,7 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .date-range-filter select {
@@ -573,6 +574,304 @@
   color: #666;
   font-size: 0.9rem;
   margin-top: 10px;
+}
+
+.risk-indicators {
+  margin-top: 18px;
+}
+
+.risk-indicators h4 {
+  margin: 0 0 10px;
+  color: #1e3a8a;
+}
+
+.risk-empty {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.risk-card {
+  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.risk-title {
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.risk-value {
+  font-weight: 700;
+  color: #111827;
+}
+
+.risk-level {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.risk-card.risk-green {
+  background: #ecfdf5;
+  border-color: #86efac;
+}
+
+.risk-card.risk-yellow {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.risk-card.risk-red {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.risk-card.risk-blue {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.risk-card.risk-gray {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.trend-charts {
+  margin: 22px 0 8px;
+}
+
+.trend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.trend-legend {
+  margin: 0 0 10px;
+  color: #475569;
+  font-size: 0.88rem;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  margin-right: 5px;
+}
+
+.legend-weight {
+  background: #0ea5e9;
+}
+
+.legend-bp {
+  background: #7c3aed;
+}
+
+.legend-bp-systolic {
+  background: #7c3aed;
+}
+
+.legend-bp-diastolic {
+  background: #f97316;
+}
+
+.legend-glucose {
+  background: #dc2626;
+}
+
+.trend-chart-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.trend-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.trend-header h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.trend-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+
+.trend-up {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.trend-down {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.trend-stable {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.trend-svg {
+  width: 100%;
+  height: 84px;
+}
+
+.trend-axis {
+  stroke: #cbd5e1;
+  stroke-width: 1;
+}
+
+.threshold-line {
+  stroke: #94a3b8;
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.8;
+}
+
+.threshold-label {
+  fill: #64748b;
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.threshold-sys {
+  stroke: #7c3aed;
+}
+
+.threshold-sys-high {
+  stroke: #6d28d9;
+}
+
+.threshold-dia {
+  stroke: #f97316;
+}
+
+.threshold-dia-high {
+  stroke: #ea580c;
+}
+
+.threshold-glucose {
+  stroke: #f59e0b;
+}
+
+.threshold-glucose-high {
+  stroke: #dc2626;
+}
+
+.trend-svg path {
+  stroke: #64748b;
+}
+
+.trend-point {
+  fill: #ffffff;
+  stroke-width: 2;
+}
+
+.trend-svg.trend-weight path {
+  stroke: #0ea5e9;
+}
+
+.trend-svg.trend-weight .trend-point {
+  stroke: #0ea5e9;
+}
+
+.trend-svg.trend-bp path {
+  stroke: #7c3aed;
+}
+
+.trend-svg.trend-bp .trend-point {
+  stroke: #7c3aed;
+}
+
+.trend-svg.trend-glucose path {
+  stroke: #dc2626;
+}
+
+.trend-svg.trend-glucose .trend-point {
+  stroke: #dc2626;
+}
+
+.trend-svg.trend-bp-dual .bp-systolic-line {
+  stroke: #7c3aed;
+}
+
+.trend-svg.trend-bp-dual .bp-diastolic-line {
+  stroke: #f97316;
+}
+
+.trend-svg.trend-bp-dual .bp-systolic-point {
+  fill: #ffffff;
+  stroke: #7c3aed;
+  stroke-width: 2;
+}
+
+.trend-svg.trend-bp-dual .bp-diastolic-point {
+  fill: #ffffff;
+  stroke: #f97316;
+  stroke-width: 2;
+}
+
+.bp-line-legend {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.trend-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.trend-value {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.trend-date {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.trend-empty {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.88rem;
+}
+
+.journey-export-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
 }
 
 .vitals-history {

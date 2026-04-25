@@ -1,21 +1,70 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
+
+function normalizeGoals(goalsValue) {
+  if (!goalsValue) return [];
+
+  if (Array.isArray(goalsValue)) {
+    return goalsValue.map((goal) => {
+      if (typeof goal === 'string') {
+        return { title: goal, completed: false };
+      }
+      if (goal && typeof goal === 'object') {
+        return {
+          title: goal.title || '',
+          completed: Boolean(goal.completed),
+        };
+      }
+      return { title: '', completed: false };
+    }).filter((g) => g.title);
+  }
+
+  if (typeof goalsValue === 'string') {
+    return goalsValue
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const checked = line.startsWith('[x]');
+        const raw = line.replace(/^\[[x ]\]\s*/i, '');
+        return { title: raw, completed: checked };
+      });
+  }
+
+  return [];
+}
+
+function normalizePlan(plan) {
+  const goals = normalizeGoals(plan.goals);
+  return {
+    ...plan,
+    title: plan.title || 'Wellness Plan',
+    description: plan.description || plan.planText || '',
+    nutritionRecommendations: plan.nutritionRecommendations || null,
+    exerciseRecommendations: plan.exerciseRecommendations || null,
+    stressManagementAdvice: plan.stressManagementAdvice || null,
+    goals,
+  };
+}
 
 function WellnessPlan() {
+  const { user } = useAuth();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!user?.id) return;
     fetchWellnessPlans();
-  }, []);
+  }, [user?.id]);
 
   const fetchWellnessPlans = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/v1/plans');
+      const response = await api.get(`/api/v1/plans/${user.id}`);
       const data = response.data.data;
-      setPlans(Array.isArray(data) ? data : []);
+      setPlans(Array.isArray(data) ? data.map(normalizePlan) : []);
       setError('');
     } catch (err) {
       setPlans([]);
