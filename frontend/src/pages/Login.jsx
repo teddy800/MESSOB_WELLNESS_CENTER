@@ -4,10 +4,17 @@ import { useAuth } from "../context/AuthContext";
 import Input from "../components/forms/Input";
 import Button from "../components/forms/Button";
 
+const SUGGESTED_CREDENTIALS = {
+  "customer@mesob.et": "Customer123!",
+  "nurse@mesob.et": "Nurse123!",
+  "manager@mesob.et": "Manager123!",
+  "regional@mesob.et": "Regional123!",
+  "admin@mesob.et": "Admin123!",
+};
+
 function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -15,7 +22,7 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
-
+  const [showPassword, setShowPassword] = useState(false);
   const validateForm = () => {
     const newErrors = {};
 
@@ -39,10 +46,21 @@ function Login() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
+
+    const nextFormData = {
+      ...formData,
       [name]: value,
-    }));
+    };
+
+    if (name === "email") {
+      const suggestedPassword =
+        SUGGESTED_CREDENTIALS[value.trim().toLowerCase()];
+      if (suggestedPassword) {
+        nextFormData.password = suggestedPassword;
+      }
+    }
+
+    setFormData(nextFormData);
     // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
@@ -126,19 +144,56 @@ function Login() {
                 placeholder="mail@example.com"
                 required
                 disabled={loading}
+                autoComplete="username"
+                list="mesob-email-suggestions"
               />
 
-              <Input
-                label="Password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={errors.password}
-                placeholder="write your password"
-                required
-                disabled={loading}
-              />
+              <datalist id="mesob-email-suggestions">
+                {Object.keys(SUGGESTED_CREDENTIALS).map((email) => (
+                  <option key={email} value={email} />
+                ))}
+              </datalist>
+
+              <div className="form-group">
+                <label htmlFor="password" className="form-label">
+                  Password
+                  <span className="required-mark">*</span>
+                </label>
+                <div className="password-input-wrapper">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder="write your password"
+                    required
+                    disabled={loading}
+                    autoComplete="current-password"
+                    className={`form-input ${errors.password ? "form-input-error" : ""}`}
+                    aria-invalid={errors.password ? "true" : "false"}
+                    aria-describedby={
+                      errors.password ? "password-error" : undefined
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle-btn"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    disabled={loading}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? "🙈" : "👁"}
+                  </button>
+                </div>
+                {errors.password && (
+                  <span id="password-error" className="form-error" role="alert">
+                    {errors.password}
+                  </span>
+                )}
+              </div>
 
               <Button
                 type="submit"
