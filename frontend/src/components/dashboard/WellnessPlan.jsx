@@ -1,33 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState, useEffect } from "react";
+import api from "../../services/api";
+import { useAuth } from "../../context/AuthContext";
 
 function normalizeGoals(goalsValue) {
   if (!goalsValue) return [];
 
   if (Array.isArray(goalsValue)) {
-    return goalsValue.map((goal) => {
-      if (typeof goal === 'string') {
-        return { title: goal, completed: false };
-      }
-      if (goal && typeof goal === 'object') {
-        return {
-          title: goal.title || '',
-          completed: Boolean(goal.completed),
-        };
-      }
-      return { title: '', completed: false };
-    }).filter((g) => g.title);
+    return goalsValue
+      .map((goal) => {
+        if (typeof goal === "string") {
+          return { title: goal, completed: false };
+        }
+        if (goal && typeof goal === "object") {
+          return {
+            title: goal.title || "",
+            completed: Boolean(goal.completed),
+          };
+        }
+        return { title: "", completed: false };
+      })
+      .filter((g) => g.title);
   }
 
-  if (typeof goalsValue === 'string') {
+  if (typeof goalsValue === "string") {
     return goalsValue
-      .split('\n')
+      .split("\n")
       .map((line) => line.trim())
       .filter(Boolean)
       .map((line) => {
-        const checked = line.startsWith('[x]');
-        const raw = line.replace(/^\[[x ]\]\s*/i, '');
+        const checked = line.startsWith("[x]");
+        const raw = line.replace(/^\[[x ]\]\s*/i, "");
         return { title: raw, completed: checked };
       });
   }
@@ -39,8 +41,8 @@ function normalizePlan(plan) {
   const goals = normalizeGoals(plan.goals);
   return {
     ...plan,
-    title: plan.title || 'Wellness Plan',
-    description: plan.description || plan.planText || '',
+    title: plan.title || "Wellness Plan",
+    description: plan.description || plan.planText || "",
     nutritionRecommendations: plan.nutritionRecommendations || null,
     exerciseRecommendations: plan.exerciseRecommendations || null,
     stressManagementAdvice: plan.stressManagementAdvice || null,
@@ -52,7 +54,7 @@ function WellnessPlan() {
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!user?.id) return;
@@ -65,10 +67,10 @@ function WellnessPlan() {
       const response = await api.get(`/api/v1/plans/${user.id}`);
       const data = response.data.data;
       setPlans(Array.isArray(data) ? data.map(normalizePlan) : []);
-      setError('');
+      setError("");
     } catch (err) {
       setPlans([]);
-      setError('Failed to load wellness plans');
+      setError("Failed to load wellness plans");
       console.error(err);
     } finally {
       setLoading(false);
@@ -77,7 +79,7 @@ function WellnessPlan() {
 
   const handleMarkGoalComplete = async (planId, goalIndex) => {
     try {
-      const plan = plans.find(p => p.id === planId);
+      const plan = plans.find((p) => p.id === planId);
       if (!plan) return;
 
       const updatedGoals = [...(plan.goals || [])];
@@ -92,13 +94,13 @@ function WellnessPlan() {
 
       fetchWellnessPlans();
     } catch (err) {
-      setError('Failed to update goal');
+      setError("Failed to update goal");
     }
   };
 
   const getProgressPercentage = (plan) => {
     if (!plan.goals || plan.goals.length === 0) return 0;
-    const completed = plan.goals.filter(g => g.completed).length;
+    const completed = plan.goals.filter((g) => g.completed).length;
     return Math.round((completed / plan.goals.length) * 100);
   };
 
@@ -111,15 +113,20 @@ function WellnessPlan() {
       {loading ? (
         <p className="loading-text">Loading wellness plans...</p>
       ) : plans.length === 0 ? (
-        <p className="empty-text">No wellness plans assigned yet. Visit a nurse to get a personalized plan!</p>
+        <p className="empty-text">
+          No wellness plans assigned yet. Visit a nurse to get a personalized
+          plan!
+        </p>
       ) : (
         <div className="plans-list">
-          {plans.map(plan => (
+          {plans.map((plan) => (
             <div key={plan.id} className="plan-card">
               <div className="plan-header">
-                <h3>{plan.title || 'Wellness Plan'}</h3>
-                <span className={`plan-status ${plan.isActive ? 'active' : 'inactive'}`}>
-                  {plan.isActive ? 'Active' : 'Inactive'}
+                <h3>{plan.title || "Wellness Plan"}</h3>
+                <span
+                  className={`plan-status ${plan.isActive ? "active" : "inactive"}`}
+                >
+                  {plan.isActive ? "Active" : "Inactive"}
                 </span>
               </div>
 
@@ -154,13 +161,14 @@ function WellnessPlan() {
                 <div className="goals-section">
                   <h4>📍 Goals & Progress</h4>
                   <div className="progress-bar">
-                    <div 
-                      className="progress-fill" 
+                    <div
+                      className="progress-fill"
                       style={{ width: `${getProgressPercentage(plan)}%` }}
                     ></div>
                   </div>
                   <p className="progress-text">
-                    {plan.goals.filter(g => g.completed).length} of {plan.goals.length} goals completed
+                    {plan.goals.filter((g) => g.completed).length} of{" "}
+                    {plan.goals.length} goals completed
                   </p>
 
                   <div className="goals-list">
@@ -172,7 +180,9 @@ function WellnessPlan() {
                           onChange={() => handleMarkGoalComplete(plan.id, idx)}
                           className="goal-checkbox"
                         />
-                        <span className={`goal-text ${goal.completed ? 'completed' : ''}`}>
+                        <span
+                          className={`goal-text ${goal.completed ? "completed" : ""}`}
+                        >
                           {goal.title || goal}
                         </span>
                       </div>
@@ -182,9 +192,7 @@ function WellnessPlan() {
               )}
 
               {plan.duration && (
-                <p className="plan-duration">
-                  Duration: {plan.duration} days
-                </p>
+                <p className="plan-duration">Duration: {plan.duration} days</p>
               )}
             </div>
           ))}

@@ -6,7 +6,10 @@ import * as WellnessService from "../services/wellness.service";
  * POST /api/v1/plans
  * Create a new wellness plan
  */
-export const createWellnessPlan = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createWellnessPlan = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({
@@ -28,7 +31,12 @@ export const createWellnessPlan = async (req: AuthRequest, res: Response): Promi
     }
 
     // Authorization: Only NURSE_OFFICER and above can create wellness plans
-    const allowedRoles = ["NURSE_OFFICER", "MANAGER", "REGIONAL_OFFICE", "FEDERAL_ADMIN"];
+    const allowedRoles = [
+      "NURSE_OFFICER",
+      "MANAGER",
+      "REGIONAL_OFFICE",
+      "FEDERAL_ADMIN",
+    ];
     if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
@@ -65,7 +73,10 @@ export const createWellnessPlan = async (req: AuthRequest, res: Response): Promi
  * GET /api/v1/plans/:userId
  * Get wellness plans for a user
  */
-export const getWellnessPlans = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getWellnessPlans = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({
@@ -79,7 +90,7 @@ export const getWellnessPlans = async (req: AuthRequest, res: Response): Promise
     const { activeOnly } = req.query;
 
     // Ensure userId is a string
-    if (!userId || typeof userId !== 'string') {
+    if (!userId || typeof userId !== "string") {
       res.status(400).json({
         status: "error",
         message: "Invalid userId parameter",
@@ -88,7 +99,12 @@ export const getWellnessPlans = async (req: AuthRequest, res: Response): Promise
     }
 
     // Authorization: Users can view their own plans, staff can view any
-    const allowedRoles = ["NURSE_OFFICER", "MANAGER", "REGIONAL_OFFICE", "FEDERAL_ADMIN"];
+    const allowedRoles = [
+      "NURSE_OFFICER",
+      "MANAGER",
+      "REGIONAL_OFFICE",
+      "FEDERAL_ADMIN",
+    ];
     if (req.user.userId !== userId && !allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
@@ -99,7 +115,7 @@ export const getWellnessPlans = async (req: AuthRequest, res: Response): Promise
 
     const plans = await WellnessService.getWellnessPlans(
       userId,
-      activeOnly === "true"
+      activeOnly === "true",
     );
 
     res.status(200).json({
@@ -128,7 +144,10 @@ export const getWellnessPlans = async (req: AuthRequest, res: Response): Promise
  * PUT /api/v1/plans/:id
  * Update an existing wellness plan
  */
-export const updateWellnessPlan = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateWellnessPlan = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     if (!req.user) {
       res.status(401).json({
@@ -156,8 +175,15 @@ export const updateWellnessPlan = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
-    const allowedRoles = ["NURSE_OFFICER", "MANAGER", "REGIONAL_OFFICE", "FEDERAL_ADMIN"];
-    const canEdit = req.user.userId === existing.userId || allowedRoles.includes(req.user.role);
+    const allowedRoles = [
+      "NURSE_OFFICER",
+      "MANAGER",
+      "REGIONAL_OFFICE",
+      "FEDERAL_ADMIN",
+    ];
+    const canEdit =
+      req.user.userId === existing.userId ||
+      allowedRoles.includes(req.user.role);
     if (!canEdit) {
       res.status(403).json({
         status: "error",
@@ -178,7 +204,11 @@ export const updateWellnessPlan = async (req: AuthRequest, res: Response): Promi
         return goals
           .map((goal: any) => {
             if (typeof goal === "string") return goal.trim();
-            if (goal && typeof goal === "object" && typeof goal.title === "string") {
+            if (
+              goal &&
+              typeof goal === "object" &&
+              typeof goal.title === "string"
+            ) {
               return `${goal.completed ? "[x]" : "[ ]"} ${goal.title.trim()}`;
             }
             return "";

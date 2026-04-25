@@ -1,8 +1,8 @@
 import { Router } from "express";
 import {
-	createWellnessPlan,
-	getWellnessPlans,
-	updateWellnessPlan,
+  createWellnessPlan,
+  getWellnessPlans,
+  updateWellnessPlan,
 } from "../controllers/wellness.controller";
 import { authenticate } from "../middleware/auth.middleware";
 

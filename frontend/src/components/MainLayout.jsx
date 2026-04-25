@@ -6,7 +6,8 @@ function MainLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const dashboardTab = new URLSearchParams(location.search).get("tab") || "appointments";
+  const dashboardTab =
+    new URLSearchParams(location.search).get("tab") || "appointments";
   const isCustomerDashboard = location.pathname === "/dashboard";
 
   // Check if user has manager access
@@ -61,7 +62,10 @@ function MainLayout({ children }) {
             </Link>
 
             {isCustomerDashboard && (
-              <div className="sidebar-subnav" aria-label="Customer dashboard sections">
+              <div
+                className="sidebar-subnav"
+                aria-label="Customer dashboard sections"
+              >
                 <Link
                   className={dashboardTab === "appointments" ? "active" : ""}
                   to="/dashboard?tab=appointments"

@@ -1,53 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import BookingCalendar from '../components/dashboard/BookingCalendar';
-import MyAppointments from '../components/dashboard/MyAppointments';
-import HealthJourney from '../components/dashboard/HealthJourney';
-import WellnessPlan from '../components/dashboard/WellnessPlan';
-import ProfileSection from '../components/dashboard/ProfileSection';
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import BookingCalendar from "../components/dashboard/BookingCalendar";
+import MyAppointments from "../components/dashboard/MyAppointments";
+import HealthJourney from "../components/dashboard/HealthJourney";
+import WellnessPlan from "../components/dashboard/WellnessPlan";
+import ProfileSection from "../components/dashboard/ProfileSection";
 
 function Dashboard() {
   const { user, logout } = useAuth();
   const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState('appointments');
+  const [activeTab, setActiveTab] = useState("appointments");
 
   useEffect(() => {
-    const tab = searchParams.get('tab');
-    const allowedTabs = ['appointments', 'health', 'wellness', 'profile'];
+    const tab = searchParams.get("tab");
+    const allowedTabs = ["appointments", "health", "wellness", "profile"];
     if (tab && allowedTabs.includes(tab)) {
       setActiveTab(tab);
       return;
     }
-    setActiveTab('appointments');
+    setActiveTab("appointments");
   }, [searchParams]);
 
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
         <h1>Welcome, {user?.fullName}</h1>
-        <p className="dashboard-subtitle">Manage your health and appointments</p>
+        <p className="dashboard-subtitle">
+          Manage your health and appointments
+        </p>
       </div>
 
       <div className="dashboard-content">
-        {activeTab === 'appointments' && (
+        {activeTab === "appointments" && (
           <>
             <BookingCalendar />
             <MyAppointments />
           </>
         )}
 
-        {activeTab === 'health' && (
-          <HealthJourney />
-        )}
+        {activeTab === "health" && <HealthJourney />}
 
-        {activeTab === 'wellness' && (
-          <WellnessPlan />
-        )}
+        {activeTab === "wellness" && <WellnessPlan />}
 
-        {activeTab === 'profile' && (
-          <ProfileSection onLogout={logout} />
-        )}
+        {activeTab === "profile" && <ProfileSection onLogout={logout} />}
       </div>
     </div>
   );
