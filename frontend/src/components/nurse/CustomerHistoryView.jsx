@@ -7,12 +7,58 @@ function CustomerHistoryView({ customerId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('vitals');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(customerId || '');
+  const [selectedCustomerName, setSelectedCustomerName] = useState('');
 
   useEffect(() => {
-    if (customerId) {
+    if (selectedCustomerId) {
       fetchCustomerHistory();
     }
-  }, [customerId]);
+  }, [selectedCustomerId]);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!searchTerm.trim()) {
+      setError('Please enter a search term');
+      return;
+    }
+
+    try {
+      setSearching(true);
+      setError('');
+      const response = await api.get(`/api/v1/users?search=${encodeURIComponent(searchTerm)}`);
+      setSearchResults(response.data.data || []);
+      
+      if (response.data.data.length === 0) {
+        setError('No customers found');
+      }
+    } catch (err) {
+      setError('Failed to search customers');
+      console.error(err);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setSelectedCustomerId(customer.id);
+    setSelectedCustomerName(customer.fullName);
+    setSearchResults([]);
+    setSearchTerm('');
+    setError('');
+  };
+
+  const handleClearCustomer = () => {
+    setSelectedCustomerId('');
+    setSelectedCustomerName('');
+    setVitalsHistory([]);
+    setWellnessPlans([]);
+  };
 
   const fetchCustomerHistory = async () => {
     try {
@@ -20,12 +66,12 @@ function CustomerHistoryView({ customerId }) {
       setError('');
 
       // Fetch vitals history
-      const vitalsResponse = await api.get(`/api/v1/vitals/${customerId}`);
+      const vitalsResponse = await api.get(`/api/v1/vitals/${selectedCustomerId}`);
       const vitalsData = vitalsResponse.data.data;
       setVitalsHistory(Array.isArray(vitalsData) ? vitalsData : []);
 
       // Fetch wellness plans
-      const plansResponse = await api.get(`/api/v1/plans/${customerId}`);
+      const plansResponse = await api.get(`/api/v1/plans/${selectedCustomerId}`);
       const plansData = plansResponse.data.data;
       setWellnessPlans(Array.isArray(plansData) ? plansData : []);
     } catch (err) {
@@ -36,18 +82,86 @@ function CustomerHistoryView({ customerId }) {
     }
   };
 
-  if (!customerId) {
+  if (!selectedCustomerId) {
     return (
       <div className="card customer-history">
-        <h3>📋 Customer History</h3>
-        <p className="empty-text">Select a customer to view history</p>
+        <h3>📚 Customer History</h3>
+        
+        <div className="inline-search">
+          <h4>🔍 Search Customer</h4>
+          <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1rem' }}>
+            Search by name, email, or customer ID
+          </p>
+          
+          <form onSubmit={handleSearch} className="search-form">
+            <div className="search-input-group">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Enter name, email, or ID..."
+                className="form-input"
+                disabled={searching}
+              />
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="btn btn-primary"
+                disabled={searching || !searchTerm.trim()}
+              >
+                {searching ? 'Searching...' : '🔍 Search'}
+              </button>
+            </div>
+          </form>
+
+          {error && <div className="alert alert-error">{error}</div>}
+
+          {searchResults.length > 0 && (
+            <div className="search-results-inline">
+              <p className="results-count">{searchResults.length} customer(s) found</p>
+              <div className="results-list-inline">
+                {searchResults.map((customer) => (
+                  <div key={customer.id} className="result-item-inline">
+                    <div className="customer-info-inline">
+                      <p className="customer-name-inline">{customer.fullName}</p>
+                      <p className="customer-details-inline">Email: {customer.email}</p>
+                      <p className="customer-details-inline">ID: {customer.id}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectCustomer(customer)}
+                      className="btn btn-small btn-primary"
+                    >
+                      Select
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="card customer-history">
-      <h3>📋 Customer History</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h3>📚 Customer History</h3>
+        <button
+          type="button"
+          onClick={handleClearCustomer}
+          className="btn btn-small btn-secondary"
+        >
+          Change Customer
+        </button>
+      </div>
+
+      <div className="customer-id-display" style={{ marginBottom: '1rem' }}>
+        <strong>Customer:</strong> {selectedCustomerName}
+        <br />
+        <small style={{ color: '#666' }}>ID: {selectedCustomerId}</small>
+      </div>
 
       {error && <div className="alert alert-error">{error}</div>}
 

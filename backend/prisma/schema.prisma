@@ -212,6 +212,11 @@ model Appointment {
   cancelledAt  DateTime? @db.Timestamptz(3)
   cancellationReason String?
   
+  // SMS Reminder Tracking
+  reminderSentAt DateTime? @db.Timestamptz(3)
+  reminderCount  Int @default(0)
+  lastReminderBy String? @db.Uuid // User who sent the last reminder
+  
   // Timestamps
   createdAt   DateTime @default(now()) @db.Timestamptz(3)
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)

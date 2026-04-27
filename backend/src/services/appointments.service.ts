@@ -145,3 +145,53 @@ export async function updateAppointmentStatus(
     },
   });
 }
+
+
+export async function getQueueAppointments() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      scheduledAt: {
+        gte: today,
+        lt: tomorrow,
+      },
+      status: {
+        in: [
+          AppointmentStatus.CONFIRMED,
+          AppointmentStatus.PENDING,
+          AppointmentStatus.IN_PROGRESS,
+        ],
+      },
+    },
+    orderBy: { scheduledAt: 'asc' },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+        },
+      },
+    },
+  });
+
+  return appointments.map((apt) => ({
+    id: apt.id,
+    appointmentId: apt.id,
+    customerName: apt.user.fullName,
+    customerId: apt.userId,
+    checkInTime: apt.scheduledAt.toISOString(),
+    scheduledAt: apt.scheduledAt.toISOString(),
+    reason: apt.reason,
+    status: apt.status === AppointmentStatus.IN_PROGRESS ? 'IN_SERVICE' : 
+            apt.status === AppointmentStatus.COMPLETED ? 'COMPLETED' : 'WAITING',
+    type: 'ONLINE', // Default to ONLINE, can be enhanced later
+    notes: apt.notes || undefined,
+  }));
+}

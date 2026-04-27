@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import api from '../../services/api';
+import WellnessPlanTemplates from './WellnessPlanTemplates';
 
 function WellnessPlanCreation({ customerId, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(customerId || '');
+  const [selectedCustomerName, setSelectedCustomerName] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     nutritionRecommendations: '',
@@ -22,11 +29,61 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
     }));
   };
 
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!searchTerm.trim()) {
+      setError('Please enter a search term');
+      return;
+    }
+
+    try {
+      setSearching(true);
+      setError('');
+      const response = await api.get(`/api/v1/users?search=${encodeURIComponent(searchTerm)}`);
+      setSearchResults(response.data.data || []);
+      
+      if (response.data.data.length === 0) {
+        setError('No customers found');
+      }
+    } catch (err) {
+      setError('Failed to search customers');
+      console.error(err);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setSelectedCustomerId(customer.id);
+    setSelectedCustomerName(customer.fullName);
+    setSearchResults([]);
+    setSearchTerm('');
+    setError('');
+  };
+
+  const handleClearCustomer = () => {
+    setSelectedCustomerId('');
+    setSelectedCustomerName('');
+  };
+
+  const handleTemplateSelect = (template) => {
+    setFormData({
+      title: template.title,
+      nutritionRecommendations: template.nutritionRecommendations,
+      exerciseRecommendations: template.exerciseRecommendations,
+      stressManagementAdvice: template.stressManagementAdvice,
+      goals: template.goals.join('\n'),
+      duration: template.duration.toString(),
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!customerId) {
-      setError('Customer ID is required');
+    if (!selectedCustomerId) {
+      setError('Please select a customer first');
       return;
     }
 
@@ -45,7 +102,7 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
         .filter(g => g.length > 0);
 
       const response = await api.post('/api/v1/plans', {
-        userId: customerId,
+        userId: selectedCustomerId,
         title: formData.title,
         nutritionRecommendations: formData.nutritionRecommendations,
         exerciseRecommendations: formData.exerciseRecommendations,
@@ -64,6 +121,8 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
         goals: '',
         duration: '30',
       });
+      setSelectedCustomerId('');
+      setSelectedCustomerName('');
 
       setTimeout(() => {
         setSuccess('');
@@ -82,6 +141,96 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
 
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
+
+      {/* Customer Search Section */}
+      {!selectedCustomerId ? (
+        <div className="inline-search">
+          <h4>🔍 Search Customer</h4>
+          <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1rem' }}>
+            Search by name, email, or customer ID
+          </p>
+          
+          <form onSubmit={handleSearch} className="search-form">
+            <div className="search-input-group">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Enter name, email, or ID..."
+                className="form-input"
+                disabled={searching}
+              />
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="btn btn-primary"
+                disabled={searching || !searchTerm.trim()}
+              >
+                {searching ? 'Searching...' : '🔍 Search'}
+              </button>
+            </div>
+          </form>
+
+          {searchResults.length > 0 && (
+            <div className="search-results-inline">
+              <p className="results-count">{searchResults.length} customer(s) found</p>
+              <div className="results-list-inline">
+                {searchResults.map((customer) => (
+                  <div key={customer.id} className="result-item-inline">
+                    <div className="customer-info-inline">
+                      <p className="customer-name-inline">{customer.fullName}</p>
+                      <p className="customer-details-inline">Email: {customer.email}</p>
+                      <p className="customer-details-inline">ID: {customer.id}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectCustomer(customer)}
+                      className="btn btn-small btn-primary"
+                    >
+                      Select
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="customer-id-display">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <strong>Selected Customer:</strong> {selectedCustomerName}
+              <br />
+              <small style={{ color: '#666' }}>ID: {selectedCustomerId}</small>
+            </div>
+            <button
+              type="button"
+              onClick={handleClearCustomer}
+              className="btn btn-small btn-secondary"
+            >
+              Change Customer
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="template-button-container">
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => setShowTemplates(true)}
+          disabled={!selectedCustomerId}
+        >
+          📋 Use Template
+        </button>
+      </div>
+
+      {showTemplates && (
+        <WellnessPlanTemplates
+          onSelectTemplate={handleTemplateSelect}
+          onClose={() => setShowTemplates(false)}
+        />
+      )}
 
       <form onSubmit={handleSubmit} className="wellness-form">
         <div className="form-group">
@@ -167,7 +316,7 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
         <button
           type="submit"
           className="btn btn-primary btn-large"
-          disabled={loading}
+          disabled={loading || !selectedCustomerId}
         >
           {loading ? 'Creating...' : '✓ Create Wellness Plan'}
         </button>

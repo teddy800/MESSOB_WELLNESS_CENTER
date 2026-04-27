@@ -105,6 +105,16 @@ function MyAppointments() {
     }
   };
 
+  const handleSendReminder = async (appointmentId) => {
+    try {
+      await api.post(`/api/v1/appointments/${appointmentId}/send-reminder`);
+      alert("✅ SMS reminder sent successfully!");
+    } catch (err) {
+      alert("❌ Failed to send SMS reminder");
+      console.error(err);
+    }
+  };
+
   const filteredAppointments = appointments.filter((apt) => {
     if (filter === "all") return true;
     return apt.status === filter;
@@ -204,12 +214,20 @@ function MyAppointments() {
 
               <div className="appointment-footer">
                 {apt.status === "CONFIRMED" && (
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => handleCancelAppointment(apt.id)}
-                  >
-                    Cancel Appointment
-                  </button>
+                  <>
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => handleSendReminder(apt.id)}
+                    >
+                      📱 Send SMS Reminder
+                    </button>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleCancelAppointment(apt.id)}
+                    >
+                      Cancel Appointment
+                    </button>
+                  </>
                 )}
               </div>
             </div>

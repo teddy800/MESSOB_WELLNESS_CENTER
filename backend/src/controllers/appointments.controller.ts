@@ -4,9 +4,11 @@ import {
   listAppointments,
   getAppointmentById,
   updateAppointmentStatus,
+  getQueueAppointments,
 } from "../services/appointments.service";
 import { AppointmentStatus } from "../generated/prisma";
 import { AuthRequest } from "../middleware/auth.middleware";
+import { prisma } from "../config/prisma";
 
 interface AppointmentRequestBody {
   patientId: unknown;
@@ -199,11 +201,20 @@ export async function updateAppointment(req: AuthRequest, res: Response): Promis
 export async function sendReminderHandler(req: AuthRequest, res: Response): Promise<void> {
   try {
     const appointmentId = req.params.id;
+    const userId = req.user?.userId;
 
     if (!appointmentId || typeof appointmentId !== "string") {
       res.status(400).json({
         status: "error",
         message: "Appointment ID is required",
+      });
+      return;
+    }
+
+    if (!userId) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
       });
       return;
     }
@@ -218,9 +229,19 @@ export async function sendReminderHandler(req: AuthRequest, res: Response): Prom
       return;
     }
 
+    // Update appointment with reminder tracking
+    const updatedAppointment = await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        reminderSentAt: new Date(),
+        reminderCount: { increment: 1 },
+        lastReminderBy: userId,
+      },
+    });
+
     // TODO: Integrate with SMS service (Twilio, AWS SNS, etc.)
     // For now, just return success
-    console.log(`SMS reminder sent for appointment ${appointmentId}`);
+    console.log(`SMS reminder sent for appointment ${appointmentId} by user ${userId}`);
 
     res.status(200).json({
       status: "success",
@@ -228,13 +249,33 @@ export async function sendReminderHandler(req: AuthRequest, res: Response): Prom
       data: {
         appointmentId,
         reminderSent: true,
-        timestamp: new Date().toISOString(),
+        reminderCount: updatedAppointment.reminderCount,
+        timestamp: updatedAppointment.reminderSentAt,
       },
     });
   } catch (error) {
+    console.error('Send reminder error:', error);
     res.status(500).json({
       status: "error",
       message: "Failed to send reminder",
+    });
+  }
+}
+
+
+export async function getQueueHandler(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const queue = await getQueueAppointments();
+
+    res.status(200).json({
+      status: "success",
+      data: queue,
+    });
+  } catch (error) {
+    console.error('Get queue error:', error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve queue",
     });
   }
 }

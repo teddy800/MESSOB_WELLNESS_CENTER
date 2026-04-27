@@ -10,8 +10,7 @@ function LiveQueuePanel() {
 
   useEffect(() => {
     fetchQueue();
-    const interval = setInterval(fetchQueue, 5000); // Refresh every 5 seconds
-    return () => clearInterval(interval);
+    // Removed auto-refresh - queue only refreshes when user clicks refresh button
   }, []);
 
   const fetchQueue = async () => {
@@ -57,6 +56,16 @@ function LiveQueuePanel() {
 
   const getAppointmentType = (type) => {
     return type === 'ONLINE' ? '📅 Online' : '🚶 Walk-in';
+  };
+
+  const handleSendReminder = async (appointmentId, customerName) => {
+    try {
+      await api.post(`/api/v1/appointments/${appointmentId}/send-reminder`);
+      alert(`✅ SMS reminder sent to ${customerName}`);
+    } catch (err) {
+      alert("❌ Failed to send SMS reminder");
+      console.error(err);
+    }
   };
 
   return (
@@ -126,7 +135,14 @@ function LiveQueuePanel() {
               </div>
 
               <div className="queue-item-actions">
-                <button className="btn btn-small btn-primary">View Details</button>
+                <button 
+                  className="btn btn-small btn-primary"
+                  onClick={() => handleSendReminder(item.appointmentId, item.customerName)}
+                  title="Send SMS reminder to customer"
+                >
+                  📱 Send Reminder
+                </button>
+                <button className="btn btn-small btn-secondary">View Details</button>
               </div>
             </div>
           ))}
