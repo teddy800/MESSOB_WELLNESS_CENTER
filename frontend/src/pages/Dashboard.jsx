@@ -1,43 +1,67 @@
-import { useEffect, useState } from 'react';
-import { fetchHealth } from '../services/healthService';
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import BookingCalendar from "../components/dashboard/BookingCalendar";
+import MyAppointments from "../components/dashboard/MyAppointments";
+import HealthJourney from "../components/dashboard/HealthJourney";
+import WellnessPlan from "../components/dashboard/WellnessPlan";
+import ProfileSection from "../components/dashboard/ProfileSection";
+import RiskScoring from "../components/dashboard/RiskScoring";
+import HealthAlerts from "../components/dashboard/HealthAlerts";
+import AppointmentReminders from "../components/dashboard/AppointmentReminders";
+import FeedbackForm from "../components/dashboard/FeedbackForm";
+import LongitudinalRecords from "../components/dashboard/LongitudinalRecords";
 
 function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  const [health, setHealth] = useState(null);
-  const [error, setError] = useState('');
+  const { user, logout } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState("appointments");
 
   useEffect(() => {
-    async function loadHealth() {
-      try {
-        setLoading(true);
-        const result = await fetchHealth();
-        setHealth(result);
-      } catch (err) {
-        setError('Failed to reach backend /api/health endpoint.');
-      } finally {
-        setLoading(false);
-      }
+    const tab = searchParams.get("tab");
+    const allowedTabs = ["appointments", "health", "wellness", "profile", "feedback", "records"];
+    if (tab && allowedTabs.includes(tab)) {
+      setActiveTab(tab);
+      return;
     }
-
-    loadHealth();
-  }, []);
+    setActiveTab("appointments");
+  }, [searchParams]);
 
   return (
-    <section className="card">
-      <h2>Dashboard</h2>
-      <p>App running</p>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h1>Welcome, {user?.fullName}</h1>
+        <p className="dashboard-subtitle">
+          Manage your health and appointments
+        </p>
+      </div>
 
-      {loading && <p className="status-text">Checking backend health...</p>}
+      <div className="dashboard-content">
+        {activeTab === "appointments" && (
+          <>
+            <BookingCalendar />
+            <MyAppointments />
+            <AppointmentReminders />
+          </>
+        )}
 
-      {!loading && error && <p className="error-text">{error}</p>}
+        {activeTab === "health" && (
+          <>
+            <HealthAlerts />
+            <RiskScoring />
+            <HealthJourney />
+          </>
+        )}
 
-      {!loading && health && (
-        <div className="status-box">
-          <h3>Health Response</h3>
-          <pre>{JSON.stringify(health, null, 2)}</pre>
-        </div>
-      )}
-    </section>
+        {activeTab === "wellness" && <WellnessPlan />}
+
+        {activeTab === "records" && <LongitudinalRecords />}
+
+        {activeTab === "feedback" && <FeedbackForm />}
+
+        {activeTab === "profile" && <ProfileSection onLogout={logout} />}
+      </div>
+    </div>
   );
 }
 

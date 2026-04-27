@@ -3,13 +3,16 @@ import { prisma } from "../config/prisma";
 import { env } from "../config/env";
 
 interface AppointmentInput {
-  patientId: number;
+  patientId: string; // UUID string
   scheduledAt: string;
   reason: string;
 }
 
-interface Appointment extends AppointmentInput {
-  id: number;
+interface Appointment {
+  id: string;
+  patientId: string;
+  scheduledAt: string;
+  reason: string;
   status: string;
   createdAt: string;
 }
@@ -17,7 +20,7 @@ interface Appointment extends AppointmentInput {
 export async function createAppointment(input: AppointmentInput): Promise<Appointment> {
   const appointment = await prisma.appointment.create({
     data: {
-      userId: String(input.patientId), // Convert to string for UUID
+      userId: input.patientId, // Use UUID directly
       scheduledAt: new Date(input.scheduledAt),
       reason: input.reason,
       status: AppointmentStatus.PENDING,
@@ -25,11 +28,11 @@ export async function createAppointment(input: AppointmentInput): Promise<Appoin
   });
 
   return {
-    id: parseInt(appointment.id.substring(0, 8), 16), // Convert UUID to number for compatibility
-    patientId: input.patientId,
+    id: appointment.id,
+    patientId: appointment.userId,
     scheduledAt: appointment.scheduledAt.toISOString(),
     reason: appointment.reason,
-    status: appointment.status.toLowerCase() as "pending",
+    status: appointment.status.toLowerCase(),
     createdAt: appointment.createdAt.toISOString(),
   };
 }
@@ -61,11 +64,11 @@ export async function listAppointments(userId?: string, status?: string): Promis
   });
 
   return appointments.map((apt) => ({
-    id: parseInt(apt.id.substring(0, 8), 16),
-    patientId: parseInt(apt.userId.substring(0, 8), 16),
+    id: apt.id,
+    patientId: apt.userId,
     scheduledAt: apt.scheduledAt.toISOString(),
     reason: apt.reason,
-    status: apt.status.toLowerCase() as any,
+    status: apt.status.toLowerCase(),
     createdAt: apt.createdAt.toISOString(),
     patient: apt.user,
     notes: apt.notes || undefined,

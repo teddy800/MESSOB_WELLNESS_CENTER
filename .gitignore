@@ -1,6 +1,7 @@
 node_modules/
 backend/node_modules/
 frontend/node_modules/
+docs/
 
 backend/dist/
 frontend/dist/
@@ -36,8 +37,4 @@ tmp/
 temp/
 *.tmp
 
-backend/*.md
-backend/BUILD_STATUS.md
-backend/STARTUP_CHECKLIST.md
-!backend/README.md
-# backend/*.sh
+docs/*.sh

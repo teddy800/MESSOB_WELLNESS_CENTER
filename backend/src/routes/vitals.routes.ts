@@ -5,6 +5,7 @@ import {
   postBloodPressure,
   getVitalsHistoryHandler,
   getLatestVitalsHandler,
+  getRiskScoreHandler,
 } from "../controllers/vitals.controller";
 import { authenticate, authorize, authorizeSelfOrAdmin } from "../middleware/auth.middleware";
 import { UserRole } from "../generated/prisma";
@@ -54,6 +55,14 @@ router.get(
   authenticate,
   authorizeSelfOrAdmin("userId"),
   getLatestVitalsHandler,
+);
+
+// Get risk score - user can view own risk score, admins can view any
+router.get(
+  "/risk-score/:userId",
+  authenticate,
+  authorizeSelfOrAdmin("userId"),
+  getRiskScoreHandler,
 );
 
 export default router;
