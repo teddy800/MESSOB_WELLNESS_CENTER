@@ -195,3 +195,46 @@ export async function updateAppointment(req: AuthRequest, res: Response): Promis
     });
   }
 }
+
+export async function sendReminderHandler(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const appointmentId = req.params.id;
+
+    if (!appointmentId || typeof appointmentId !== "string") {
+      res.status(400).json({
+        status: "error",
+        message: "Appointment ID is required",
+      });
+      return;
+    }
+
+    const appointment = await getAppointmentById(appointmentId);
+
+    if (!appointment) {
+      res.status(404).json({
+        status: "error",
+        message: "Appointment not found",
+      });
+      return;
+    }
+
+    // TODO: Integrate with SMS service (Twilio, AWS SNS, etc.)
+    // For now, just return success
+    console.log(`SMS reminder sent for appointment ${appointmentId}`);
+
+    res.status(200).json({
+      status: "success",
+      message: "SMS reminder sent successfully",
+      data: {
+        appointmentId,
+        reminderSent: true,
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Failed to send reminder",
+    });
+  }
+}

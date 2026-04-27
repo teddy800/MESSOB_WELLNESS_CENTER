@@ -4,6 +4,7 @@ import {
   postAppointment,
   getAppointment,
   updateAppointment,
+  sendReminderHandler,
 } from "../controllers/appointments.controller";
 import { authenticate, authorizeMinRole } from "../middleware/auth.middleware";
 import { UserRole } from "../generated/prisma";
@@ -39,6 +40,14 @@ router.patch(
   authenticate,
   authorizeMinRole(UserRole.NURSE_OFFICER),
   updateAppointment,
+);
+
+// Send SMS reminder - CUSTOMER_STAFF and above can request reminders
+router.post(
+  "/:id/send-reminder",
+  authenticate,
+  authorizeMinRole(UserRole.CUSTOMER_STAFF),
+  sendReminderHandler,
 );
 
 export default router;

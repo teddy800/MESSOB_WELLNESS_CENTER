@@ -225,3 +225,33 @@
     width: 100%;
   }
 }
+
+
+/* ========================================
+   DASHBOARD HEADER STYLES
+   ======================================== */
+
+.dashboard-header {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #284394 0%, #2563eb 100%);
+  color: white;
+  border-radius: 12px;
+}
+
+.dashboard-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  color: #fbbf24;
+}
+
+.dashboard-subtitle {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 1rem;
+}
+
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}

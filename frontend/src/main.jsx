@@ -9,6 +9,7 @@ import "./styles/login.css";
 import "./styles/register.css";
 import "./styles/dashboard.css";
 import "./styles/dashboard-priority2.css";
+import "./styles/dashboard-new-features.css";
 import "./styles/manager-dashboard.css";
 import "./styles/nurse-dashboard.css";
 

@@ -16,22 +16,22 @@ export const createFeedback = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const { userId, rating, comment, category } = req.body;
+    const { 
+      userId, 
+      npsScore, 
+      serviceQuality, 
+      staffBehavior, 
+      cleanliness, 
+      waitTime,
+      comments,
+      feedbackType 
+    } = req.body;
 
     // Validate required fields
-    if (!userId || !rating) {
+    if (!userId) {
       res.status(400).json({
         status: "error",
-        message: "userId and rating are required",
-      });
-      return;
-    }
-
-    // Validate rating range
-    if (rating < 1 || rating > 5) {
-      res.status(400).json({
-        status: "error",
-        message: "Rating must be between 1 and 5",
+        message: "userId is required",
       });
       return;
     }
@@ -45,11 +45,44 @@ export const createFeedback = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
+    // Validate NPS score
+    if (npsScore !== undefined && (npsScore < 0 || npsScore > 10)) {
+      res.status(400).json({
+        status: "error",
+        message: "NPS score must be between 0 and 10",
+      });
+      return;
+    }
+
+    // Validate rating scales
+    const validateRating = (rating: any, fieldName: string) => {
+      if (rating !== undefined && (rating < 1 || rating > 5)) {
+        throw new Error(`${fieldName} must be between 1 and 5`);
+      }
+    };
+
+    try {
+      validateRating(serviceQuality, "Service Quality");
+      validateRating(staffBehavior, "Staff Behavior");
+      validateRating(cleanliness, "Cleanliness");
+      validateRating(waitTime, "Wait Time");
+    } catch (error) {
+      res.status(400).json({
+        status: "error",
+        message: error instanceof Error ? error.message : "Invalid rating",
+      });
+      return;
+    }
+
     const feedback = await FeedbackService.createFeedback({
       userId,
-      rating,
-      comment,
-      category,
+      npsScore,
+      serviceQuality,
+      staffBehavior,
+      cleanliness,
+      waitTime,
+      comments,
+      feedbackType: feedbackType || "SERVICE",
     });
 
     res.status(201).json({
@@ -63,7 +96,7 @@ export const createFeedback = async (req: AuthRequest, res: Response): Promise<v
     console.error("Create feedback error:", error);
     res.status(500).json({
       status: "error",
-      message: "Failed to create feedback",
+      message: error instanceof Error ? error.message : "Failed to create feedback",
     });
   }
 };
@@ -92,7 +125,7 @@ export const getAllFeedback = async (req: AuthRequest, res: Response): Promise<v
       return;
     }
 
-    const { userId, rating, category, limit, stats } = req.query;
+    const { userId, npsScore, limit, stats } = req.query;
 
     // If stats requested, return statistics
     if (stats === "true") {
@@ -107,8 +140,7 @@ export const getAllFeedback = async (req: AuthRequest, res: Response): Promise<v
     // Otherwise return feedback list
     const filters: any = {};
     if (userId) filters.userId = userId as string;
-    if (rating) filters.rating = parseInt(rating as string);
-    if (category) filters.category = category as string;
+    if (npsScore) filters.npsScore = parseInt(npsScore as string);
     if (limit) filters.limit = parseInt(limit as string);
 
     const feedback = await FeedbackService.getAllFeedback(filters);

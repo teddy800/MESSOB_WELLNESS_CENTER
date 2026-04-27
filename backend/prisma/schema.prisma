@@ -258,10 +258,17 @@ model Feedback {
   id      String @id @default(uuid()) @db.Uuid
   userId  String @db.Uuid
   
+  // NPS and Satisfaction Ratings
+  npsScore        Int?    // 0-10 Net Promoter Score
+  serviceQuality  Int?    // 1-5 rating
+  staffBehavior   Int?    // 1-5 rating
+  cleanliness     Int?    // 1-5 rating
+  waitTime        Int?    // 1-5 rating
+  
   // Feedback Details
-  rating  Int    // 1-5 rating
-  comment String?
-  category String? // e.g., "service", "facility", "staff"
+  rating          Int?    // Average rating (for backward compatibility)
+  comments        String? // Additional comments
+  feedbackType    String? @default("SERVICE") // e.g., "SERVICE", "FACILITY", "STAFF"
   
   // Timestamps
   createdAt DateTime @default(now()) @db.Timestamptz(3)
@@ -270,9 +277,9 @@ model Feedback {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@index([userId])
-  @@index([rating])
+  @@index([npsScore])
   @@index([createdAt(sort: Desc)])
-  @@index([rating, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
   @@map("feedback")
 }
 
