@@ -41,6 +41,7 @@ export function getVitalsModuleStatus(_req: Request, res: Response): void {
         "POST /api/v1/vitals/blood-pressure",
         "GET /api/v1/vitals/history/:userId",
         "GET /api/v1/vitals/latest/:userId",
+        "GET /api/v1/vitals/risk-score/:userId",
       ],
     },
   });
@@ -212,4 +213,72 @@ export async function getLatestVitalsHandler(req: AuthRequest, res: Response): P
       message: "Failed to retrieve latest vitals",
     });
   }
+}
+
+export async function getRiskScoreHandler(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const userId = req.params.userId;
+
+    if (!userId || typeof userId !== "string") {
+      res.status(400).json({
+        status: "error",
+        message: "userId is required",
+      });
+      return;
+    }
+
+    const latest = await getLatestVitals(userId);
+
+    if (!latest) {
+      res.status(404).json({
+        status: "error",
+        message: "No vitals records found for this user",
+      });
+      return;
+    }
+
+    // Calculate risk scores
+    const hypertensionRisk = calculateHypertensionRisk(latest.systolicBP, latest.diastolicBP);
+    const diabetesRisk = calculateDiabetesRisk(latest.glucose);
+    const obesityRisk = calculateObesityRisk(latest.bmi);
+
+    const scores = {
+      hypertension: hypertensionRisk,
+      diabetes: diabetesRisk,
+      obesity: obesityRisk,
+      overall: Math.round((hypertensionRisk + diabetesRisk + obesityRisk) / 3),
+    };
+
+    res.status(200).json({
+      status: "success",
+      data: scores,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Failed to calculate risk scores",
+    });
+  }
+}
+
+function calculateHypertensionRisk(systolic?: number, diastolic?: number): number {
+  if (!systolic) return 0;
+  if (systolic < 120) return 0;
+  if (systolic < 130) return 20;
+  if (systolic < 140) return 50;
+  return 100;
+}
+
+function calculateDiabetesRisk(glucose?: number): number {
+  if (!glucose) return 0;
+  if (glucose < 100) return 0;
+  if (glucose < 126) return 50;
+  return 100;
+}
+
+function calculateObesityRisk(bmi?: number): number {
+  if (!bmi) return 0;
+  if (bmi < 25) return 0;
+  if (bmi < 30) return 50;
+  return 100;
 }
