@@ -78,25 +78,37 @@ function MainLayout({ children }) {
                   className={dashboardTab === "appointments" ? "active" : ""}
                   to="/dashboard?tab=appointments"
                 >
-                  Appointments
+                  📋 Appointments
                 </Link>
                 <Link
                   className={dashboardTab === "health" ? "active" : ""}
                   to="/dashboard?tab=health"
                 >
-                  Health Journey
+                  💪 Health Journey
                 </Link>
                 <Link
                   className={dashboardTab === "wellness" ? "active" : ""}
                   to="/dashboard?tab=wellness"
                 >
-                  Wellness Plan
+                  💊 Wellness Plan
+                </Link>
+                <Link
+                  className={dashboardTab === "records" ? "active" : ""}
+                  to="/dashboard?tab=records"
+                >
+                  📊 Health Records
+                </Link>
+                <Link
+                  className={dashboardTab === "feedback" ? "active" : ""}
+                  to="/dashboard?tab=feedback"
+                >
+                  📝 Feedback
                 </Link>
                 <Link
                   className={dashboardTab === "profile" ? "active" : ""}
                   to="/dashboard?tab=profile"
                 >
-                  Profile
+                  👤 Profile
                 </Link>
               </div>
             )}
