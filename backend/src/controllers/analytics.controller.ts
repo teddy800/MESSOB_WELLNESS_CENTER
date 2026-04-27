@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../config/prisma";
 import { AuthRequest } from "../middleware/auth.middleware";
 import { AppointmentStatus, UserRole } from "../generated/prisma";
+import bcrypt from "bcryptjs";
 
 // ─── System Settings ──────────────────────────────────────────────────────────
 export async function getSystemSettings(req: Request, res: Response) {
@@ -305,17 +306,27 @@ export async function getHealthAnalytics(req: Request, res: Response) {
     const stage2BP = bpRecords.filter((r) => r.bpCategory === "HYPERTENSION_STAGE_2").length;
     const crisisBP = bpRecords.filter((r) => r.bpCategory === "HYPERTENSIVE_CRISIS").length;
 
-    // Feedback stats
-    const feedbackStats = await prisma.feedback.aggregate({
-      _avg: {
-        npsScore: true,
-        serviceQuality: true,
-        staffBehavior: true,
-        cleanliness: true,
-        waitTime: true,
-      },
-      _count: { id: true },
-    });
+    // Feedback stats — use raw query to handle missing columns gracefully
+    let feedbackStats = {
+      _count: { id: 0 },
+      _avg: { npsScore: null as number | null, serviceQuality: null as number | null, staffBehavior: null as number | null, cleanliness: null as number | null, waitTime: null as number | null },
+    };
+    try {
+      feedbackStats = await prisma.feedback.aggregate({
+        _avg: {
+          npsScore: true,
+          serviceQuality: true,
+          staffBehavior: true,
+          cleanliness: true,
+          waitTime: true,
+        },
+        _count: { id: true },
+      }) as typeof feedbackStats;
+    } catch {
+      // New feedback columns not yet migrated — fall back to basic count
+      const count = await prisma.feedback.count();
+      feedbackStats._count.id = count;
+    }
 
     // Total vitals recorded
     const totalVitalsRecorded = await prisma.vitalRecord.count();
@@ -342,12 +353,12 @@ export async function getHealthAnalytics(req: Request, res: Response) {
           obesity: obesityCount,
         },
         feedbackStats: {
-          total: feedbackStats._count.id,
-          avgNps: Math.round((feedbackStats._avg.npsScore || 0) * 10) / 10,
-          avgServiceQuality: Math.round((feedbackStats._avg.serviceQuality || 0) * 10) / 10,
-          avgStaffBehavior: Math.round((feedbackStats._avg.staffBehavior || 0) * 10) / 10,
-          avgCleanliness: Math.round((feedbackStats._avg.cleanliness || 0) * 10) / 10,
-          avgWaitTime: Math.round((feedbackStats._avg.waitTime || 0) * 10) / 10,
+          total: feedbackStats._count?.id ?? 0,
+          avgNps: Math.round(((feedbackStats._avg?.npsScore ?? 0) || 0) * 10) / 10,
+          avgServiceQuality: Math.round(((feedbackStats._avg?.serviceQuality ?? 0) || 0) * 10) / 10,
+          avgStaffBehavior: Math.round(((feedbackStats._avg?.staffBehavior ?? 0) || 0) * 10) / 10,
+          avgCleanliness: Math.round(((feedbackStats._avg?.cleanliness ?? 0) || 0) * 10) / 10,
+          avgWaitTime: Math.round(((feedbackStats._avg?.waitTime ?? 0) || 0) * 10) / 10,
         },
       },
     });
@@ -450,7 +461,6 @@ export async function createStaffUser(req: AuthRequest, res: Response) {
       return;
     }
 
-    const bcrypt = await import("bcryptjs");
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const newUser = await prisma.$transaction(async (tx) => {
