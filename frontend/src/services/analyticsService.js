@@ -60,4 +60,10 @@ export const analyticsService = {
     const response = await api.get('/api/v1/analytics/audit-logs', { params: { limit } });
     return response.data;
   },
+
+  // ─── Trends (daily / weekly / monthly) ──────────────────────────────────────
+  async getTrends() {
+    const response = await api.get('/api/v1/analytics/trends');
+    return response.data;
+  },
 };

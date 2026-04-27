@@ -515,3 +515,68 @@ export async function getAuditLogs(req: AuthRequest, res: Response) {
     res.status(500).json({ success: false, message: "Failed to fetch audit logs" });
   }
 }
+
+// ─── Daily / Weekly / Monthly Trends (real DB) ───────────────────────────────
+export async function getTrends(req: Request, res: Response) {
+  try {
+    const now = new Date();
+
+    // ── Daily: last 7 days ──
+    const dailyData = await Promise.all(
+      Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(now);
+        d.setDate(now.getDate() - (6 - i));
+        const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+        const end   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+        const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+        return Promise.all([
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end } } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end }, status: AppointmentStatus.COMPLETED } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end }, status: AppointmentStatus.NO_SHOW } }),
+        ]).then(([total, completed, noShow]) => ({ label, total, completed, noShow }));
+      })
+    );
+
+    // ── Weekly: last 8 weeks ──
+    const weeklyData = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => {
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay() - (7 - i) * 7);
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        const label = `W${i + 1}`;
+        return Promise.all([
+          prisma.appointment.count({ where: { scheduledAt: { gte: weekStart, lte: weekEnd } } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: weekStart, lte: weekEnd }, status: AppointmentStatus.COMPLETED } }),
+          prisma.user.count({ where: { createdAt: { gte: weekStart, lte: weekEnd } } }),
+        ]).then(([total, completed, newUsers]) => ({ label, total, completed, newUsers }));
+      })
+    );
+
+    // ── Monthly: last 6 months ──
+    const monthlyData = await Promise.all(
+      Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+        const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0);
+        const end   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+        const label = d.toLocaleDateString('en-US', { month: 'short' });
+        return Promise.all([
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end } } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end }, status: AppointmentStatus.COMPLETED } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end }, status: AppointmentStatus.NO_SHOW } }),
+          prisma.user.count({ where: { createdAt: { gte: start, lte: end } } }),
+          prisma.vitalRecord.count({ where: { recordedAt: { gte: start, lte: end } } }),
+        ]).then(([total, completed, noShow, newUsers, vitals]) => ({
+          label, total, completed, noShow, newUsers, vitals,
+        }));
+      })
+    );
+
+    res.json({ success: true, data: { daily: dailyData, weekly: weeklyData, monthly: monthlyData } });
+  } catch (error) {
+    console.error("Error fetching trends:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch trends" });
+  }
+}
