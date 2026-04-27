@@ -1,5 +1,50 @@
 /* Manager Dashboard Styles - Matching main branch design patterns */
 
+/* ── White canvas so content is visible over the blue body background ── */
+.dashboard-container {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  min-height: calc(100vh - 120px);
+  color: #212529;
+}
+
+.dashboard-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+  padding: 0.6rem 1.2rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+  color: #495057;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.tab-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.tab-btn.active {
+  background: #284394;
+  border-color: #284394;
+  color: #ffffff;
+}
+
+.tab-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .access-denied {
   text-align: center;
   padding: 2rem;
