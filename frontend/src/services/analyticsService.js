@@ -1,70 +1,63 @@
 import api from './api';
 
 export const analyticsService = {
-  // System Settings
+
+  // ─── System Settings ────────────────────────────────────────────────────────
   async getSystemSettings() {
-    try {
-      const response = await api.get('/api/v1/analytics/settings');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching system settings:', error);
-      throw error;
-    }
+    const response = await api.get('/api/v1/analytics/settings');
+    return response.data;
   },
 
   async updateSystemSettings(settings) {
-    try {
-      const response = await api.put('/api/v1/analytics/settings', settings);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating system settings:', error);
-      throw error;
-    }
+    const response = await api.put('/api/v1/analytics/settings', settings);
+    return response.data;
   },
 
-  // Capacity Management
+  // ─── Capacity ───────────────────────────────────────────────────────────────
   async getCapacityInfo(date) {
-    try {
-      const params = date ? { date } : {};
-      const response = await api.get('/api/v1/analytics/capacity', { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching capacity info:', error);
-      throw error;
-    }
+    const params = date ? { date } : {};
+    const response = await api.get('/api/v1/analytics/capacity', { params });
+    return response.data;
   },
 
-  // Booking Statistics
+  // ─── Booking Stats ──────────────────────────────────────────────────────────
   async getBookingStats(date) {
-    try {
-      const params = date ? { date } : {};
-      const response = await api.get('/api/v1/analytics/appointments/stats', { params });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching booking stats:', error);
-      throw error;
-    }
+    const params = date ? { date } : {};
+    const response = await api.get('/api/v1/analytics/appointments/stats', { params });
+    return response.data;
   },
 
-  // Queue Analytics
+  // ─── Queue Analytics ────────────────────────────────────────────────────────
   async getQueueAnalytics() {
-    try {
-      const response = await api.get('/api/v1/analytics/queue/analytics');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching queue analytics:', error);
-      throw error;
-    }
+    const response = await api.get('/api/v1/analytics/queue/analytics');
+    return response.data;
   },
 
-  // Health Analytics
+  // ─── Health Analytics ───────────────────────────────────────────────────────
   async getHealthAnalytics() {
-    try {
-      const response = await api.get('/api/v1/analytics/health/analytics');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching health analytics:', error);
-      throw error;
-    }
-  }
+    const response = await api.get('/api/v1/analytics/health/analytics');
+    return response.data;
+  },
+
+  // ─── Staff Users ────────────────────────────────────────────────────────────
+  async getStaffUsers() {
+    const response = await api.get('/api/v1/analytics/users/staff');
+    return response.data;
+  },
+
+  async createStaffUser(userData) {
+    const response = await api.post('/api/v1/analytics/users/staff', userData);
+    return response.data;
+  },
+
+  async toggleUserStatus(userId) {
+    const response = await api.patch(`/api/v1/analytics/users/${userId}/toggle`);
+    return response.data;
+  },
+
+  // ─── Audit Logs ─────────────────────────────────────────────────────────────
+  async getAuditLogs(limit = 50) {
+    const response = await api.get('/api/v1/analytics/audit-logs', { params: { limit } });
+    return response.data;
+  },
 };
