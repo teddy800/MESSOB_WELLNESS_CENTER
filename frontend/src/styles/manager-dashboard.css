@@ -514,3 +514,80 @@
 
 .mgr-period-btn:hover  { background: #e2e8f0; color: #284394; }
 .mgr-period-btn.active { background: #284394; color: #ffffff; box-shadow: 0 2px 6px rgba(40,67,148,0.3); }
+
+/* ── Dark Chart Cards ── */
+.mgr-dark-card {
+  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+
+.mgr-dark-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.mgr-dark-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  flex: 1;
+}
+
+.mgr-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: mgrPulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes mgrPulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px #22c55e; }
+  50%       { opacity: 0.6; box-shadow: 0 0 14px #22c55e; }
+}
+
+.mgr-demo-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.3);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.mgr-dark-stats {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.mgr-dark-stat {
+  flex: 1;
+  text-align: center;
+}
+
+.mgr-dark-stat span {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.mgr-dark-stat small {
+  font-size: 0.68rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
