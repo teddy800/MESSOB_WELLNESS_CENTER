@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import AnimatedWaveBackground from "../components/AnimatedWaveBackground";
 import "../styles/register.css";
 
 function Register() {
@@ -319,6 +320,8 @@ function Register() {
 
   return (
     <div className="mesob-auth-wrapper">
+      {/* Animated wave background with particles */}
+      <AnimatedWaveBackground />
       <div className="mesob-auth-container">
         <div className="mesob-auth-card">
           {/* Logo and Header Section */}
