@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 
 // ─── Role guard ───────────────────────────────────────────────────────────────
-const MANAGER_ROLES = ['MANAGER', 'REGIONAL_OFFICE', 'FEDERAL_ADMIN'];
+const MANAGER_ROLES = ['MANAGER', 'REGIONAL_OFFICE', 'SYSTEM_ADMIN'];
 
 // ─── Root Component ───────────────────────────────────────────────────────────
 const ManagerDashboard = () => {
@@ -811,7 +811,7 @@ const UsersTab = ({ loading, users, onRefresh }) => {
                   <option value="NURSE_OFFICER">Nurse Officer</option>
                   <option value="MANAGER">Manager</option>
                   <option value="REGIONAL_OFFICE">Regional Office</option>
-                  <option value="FEDERAL_ADMIN">Federal Admin</option>
+                  <option value="SYSTEM_ADMIN">System Admin</option>
                 </select>
               </div>
               <div className="modal-actions">

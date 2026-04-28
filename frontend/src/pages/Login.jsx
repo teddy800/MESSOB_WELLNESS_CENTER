@@ -1,14 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Input from "../components/forms/Input";
 import Button from "../components/forms/Button";
 
-const SUGGESTED_CREDENTIALS = {
-  "customer@mesob.et": "Customer123!",
+// Key for localStorage
+const CACHED_CREDENTIALS_KEY = 'mesob_cached_credentials';
+
+// Default test credentials
+const DEFAULT_CREDENTIALS = {
+  "staff@mesob.et": "Staff123!",
   "nurse@mesob.et": "Nurse123!",
   "manager@mesob.et": "Manager123!",
   "regional@mesob.et": "Regional123!",
+  "federal@mesob.et": "Federal123!",
   "admin@mesob.et": "Admin123!",
 };
 
@@ -23,6 +28,36 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [cachedCredentials, setCachedCredentials] = useState({});
+
+  // Load cached credentials on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(CACHED_CREDENTIALS_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setCachedCredentials({ ...DEFAULT_CREDENTIALS, ...parsed });
+      } else {
+        setCachedCredentials(DEFAULT_CREDENTIALS);
+      }
+    } catch (error) {
+      console.error('Error loading cached credentials:', error);
+      setCachedCredentials(DEFAULT_CREDENTIALS);
+    }
+  }, []);
+
+  // Save credentials to cache
+  const cacheCredentials = (email, password) => {
+    try {
+      const cached = localStorage.getItem(CACHED_CREDENTIALS_KEY);
+      const existing = cached ? JSON.parse(cached) : {};
+      const updated = { ...existing, [email]: password };
+      localStorage.setItem(CACHED_CREDENTIALS_KEY, JSON.stringify(updated));
+      setCachedCredentials({ ...DEFAULT_CREDENTIALS, ...updated });
+    } catch (error) {
+      console.error('Error caching credentials:', error);
+    }
+  };
   const validateForm = () => {
     const newErrors = {};
 
@@ -52,11 +87,12 @@ function Login() {
       [name]: value,
     };
 
+    // Auto-fill password when email is selected or matches cached credential
     if (name === "email") {
-      const suggestedPassword =
-        SUGGESTED_CREDENTIALS[value.trim().toLowerCase()];
-      if (suggestedPassword) {
-        nextFormData.password = suggestedPassword;
+      const emailLower = value.trim().toLowerCase();
+      const cachedPassword = cachedCredentials[emailLower];
+      if (cachedPassword) {
+        nextFormData.password = cachedPassword;
       }
     }
 
@@ -84,12 +120,16 @@ function Login() {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
+      // Cache credentials on successful login
+      cacheCredentials(formData.email.toLowerCase(), formData.password);
+      
       const roleRoutes = {
-        CUSTOMER_STAFF: "/dashboard",
+        STAFF: "/dashboard",
         NURSE_OFFICER: "/nurse",
         MANAGER: "/manager",
         REGIONAL_OFFICE: "/regional",
-        FEDERAL_ADMIN: "/admin",
+        FEDERAL_OFFICE: "/federal",
+        SYSTEM_ADMIN: "/admin",
       };
       const route = roleRoutes[result?.user?.role] || "/dashboard";
       navigate(route, { replace: true });
@@ -144,12 +184,12 @@ function Login() {
                 placeholder="mail@example.com"
                 required
                 disabled={loading}
-                autoComplete="username"
+                autoComplete="username email"
                 list="mesob-email-suggestions"
               />
 
               <datalist id="mesob-email-suggestions">
-                {Object.keys(SUGGESTED_CREDENTIALS).map((email) => (
+                {Object.keys(cachedCredentials).map((email) => (
                   <option key={email} value={email} />
                 ))}
               </datalist>
