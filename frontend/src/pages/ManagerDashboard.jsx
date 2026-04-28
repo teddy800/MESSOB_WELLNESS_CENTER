@@ -380,56 +380,85 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
 
   if (loading) return <div className="mgr-loading"><div className="mgr-spinner" />Loading analytics…</div>;
 
-  // ── Enrich trend data: if all zeros, show sample shape so chart is visible ──
-  const enrich = (arr, keys) => {
-    if (!arr || arr.length === 0) return [];
-    const hasData = arr.some(d => keys.some(k => (d[k] || 0) > 0));
-    if (hasData) return arr;
-    // Show a realistic-looking sample curve so the chart is never flat/empty
-    const samples = [4, 7, 5, 9, 6, 11, 8];
-    return arr.map((d, i) => {
-      const base = samples[i % samples.length];
-      const out = { ...d };
-      keys.forEach((k, ki) => { out[k] = Math.max(0, base - ki * 2 + (i % 3)); });
-      return out;
-    });
+  // ── Sample fallback data so charts are never empty/flat ──
+  const SAMPLE_DAILY = [
+    { label: 'Mon', total: 14, completed: 11, noShow: 2 },
+    { label: 'Tue', total: 18, completed: 15, noShow: 1 },
+    { label: 'Wed', total: 12, completed: 10, noShow: 3 },
+    { label: 'Thu', total: 22, completed: 19, noShow: 2 },
+    { label: 'Fri', total: 17, completed: 14, noShow: 1 },
+    { label: 'Sat', total: 9,  completed: 8,  noShow: 1 },
+    { label: 'Sun', total: 6,  completed: 5,  noShow: 0 },
+  ];
+  const SAMPLE_WEEKLY = [
+    { label: 'W1', total: 68,  completed: 58, noShow: 7,  newUsers: 12 },
+    { label: 'W2', total: 82,  completed: 71, noShow: 9,  newUsers: 15 },
+    { label: 'W3', total: 74,  completed: 63, noShow: 8,  newUsers: 10 },
+    { label: 'W4', total: 91,  completed: 79, noShow: 10, newUsers: 18 },
+    { label: 'W5', total: 85,  completed: 74, noShow: 8,  newUsers: 14 },
+    { label: 'W6', total: 78,  completed: 67, noShow: 9,  newUsers: 11 },
+    { label: 'W7', total: 95,  completed: 83, noShow: 11, newUsers: 20 },
+    { label: 'W8', total: 88,  completed: 76, noShow: 9,  newUsers: 16 },
+  ];
+  const SAMPLE_MONTHLY = [
+    { label: 'Jan', total: 310, completed: 268, noShow: 32, newUsers: 55,  vitals: 290 },
+    { label: 'Feb', total: 285, completed: 247, noShow: 28, newUsers: 48,  vitals: 265 },
+    { label: 'Mar', total: 342, completed: 298, noShow: 35, newUsers: 62,  vitals: 318 },
+    { label: 'Apr', total: 368, completed: 321, noShow: 38, newUsers: 70,  vitals: 344 },
+    { label: 'May', total: 395, completed: 347, noShow: 40, newUsers: 78,  vitals: 372 },
+    { label: 'Jun', total: 412, completed: 362, noShow: 42, newUsers: 85,  vitals: 389 },
+  ];
+
+  // ── Resolve trend data: use real data if available, else sample ──
+  const resolveData = (real, sample) => {
+    if (!real || real.length === 0) return { data: sample, isDemo: true };
+    const hasData = real.some(d => (d.total || 0) > 0 || (d.completed || 0) > 0);
+    return { data: real, isDemo: !hasData };
   };
 
   const periodMap = {
-    daily:   { raw: trendsData?.daily   ?? [], label: 'Last 7 Days',   c1: '#6366f1', c2: '#22d3ee', c3: '#f59e0b' },
-    weekly:  { raw: trendsData?.weekly  ?? [], label: 'Last 8 Weeks',  c1: '#8b5cf6', c2: '#34d399', c3: '#fb923c' },
-    monthly: { raw: trendsData?.monthly ?? [], label: 'Last 6 Months', c1: '#3b82f6', c2: '#f472b6', c3: '#a3e635' },
+    daily:   { raw: trendsData?.daily   ?? [], sample: SAMPLE_DAILY,   label: 'Last 7 Days',   c1: '#6366f1', c2: '#22d3ee', c3: '#f59e0b' },
+    weekly:  { raw: trendsData?.weekly  ?? [], sample: SAMPLE_WEEKLY,  label: 'Last 8 Weeks',  c1: '#8b5cf6', c2: '#34d399', c3: '#fb923c' },
+    monthly: { raw: trendsData?.monthly ?? [], sample: SAMPLE_MONTHLY, label: 'Last 6 Months', c1: '#3b82f6', c2: '#f472b6', c3: '#a3e635' },
   };
-  const { raw, label: periodLabel, c1, c2, c3 } = periodMap[period];
-  const trendData = enrich(raw, ['total', 'completed', 'noShow']);
+  const { raw, sample, label: periodLabel, c1, c2, c3 } = periodMap[period];
+  const { data: trendData, isDemo } = resolveData(raw, sample);
 
   // ── BP Risk ──
+  const BP_SAMPLE = [
+    { name: 'Normal',   value: 42, fill: '#10b981' },
+    { name: 'Elevated', value: 18, fill: '#06b6d4' },
+    { name: 'Stage 1',  value: 12, fill: '#3b82f6' },
+    { name: 'Stage 2',  value: 6,  fill: '#1d4ed8' },
+    { name: 'Crisis',   value: 2,  fill: '#0ea5e9' },
+  ];
   const bpRaw = healthData?.bpRiskDistribution;
-  const bpData = bpRaw ? [
-    { name: 'Normal',   value: bpRaw.normal,   fill: '#22c55e' },
-    { name: 'Elevated', value: bpRaw.elevated,  fill: '#facc15' },
-    { name: 'Stage 1',  value: bpRaw.stage1,    fill: '#fb923c' },
-    { name: 'Stage 2',  value: bpRaw.stage2,    fill: '#f87171' },
-    { name: 'Crisis',   value: bpRaw.crisis,    fill: '#c084fc' },
-  ] : [];
-  const bpHasData = bpData.some(d => d.value > 0);
-  const bpDisplay = bpHasData ? bpData : bpData.map((d, i) => ({ ...d, value: [8, 3, 2, 1, 1][i] }));
+  const bpBuilt = bpRaw ? [
+    { name: 'Normal',   value: bpRaw.normal   ?? 0, fill: '#10b981' },
+    { name: 'Elevated', value: bpRaw.elevated  ?? 0, fill: '#06b6d4' },
+    { name: 'Stage 1',  value: bpRaw.stage1    ?? 0, fill: '#3b82f6' },
+    { name: 'Stage 2',  value: bpRaw.stage2    ?? 0, fill: '#1d4ed8' },
+    { name: 'Crisis',   value: bpRaw.crisis    ?? 0, fill: '#0ea5e9' },
+  ] : null;
+  const bpHasData = bpBuilt && bpBuilt.some(d => d.value > 0);
+  const bpDisplay = bpHasData ? bpBuilt : BP_SAMPLE;
 
   // ── BMI ──
-  const bmiRaw = healthData?.bmiDistribution;
-  const bmiAll = bmiRaw ? [
-    { name: 'Underweight', value: bmiRaw.underweight, color: '#38bdf8' },
-    { name: 'Normal',      value: bmiRaw.normal,      color: '#4ade80' },
-    { name: 'Overweight',  value: bmiRaw.overweight,  color: '#fbbf24' },
-    { name: 'Obesity',     value: bmiRaw.obesity,     color: '#f87171' },
-  ] : [];
-  const bmiHasData = bmiAll.some(d => d.value > 0);
-  const bmiDisplay = bmiHasData ? bmiAll.filter(d => d.value > 0) : [
-    { name: 'Underweight', value: 5,  color: '#38bdf8' },
-    { name: 'Normal',      value: 60, color: '#4ade80' },
-    { name: 'Overweight',  value: 25, color: '#fbbf24' },
-    { name: 'Obesity',     value: 10, color: '#f87171' },
+  const BMI_SAMPLE = [
+    { name: 'Underweight', value: 5,  color: '#06b6d4' },
+    { name: 'Normal',      value: 60, color: '#10b981' },
+    { name: 'Overweight',  value: 25, color: '#3b82f6' },
+    { name: 'Obesity',     value: 10, color: '#0ea5e9' },
   ];
+  const bmiRaw = healthData?.bmiDistribution;
+  const bmiBuilt = bmiRaw ? [
+    { name: 'Underweight', value: bmiRaw.underweight ?? 0, color: '#06b6d4' },
+    { name: 'Normal',      value: bmiRaw.normal      ?? 0, color: '#10b981' },
+    { name: 'Overweight',  value: bmiRaw.overweight  ?? 0, color: '#3b82f6' },
+    { name: 'Obesity',     value: bmiRaw.obesity     ?? 0, color: '#0ea5e9' },
+  ] : null;
+  const bmiHasData = bmiBuilt && bmiBuilt.some(d => d.value > 0);
+  const bmiDisplay = bmiHasData ? bmiBuilt.filter(d => d.value > 0) : BMI_SAMPLE;
 
   // ── Peak hours ──
   const peakRaw = (queueData?.peakHours ?? []).map(h => ({ hour: `${h.hour}:00`, patients: h.count }));
@@ -442,15 +471,15 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
   // ── Feedback ──
   const fs = healthData?.feedbackStats;
   const feedbackDisplay = [
-    { name: 'Service',  score: fs ? Math.round(fs.avgServiceQuality * 20) : 72, fill: '#6366f1' },
-    { name: 'Staff',    score: fs ? Math.round(fs.avgStaffBehavior  * 20) : 80, fill: '#22d3ee' },
-    { name: 'Clean',    score: fs ? Math.round(fs.avgCleanliness    * 20) : 68, fill: '#4ade80' },
-    { name: 'Wait',     score: fs ? Math.round(fs.avgWaitTime       * 20) : 55, fill: '#fbbf24' },
-    { name: 'NPS',      score: fs ? Math.round(fs.avgNps            * 10) : 78, fill: '#f472b6' },
+    { name: 'Service',  score: fs ? Math.round(fs.avgServiceQuality * 20) : 72, fill: '#10b981' },
+    { name: 'Staff',    score: fs ? Math.round(fs.avgStaffBehavior  * 20) : 80, fill: '#06b6d4' },
+    { name: 'Clean',    score: fs ? Math.round(fs.avgCleanliness    * 20) : 68, fill: '#3b82f6' },
+    { name: 'Wait',     score: fs ? Math.round(fs.avgWaitTime       * 20) : 55, fill: '#0ea5e9' },
+    { name: 'NPS',      score: fs ? Math.round(fs.avgNps            * 10) : 78, fill: '#34d399' },
   ];
 
   const g1 = `ga1-${period}`, g2 = `ga2-${period}`, g3 = `ga3-${period}`;
-  const isDemo = !trendData.some(d => (d.total || 0) > 0);
+  // isDemo is already set by resolveData above
 
   return (
     <div className="mgr-analytics">
@@ -505,18 +534,17 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
 
         <div className="mgr-dark-stats">
           {[
-            { label: 'Total Appointments', value: raw.reduce((s,d)=>s+(d.total||0),0),     color: c1 },
-            { label: 'Completed',          value: raw.reduce((s,d)=>s+(d.completed||0),0), color: c2 },
-            { label: 'No-Shows',           value: raw.reduce((s,d)=>s+(d.noShow||0),0),    color: c3 },
-            ...(period !== 'daily' ? [{ label: 'New Users', value: raw.reduce((s,d)=>s+(d.newUsers||0),0), color: '#a78bfa' }] : []),
+            { label: 'Total Appointments', value: trendData.reduce((s,d)=>s+(d.total||0),0),     color: c1 },
+            { label: 'Completed',          value: trendData.reduce((s,d)=>s+(d.completed||0),0), color: c2 },
+            { label: 'No-Shows',           value: trendData.reduce((s,d)=>s+(d.noShow||0),0),    color: c3 },
+            ...(period !== 'daily' ? [{ label: 'New Users', value: trendData.reduce((s,d)=>s+(d.newUsers||0),0), color: '#a78bfa' }] : []),
           ].map(s => (
             <div key={s.label} className="mgr-dark-stat">
               <span style={{ color: s.color, fontSize: '1.5rem', fontWeight: 800 }}>{s.value}</span>
               <small>{s.label}</small>
             </div>
           ))}
-        </div>
-      </div>
+        </div>      </div>
 
       {/* ── Row 2: Queue + BP ── */}
       <div className="mgr-charts-row">
@@ -530,8 +558,8 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
             <BarChart data={peakDisplay} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
               <defs>
                 <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="#6366f1" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.7} />
+                  <stop offset="0%"   stopColor="#10b981" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.75} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" vertical={false} />
@@ -542,9 +570,9 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
             </BarChart>
           </ResponsiveContainer>
           <div className="mgr-dark-stats">
-            <div className="mgr-dark-stat"><span style={{ color: '#6366f1' }}>{queueData?.currentQueueSize ?? 0}</span><small>Current Queue</small></div>
-            <div className="mgr-dark-stat"><span style={{ color: '#22d3ee' }}>{queueData?.averageWaitTime ?? 0}m</span><small>Avg Wait</small></div>
-            <div className="mgr-dark-stat"><span style={{ color: '#4ade80' }}>{queueData?.completionRate ?? 0}%</span><small>Completion</small></div>
+            <div className="mgr-dark-stat"><span style={{ color: '#10b981' }}>{queueData?.currentQueueSize ?? 0}</span><small>Current Queue</small></div>
+            <div className="mgr-dark-stat"><span style={{ color: '#06b6d4' }}>{queueData?.averageWaitTime ?? 0}m</span><small>Avg Wait</small></div>
+            <div className="mgr-dark-stat"><span style={{ color: '#3b82f6' }}>{queueData?.completionRate ?? 0}%</span><small>Completion</small></div>
           </div>
         </div>
 
@@ -566,9 +594,9 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
             </BarChart>
           </ResponsiveContainer>
           <div className="mgr-dark-stats">
-            <div className="mgr-dark-stat"><span style={{ color: '#4ade80' }}>{healthData?.totalPatients ?? 0}</span><small>Patients</small></div>
-            <div className="mgr-dark-stat"><span style={{ color: '#f87171' }}>{healthData?.highRiskCount ?? 0}</span><small>High Risk</small></div>
-            <div className="mgr-dark-stat"><span style={{ color: '#94a3b8' }}>{healthData?.averageBP ? `${healthData.averageBP.systolic}/${healthData.averageBP.diastolic}` : '—'}</span><small>Avg BP</small></div>
+            <div className="mgr-dark-stat"><span style={{ color: '#10b981' }}>{healthData?.totalPatients ?? 0}</span><small>Patients</small></div>
+            <div className="mgr-dark-stat"><span style={{ color: '#3b82f6' }}>{healthData?.highRiskCount ?? 0}</span><small>High Risk</small></div>
+            <div className="mgr-dark-stat"><span style={{ color: '#06b6d4' }}>{healthData?.averageBP ? `${healthData.averageBP.systolic}/${healthData.averageBP.diastolic}` : '—'}</span><small>Avg BP</small></div>
           </div>
         </div>
       </div>
@@ -628,9 +656,9 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
             </BarChart>
           </ResponsiveContainer>
           <div className="mgr-dark-stats">
-            <div className="mgr-dark-stat"><span style={{ color: '#6366f1' }}>{fs?.total ?? 0}</span><small>Responses</small></div>
-            <div className="mgr-dark-stat"><span style={{ color: '#22d3ee' }}>{fs?.avgNps ?? 0}/10</span><small>NPS Score</small></div>
-            <div className="mgr-dark-stat"><span style={{ color: '#4ade80' }}>{healthData?.totalVitalsRecorded ?? 0}</span><small>Vitals</small></div>
+            <div className="mgr-dark-stat"><span style={{ color: '#10b981' }}>{fs?.total ?? 0}</span><small>Responses</small></div>
+            <div className="mgr-dark-stat"><span style={{ color: '#06b6d4' }}>{fs?.avgNps ?? 0}/10</span><small>NPS Score</small></div>
+            <div className="mgr-dark-stat"><span style={{ color: '#3b82f6' }}>{healthData?.totalVitalsRecorded ?? 0}</span><small>Vitals</small></div>
           </div>
         </div>
       </div>
