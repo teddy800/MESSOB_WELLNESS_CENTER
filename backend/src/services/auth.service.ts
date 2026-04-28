@@ -139,7 +139,7 @@ export class AuthService {
           email: input.email.toLowerCase(),
           password: hashedPassword,
           fullName: input.fullName.trim(),
-          role: input.role || UserRole.CUSTOMER_STAFF,
+          role: input.role || UserRole.STAFF,
           centerId: input.centerId,
           dateOfBirth: input.dateOfBirth,
           gender: input.gender,
@@ -187,7 +187,7 @@ export class AuthService {
     return {
       user: {
         id: user.id,
-        email: user.email,
+        email: user.email || "", // Handle nullable email for external patients
         fullName: user.fullName,
         role: user.role,
         isActive: user.isActive,
@@ -215,7 +215,16 @@ export class AuthService {
       throw new Error("Account is deactivated. Please contact support.");
     }
 
-    // Verify password
+    // Check if user can login (external patients cannot login)
+    if (!user.canLogin) {
+      throw new Error("This account cannot login. External patients must visit in person.");
+    }
+
+    // Verify password - handle nullable password for external patients
+    if (!user.password) {
+      throw new Error("Invalid email or password");
+    }
+
     const isPasswordValid = await bcrypt.compare(input.password, user.password);
 
     if (!isPasswordValid) {
@@ -266,7 +275,7 @@ export class AuthService {
     return {
       user: {
         id: user.id,
-        email: user.email,
+        email: user.email || "", // Handle nullable email for external patients
         fullName: user.fullName,
         role: user.role,
         isActive: user.isActive,
@@ -333,6 +342,7 @@ export class AuthService {
         fullName: true,
         role: true,
         isActive: true,
+        canLogin: true,
         dateOfBirth: true,
         gender: true,
         phone: true,
