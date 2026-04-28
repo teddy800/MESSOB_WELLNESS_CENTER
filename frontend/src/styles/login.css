@@ -1,210 +1,400 @@
 /* ========================================
-   LOGIN PAGE STYLES
+   MESOB BRAND THEME - LOGIN PAGE
+   Based on dashboard.mesobcenter.et
    ======================================== */
 
-.login-page-wrapper {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #1e3a8a 0%, #284394 50%, #312e81 100%);
+:root {
+  --mesob-primary-blue: #2B4C7E;
+  --mesob-dark-blue: #1e3a5f;
+  --mesob-accent-orange: #F59E0B;
+  --mesob-gold: #FFA500;
+  --mesob-white: #FFFFFF;
+  --mesob-light-blue: rgba(59, 130, 246, 0.1);
+  --mesob-card-bg: rgba(255, 255, 255, 0.95);
+  --mesob-input-bg: rgba(255, 255, 255, 0.9);
 }
 
-.auth-container {
-  flex: 1;
+/* Starry Background Pattern */
+.mesob-auth-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a2d5c 0%, #2E4998 50%, #3d5fa8 100%);
+  position: relative;
+  overflow: hidden;
+  background-image: 
+    linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, 0.05) 75%, rgba(255, 255, 255, 0.05) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, 0.05) 75%, rgba(255, 255, 255, 0.05) 76%, transparent 77%, transparent);
+  background-size: 120px 120px;
+}
+
+/* Animated dots container */
+.mesob-dots-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.mesob-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  animation-name: float-dot;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-duration: var(--duration, 20s);
+  animation-delay: var(--delay, 0s);
+}
+
+.mesob-dot:nth-child(1) { top: 10%; left: 10%; width: 1.5px; height: 1.5px; }
+.mesob-dot:nth-child(2) { top: 20%; left: 80%; width: 2px; height: 2px; }
+.mesob-dot:nth-child(3) { top: 30%; left: 30%; width: 1px; height: 1px; }
+.mesob-dot:nth-child(4) { top: 40%; left: 70%; width: 1.5px; height: 1.5px; }
+.mesob-dot:nth-child(5) { top: 50%; left: 20%; width: 2px; height: 2px; }
+.mesob-dot:nth-child(6) { top: 60%; left: 90%; width: 1px; height: 1px; }
+.mesob-dot:nth-child(7) { top: 70%; left: 40%; width: 1.5px; height: 1.5px; }
+.mesob-dot:nth-child(8) { top: 80%; left: 60%; width: 2px; height: 2px; }
+.mesob-dot:nth-child(9) { top: 15%; left: 50%; width: 1px; height: 1px; }
+.mesob-dot:nth-child(10) { top: 85%; left: 15%; width: 1.5px; height: 1.5px; }
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes float-dot {
+  0% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100vh) translateX(0);
+    opacity: 0;
+  }
+}
+
+/* Auth Container */
+.mesob-auth-container {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
   position: relative;
-  background: transparent;
+  z-index: 10;
 }
 
-.auth-wrapper {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  max-width: 1000px;
-  width: 100%;
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
+/* Auth Card */
+.mesob-auth-card {
+  background: #3550A0;
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 650px;
+  width: 100%;
+  padding: 2.5rem;
+  animation: slideUp 0.5s ease-out;
 }
 
-.auth-left {
-  padding: 3rem;
-  background: white;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.auth-right {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%);
-  padding: 3rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
+/* Logo Section */
+.mesob-logo-section {
   text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.auth-right::before {
-  content: '';
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-  background-size: 30px 30px;
-  animation: float 20s linear infinite;
-}
-
-@keyframes float {
-  from { transform: translate(0, 0); }
-  to { transform: translate(50px, 50px); }
-}
-
-.auth-branding {
-  position: relative;
-  z-index: 1;
-}
-
-.auth-logo-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.auth-logo {
-  width: 80px;
-  height: 80px;
-  background: white;
-  border-radius: 50%;
+.mesob-logo-circle {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  font-size: 2rem;
 }
 
-.auth-branding h2 {
-  font-size: 2rem;
-  margin: 0 0 0.5rem;
-  font-weight: 700;
+.mesob-logo-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.auth-branding p {
-  font-size: 1rem;
-  opacity: 0.95;
-  margin: 0;
-  line-height: 1.6;
-}
-
-.auth-header {
-  margin-bottom: 2rem;
-}
-
-.auth-header h2 {
-  margin: 0 0 0.5rem;
-  color: #1e293b;
-  font-size: 1.75rem;
-  font-weight: 700;
-}
-
-.auth-header p {
-  margin: 0;
-  color: #64748b;
+.mesob-title-amharic {
   font-size: 0.95rem;
+  color: #FFFFFF;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
 }
 
-.auth-form {
+.mesob-title-english {
+  font-size: 0.85rem;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.mesob-service-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.mesob-welcome {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--mesob-accent-orange);
+  margin-bottom: 0.25rem;
+}
+
+.mesob-subtitle {
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  margin-bottom: 1.5rem;
+}
+
+/* Form Styles */
+.mesob-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
-.auth-footer {
+.mesob-form-group {
+  margin-bottom: 0.5rem;
+}
+
+.mesob-form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.mesob-form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #FFFFFF;
+  transition: all 0.3s ease;
+}
+
+.mesob-form-input:focus {
+  outline: none;
+  border-color: var(--mesob-accent-orange);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.mesob-form-input:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mesob-form-input.error {
+  border-color: #ef4444;
+}
+
+.mesob-form-error {
+  display: block;
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.mesob-form-success {
+  display: block;
+  color: #059669;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.mesob-form-hint {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #FFFFFF;
+  margin-left: 0.25rem;
+}
+
+/* Password Input Wrapper */
+.mesob-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mesob-password-wrapper .mesob-form-input {
+  padding-right: 2.5rem;
+}
+
+.mesob-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.mesob-password-toggle:hover:not(:disabled) {
+  opacity: 0.7;
+}
+
+.mesob-password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Buttons */
+.mesob-btn {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mesob-btn-primary {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  background: #FFFFFF;
+  color: #3550A0;
+}
+
+.mesob-btn-primary:hover:not(:disabled) {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.4);
+}
+
+.mesob-btn-secondary {
+  background: var(--mesob-primary-blue);
+  color: white;
+}
+
+.mesob-btn-secondary:hover:not(:disabled) {
+  background: var(--mesob-dark-blue);
+}
+
+.mesob-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  background-color: #d1d5db !important;
+  color: #6b7280 !important;
+}
+
+/* Alerts */
+.mesob-alert {
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.mesob-alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.mesob-alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+/* Footer Links */
+.mesob-footer {
+  text-align: center;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e2e8f0;
-  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.auth-footer p {
-  margin: 0;
-  color: #64748b;
+.mesob-footer-text {
   font-size: 0.9rem;
+  color: #FFFFFF;
 }
 
-.auth-link {
-  color: #8b5cf6;
+.mesob-link {
+  color: var(--mesob-gold);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
-.auth-link:hover {
-  color: #7c3aed;
+.mesob-link:hover {
+  color: #FFB84D;
   text-decoration: underline;
 }
 
-.auth-hint {
-  font-size: 0.85rem;
-  color: #64748b;
-  margin: 0;
-  padding: 0.75rem;
-  background: #f1f5f9;
-  border-radius: 8px;
-}
-
-.password-input-wrapper {
-  position: relative;
-}
-
-.password-input-wrapper .form-input {
-  padding-right: 2.8rem;
-}
-
-.password-toggle-btn {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0.2rem;
-}
-
-.password-toggle-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+/* Required Mark */
+.mesob-required {
+  color: #ef4444;
+  margin-left: 0.25rem;
 }
 
 /* Responsive */
-@media (max-width: 900px) {
-  .auth-wrapper {
-    grid-template-columns: 1fr;
+@media (max-width: 640px) {
+  .mesob-auth-card {
+    padding: 1.5rem;
   }
 
-  .auth-right {
-    display: none;
+  .mesob-logo-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .mesob-service-title {
+    font-size: 1.1rem;
   }
 }
 
-@media (max-width: 600px) {
-  .auth-left {
-    padding: 2rem 1.5rem;
+@media (max-width: 480px) {
+  .mesob-auth-container {
+    padding: 1rem 0.5rem;
   }
 
-  .auth-header h2 {
-    font-size: 1.5rem;
-  }
-
-  .auth-form {
-    gap: 1rem;
+  .mesob-auth-card {
+    padding: 1.25rem;
   }
 }
