@@ -17,7 +17,7 @@ function CapacityTracker() {
   const fetchCapacity = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/v1/capacity');
+      const response = await api.get('/api/v1/analytics/capacity');
       setCapacity(response.data.data);
       setError('');
     } catch (err) {

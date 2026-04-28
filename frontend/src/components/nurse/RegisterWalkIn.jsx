@@ -1,618 +1,499 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import api from '../../services/api';
 
-// Phase 3 Enhanced Walk-in Registration - Updated 2026-04-28
-function RegisterWalkIn({ onSuccess, capacityAvailable }) {
-  const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+function RegisterWalkIn({ onSuccess }) {
+  const [step, setStep] = useState('search'); // search, register, vitals
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [registering, setRegistering] = useState(false);
   const [alert, setAlert] = useState({ type: '', message: '' });
-  
-  const [formData, setFormData] = useState({
-    customerName: '',
+
+  const [registerForm, setRegisterForm] = useState({
+    fullName: '',
     email: '',
     phone: '',
     dateOfBirth: '',
     gender: '',
-    reason: '',
-    priority: 'MEDIUM',
-    medicalHistory: [],
-    emergencyContactName: '',
-    emergencyContactPhone: '',
   });
 
-  // Load draft from localStorage on mount
-  useEffect(() => {
-    const savedDraft = localStorage.getItem('walkin_draft');
-    if (savedDraft) {
-      try {
-        setFormData(JSON.parse(savedDraft));
-      } catch (err) {
-        console.error('Error loading draft:', err);
-      }
-    }
-  }, []);
+  const [registerErrors, setRegisterErrors] = useState({});
 
-  // Save draft to localStorage
-  useEffect(() => {
-    if (showForm) {
-      localStorage.setItem('walkin_draft', JSON.stringify(formData));
-    }
-  }, [formData, showForm]);
-
-  const validateField = (name, value) => {
-    const newErrors = { ...errors };
-
-    switch (name) {
-      case 'customerName':
-        if (!value.trim()) {
-          newErrors.customerName = 'Customer name is required';
-        } else if (value.trim().length < 2) {
-          newErrors.customerName = 'Name must be at least 2 characters';
-        } else {
-          delete newErrors.customerName;
-        }
-        break;
-
-      case 'email':
-        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          newErrors.email = 'Please enter a valid email address';
-        } else {
-          delete newErrors.email;
-        }
-        break;
-
-      case 'phone':
-        if (!value.trim()) {
-          newErrors.phone = 'Phone number is required';
-        } else if (!/^(\+251|0)[0-9]{9}$/.test(value.replace(/\s/g, ''))) {
-          newErrors.phone = 'Please enter a valid Ethiopian phone number';
-        } else {
-          delete newErrors.phone;
-        }
-        break;
-
-      case 'dateOfBirth':
-        if (value) {
-          const age = new Date().getFullYear() - new Date(value).getFullYear();
-          if (age < 0 || age > 150) {
-            newErrors.dateOfBirth = 'Please enter a valid date of birth';
-          } else {
-            delete newErrors.dateOfBirth;
-          }
-        } else {
-          delete newErrors.dateOfBirth;
-        }
-        break;
-
-      case 'reason':
-        if (!value.trim()) {
-          newErrors.reason = 'Reason for visit is required';
-        } else if (value.trim().length < 5) {
-          newErrors.reason = 'Please provide more details (at least 5 characters)';
-        } else {
-          delete newErrors.reason;
-        }
-        break;
-
-      case 'emergencyContactPhone':
-        if (value && !/^(\+251|0)[0-9]{9}$/.test(value.replace(/\s/g, ''))) {
-          newErrors.emergencyContactPhone = 'Please enter a valid phone number';
-        } else {
-          delete newErrors.emergencyContactPhone;
-        }
-        break;
-
-      default:
-        break;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-
-    if (type === 'checkbox') {
-      setFormData(prev => ({
-        ...prev,
-        medicalHistory: checked
-          ? [...prev.medicalHistory, value]
-          : prev.medicalHistory.filter(item => item !== value),
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value,
-      }));
-      
-      if (touched[name]) {
-        validateField(name, value);
-      }
-    }
-
-    setAlert({ type: '', message: '' });
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-    validateField(name, value);
-  };
-
-  const validateForm = () => {
-    const requiredFields = ['customerName', 'phone', 'reason'];
-    const newErrors = {};
-
-    requiredFields.forEach(field => {
-      if (!formData[field].trim()) {
-        newErrors[field] = `${field.replace(/([A-Z])/g, ' $1').trim()} is required`;
-      }
-    });
-
-    // Validate phone format
-    if (formData.phone && !/^(\+251|0)[0-9]{9}$/.test(formData.phone.replace(/\s/g, ''))) {
-      newErrors.phone = 'Please enter a valid Ethiopian phone number';
-    }
-
-    // Validate email if provided
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    // Validate emergency contact phone if provided
-    if (formData.emergencyContactPhone && !/^(\+251|0)[0-9]{9}$/.test(formData.emergencyContactPhone.replace(/\s/g, ''))) {
-      newErrors.emergencyContactPhone = 'Please enter a valid phone number';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleClearForm = () => {
-    if (window.confirm('Are you sure you want to clear all fields?')) {
-      setFormData({
-        customerName: '',
-        email: '',
-        phone: '',
-        dateOfBirth: '',
-        gender: '',
-        reason: '',
-        priority: 'MEDIUM',
-        medicalHistory: [],
-        emergencyContactName: '',
-        emergencyContactPhone: '',
-      });
-      setErrors({});
-      setTouched({});
-      localStorage.removeItem('walkin_draft');
-    }
-  };
-
-  const handleSubmit = async (e) => {
+  // Task 3.1: Search for existing patients
+  const handleSearch = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      setAlert({
-        type: 'error',
-        message: 'Please fix the errors above before submitting',
-      });
-      return;
-    }
-
-    if (!capacityAvailable) {
-      setAlert({
-        type: 'error',
-        message: 'No available slots for today',
-      });
+    if (!searchTerm.trim()) {
+      setAlert({ type: 'error', message: 'Please enter a search term' });
       return;
     }
 
     try {
-      setLoading(true);
+      setSearching(true);
       setAlert({ type: '', message: '' });
-
-      const response = await api.post('/api/v1/appointments/walk-in', {
-        customerName: formData.customerName,
-        email: formData.email || null,
-        phone: formData.phone,
-        dateOfBirth: formData.dateOfBirth || null,
-        gender: formData.gender || null,
-        reason: formData.reason,
-        priority: formData.priority,
-        medicalHistory: formData.medicalHistory,
-        emergencyContactName: formData.emergencyContactName || null,
-        emergencyContactPhone: formData.emergencyContactPhone || null,
-        scheduledAt: new Date().toISOString(),
-      });
-
-      setAlert({
-        type: 'success',
-        message: `Walk-in registered successfully! Appointment ID: ${response.data.data.appointmentId}`,
-      });
-
-      // Clear form and draft
-      setFormData({
-        customerName: '',
-        email: '',
-        phone: '',
-        dateOfBirth: '',
-        gender: '',
-        reason: '',
-        priority: 'MEDIUM',
-        medicalHistory: [],
-        emergencyContactName: '',
-        emergencyContactPhone: '',
-      });
-      setErrors({});
-      setTouched({});
-      localStorage.removeItem('walkin_draft');
-
-      setTimeout(() => {
-        setShowForm(false);
-        setAlert({ type: '', message: '' });
-        if (onSuccess) onSuccess();
-      }, 2000);
+      const response = await api.get(`/api/v1/users?search=${encodeURIComponent(searchTerm)}`);
+      setSearchResults(response.data.data || []);
+      
+      if (!response.data.data || response.data.data.length === 0) {
+        setAlert({ type: 'info', message: 'No patients found. Register a new external patient.' });
+      }
     } catch (err) {
-      setAlert({
-        type: 'error',
-        message: err.response?.data?.message || 'Failed to register walk-in',
-      });
+      setAlert({ type: 'error', message: 'Failed to search patients' });
+      console.error(err);
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
   };
 
-  if (!showForm) {
-    return (
-      <div className="register-walk-in">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
-          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 600, color: '#3550A0' }}>
-            🚶 Register Walk-in
-          </h3>
-          <button
-            className="walkin-btn-toggle"
-            onClick={() => setShowForm(true)}
-            disabled={!capacityAvailable}
-            style={{ minWidth: '200px' }}
-          >
-            {capacityAvailable ? '+ Register Walk-in' : '❌ No Capacity'}
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // Task 3.2: Select patient and navigate to vitals
+  const handleSelectPatient = (patient) => {
+    setSelectedPatient(patient);
+    setAlert({ type: 'success', message: `Selected: ${patient.fullName}` });
+    // Trigger navigation to vitals tab via parent
+    if (onSuccess) {
+      onSuccess({ patientId: patient.id, action: 'recordVitals' });
+    }
+  };
+
+  // Task 3.3: Open registration modal
+  const handleOpenRegisterModal = () => {
+    setShowRegisterModal(true);
+    setRegisterForm({
+      fullName: '',
+      email: '',
+      phone: '',
+      dateOfBirth: '',
+      gender: '',
+    });
+    setRegisterErrors({});
+  };
+
+  // Validate registration form
+  const validateRegisterForm = () => {
+    const errors = {};
+    
+    if (!registerForm.fullName.trim()) {
+      errors.fullName = 'Full name is required';
+    }
+    
+    if (!registerForm.phone.trim()) {
+      errors.phone = 'Phone number is required';
+    } else if (!/^(\+251|0)[0-9]{9}$/.test(registerForm.phone.replace(/\s/g, ''))) {
+      errors.phone = 'Invalid Ethiopian phone number';
+    }
+    
+    if (registerForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(registerForm.email)) {
+      errors.email = 'Invalid email address';
+    }
+    
+    if (!registerForm.dateOfBirth) {
+      errors.dateOfBirth = 'Date of birth is required';
+    }
+    
+    if (!registerForm.gender) {
+      errors.gender = 'Gender is required';
+    }
+
+    setRegisterErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Task 3.4 & 3.5: Register external patient
+  const handleRegisterPatient = async (e) => {
+    e.preventDefault();
+
+    if (!validateRegisterForm()) {
+      setAlert({ type: 'error', message: 'Please fix the errors below' });
+      return;
+    }
+
+    try {
+      setRegistering(true);
+      setAlert({ type: '', message: '' });
+
+      const response = await api.post('/api/v1/patients/external', {
+        fullName: registerForm.fullName,
+        email: registerForm.email || null,
+        phone: registerForm.phone,
+        dateOfBirth: registerForm.dateOfBirth,
+        gender: registerForm.gender,
+      });
+
+      const newPatient = response.data.data;
+      setAlert({ type: 'success', message: `Patient registered: ${newPatient.fullName}` });
+      setShowRegisterModal(false);
+      setSelectedPatient(newPatient);
+
+      // Navigate to vitals entry
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess({ patientId: newPatient.id, action: 'recordVitals' });
+        }
+      }, 1500);
+    } catch (err) {
+      setAlert({ type: 'error', message: err.response?.data?.message || 'Failed to register patient' });
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const handleRegisterFormChange = (e) => {
+    const { name, value } = e.target;
+    setRegisterForm(prev => ({ ...prev, [name]: value }));
+    if (registerErrors[name]) {
+      setRegisterErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
 
   return (
-    <div className="register-walk-in form-open" style={{ maxWidth: '100%', overflow: 'auto' }}>
-      {/* Form Header */}
-      <div className="walkin-form-header">
-        <h3>🚶 Register Walk-in Patient</h3>
-        <button
-          className="walkin-close-btn"
-          onClick={() => setShowForm(false)}
-          disabled={loading}
-        >
-          ✕
-        </button>
+    <div className="card">
+      {/* Alert */}
+      {alert.message && (
+        <div style={{
+          padding: '1rem',
+          borderRadius: '8px',
+          marginBottom: '1rem',
+          backgroundColor: alert.type === 'error' ? '#FEE2E2' : alert.type === 'success' ? '#D1FAE5' : '#DBEAFE',
+          color: alert.type === 'error' ? '#991B1B' : alert.type === 'success' ? '#065F46' : '#0C4A6E',
+          border: `1px solid ${alert.type === 'error' ? '#FECACA' : alert.type === 'success' ? '#6EE7B7' : '#93C5FD'}`,
+        }}>
+          {alert.message}
+        </div>
+      )}
+
+      {/* Search Section */}
+      <div>
+        <h3 style={{ margin: '0 0 1.5rem 0', color: '#3550A0', fontSize: '1.25rem', fontWeight: 700 }}>
+          🔍 Search Patient
+        </h3>
+
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name, email, phone, or ID..."
+            className="form-input"
+            style={{ flex: 1, padding: '0.75rem 1rem', border: '2px solid #E5E7EB', borderRadius: '8px' }}
+          />
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={searching}
+            style={{ minWidth: '120px' }}
+          >
+            {searching ? '⏳ Searching...' : '🔍 Search'}
+          </button>
+        </form>
+
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h4 style={{ margin: '0 0 1rem 0', color: '#374151', fontSize: '0.95rem', fontWeight: 600 }}>
+              Found {searchResults.length} patient(s)
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {searchResults.map(patient => (
+                <div
+                  key={patient.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '1rem',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '8px',
+                    backgroundColor: '#F9FAFB',
+                  }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: '0 0 0.25rem 0', fontWeight: 600, color: '#1F2937' }}>
+                      {patient.fullName}
+                    </p>
+                    <p style={{ margin: '0.25rem 0', fontSize: '0.875rem', color: '#6B7280' }}>
+                      📧 {patient.email || 'N/A'} | 📱 {patient.phone}
+                    </p>
+                    <p style={{ margin: '0.25rem 0', fontSize: '0.875rem', color: '#6B7280' }}>
+                      ID: {patient.id}
+                    </p>
+                    <span style={{
+                      display: 'inline-block',
+                      marginTop: '0.5rem',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '12px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      backgroundColor: patient.role === 'EXTERNAL_PATIENT' ? '#FEF3C7' : '#DBEAFE',
+                      color: patient.role === 'EXTERNAL_PATIENT' ? '#92400E' : '#0C4A6E',
+                    }}>
+                      {patient.role === 'EXTERNAL_PATIENT' ? '🟠 External' : '🔵 Staff'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleSelectPatient(patient)}
+                    className="btn btn-primary"
+                    style={{ minWidth: '150px' }}
+                  >
+                    💉 Record Vitals
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* No Results - Register New Patient */}
+        {searchResults.length === 0 && searchTerm && !searching && (
+          <div style={{
+            padding: '1.5rem',
+            borderRadius: '8px',
+            backgroundColor: '#F3F4F6',
+            textAlign: 'center',
+            marginBottom: '1.5rem',
+          }}>
+            <p style={{ margin: '0 0 1rem 0', color: '#6B7280' }}>
+              No patient found with "{searchTerm}"
+            </p>
+            <button
+              onClick={handleOpenRegisterModal}
+              className="btn btn-primary"
+              style={{ minWidth: '200px' }}
+            >
+              ➕ Register New External Patient
+            </button>
+          </div>
+        )}
+
+        {/* Initial State - Register Button */}
+        {searchResults.length === 0 && !searchTerm && (
+          <div style={{
+            padding: '1.5rem',
+            borderRadius: '8px',
+            backgroundColor: '#F3F4F6',
+            textAlign: 'center',
+          }}>
+            <p style={{ margin: '0 0 1rem 0', color: '#6B7280' }}>
+              Or register a new external patient
+            </p>
+            <button
+              onClick={handleOpenRegisterModal}
+              className="btn btn-primary"
+              style={{ minWidth: '200px' }}
+            >
+              ➕ Register New Patient
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Capacity Status */}
-      {capacityAvailable && (
-        <div className="walkin-capacity-status available">
-          <span className="walkin-capacity-text">✓ Capacity available for today</span>
-          <span className="walkin-capacity-badge">Available</span>
+      {/* Registration Modal */}
+      {showRegisterModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+        }}>
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, color: '#3550A0', fontSize: '1.25rem', fontWeight: 700 }}>
+                ➕ Register External Patient
+              </h3>
+              <button
+                onClick={() => setShowRegisterModal(false)}
+                disabled={registering}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#6B7280',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleRegisterPatient}>
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                {/* Full Name */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#3550A0', fontSize: '0.875rem' }}>
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={registerForm.fullName}
+                    onChange={handleRegisterFormChange}
+                    placeholder="Full name"
+                    disabled={registering}
+                    className="form-input"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: `2px solid ${registerErrors.fullName ? '#EF4444' : '#E5E7EB'}`,
+                      borderRadius: '8px',
+                    }}
+                  />
+                  {registerErrors.fullName && (
+                    <span style={{ fontSize: '0.8rem', color: '#EF4444', marginTop: '0.25rem', display: 'block' }}>
+                      {registerErrors.fullName}
+                    </span>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#3550A0', fontSize: '0.875rem' }}>
+                    Email (Optional)
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={registerForm.email}
+                    onChange={handleRegisterFormChange}
+                    placeholder="email@example.com"
+                    disabled={registering}
+                    className="form-input"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: `2px solid ${registerErrors.email ? '#EF4444' : '#E5E7EB'}`,
+                      borderRadius: '8px',
+                    }}
+                  />
+                  {registerErrors.email && (
+                    <span style={{ fontSize: '0.8rem', color: '#EF4444', marginTop: '0.25rem', display: 'block' }}>
+                      {registerErrors.email}
+                    </span>
+                  )}
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#3550A0', fontSize: '0.875rem' }}>
+                    Phone Number *
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={registerForm.phone}
+                    onChange={handleRegisterFormChange}
+                    placeholder="+251 9XX XXX XXXX"
+                    disabled={registering}
+                    className="form-input"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: `2px solid ${registerErrors.phone ? '#EF4444' : '#E5E7EB'}`,
+                      borderRadius: '8px',
+                    }}
+                  />
+                  {registerErrors.phone && (
+                    <span style={{ fontSize: '0.8rem', color: '#EF4444', marginTop: '0.25rem', display: 'block' }}>
+                      {registerErrors.phone}
+                    </span>
+                  )}
+                </div>
+
+                {/* Date of Birth */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#3550A0', fontSize: '0.875rem' }}>
+                    Date of Birth *
+                  </label>
+                  <input
+                    type="date"
+                    name="dateOfBirth"
+                    value={registerForm.dateOfBirth}
+                    onChange={handleRegisterFormChange}
+                    disabled={registering}
+                    className="form-input"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: `2px solid ${registerErrors.dateOfBirth ? '#EF4444' : '#E5E7EB'}`,
+                      borderRadius: '8px',
+                    }}
+                  />
+                  {registerErrors.dateOfBirth && (
+                    <span style={{ fontSize: '0.8rem', color: '#EF4444', marginTop: '0.25rem', display: 'block' }}>
+                      {registerErrors.dateOfBirth}
+                    </span>
+                  )}
+                </div>
+
+                {/* Gender */}
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#3550A0', fontSize: '0.875rem' }}>
+                    Gender *
+                  </label>
+                  <select
+                    name="gender"
+                    value={registerForm.gender}
+                    onChange={handleRegisterFormChange}
+                    disabled={registering}
+                    className="form-input"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: `2px solid ${registerErrors.gender ? '#EF4444' : '#E5E7EB'}`,
+                      borderRadius: '8px',
+                    }}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                  {registerErrors.gender && (
+                    <span style={{ fontSize: '0.8rem', color: '#EF4444', marginTop: '0.25rem', display: 'block' }}>
+                      {registerErrors.gender}
+                    </span>
+                  )}
+                </div>
+
+                {/* Buttons */}
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={registering}
+                    style={{ flex: 1 }}
+                  >
+                    {registering ? '⏳ Registering...' : '✓ Register'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => setShowRegisterModal(false)}
+                    disabled={registering}
+                    style={{ flex: 1 }}
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       )}
-
-      {/* Alert Messages */}
-      {alert.message && (
-        <div className={`walkin-alert walkin-alert-${alert.type}`}>
-          <span>{alert.message}</span>
-        </div>
-      )}
-
-      {/* Form */}
-      <form onSubmit={handleSubmit}>
-        <div className="walkin-form-container">
-          {/* Basic Information Section */}
-          <div className="walkin-section-title">
-            <span>👤</span> Basic Information
-          </div>
-
-          {/* Customer Name */}
-          <div className="walkin-form-group">
-            <label className="walkin-form-label">
-              <span className="icon">👤</span>
-              Customer Name
-              <span className="walkin-required">*</span>
-            </label>
-            <div className="walkin-input-icon-wrapper">
-              <input
-                type="text"
-                name="customerName"
-                value={formData.customerName}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="Full name"
-                disabled={loading}
-                className={`walkin-form-input ${
-                  touched.customerName && errors.customerName ? 'error' : ''
-                } ${touched.customerName && !errors.customerName ? 'success' : ''}`}
-              />
-            </div>
-            {touched.customerName && errors.customerName && (
-              <span className="walkin-form-error">{errors.customerName}</span>
-            )}
-          </div>
-
-          {/* Phone */}
-          <div className="walkin-form-group">
-            <label className="walkin-form-label">
-              <span className="icon">📱</span>
-              Phone Number
-              <span className="walkin-required">*</span>
-            </label>
-            <div className="walkin-input-icon-wrapper">
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="+251 9XX XXX XXXX"
-                disabled={loading}
-                className={`walkin-form-input ${
-                  touched.phone && errors.phone ? 'error' : ''
-                } ${touched.phone && !errors.phone ? 'success' : ''}`}
-              />
-            </div>
-            {touched.phone && errors.phone && (
-              <span className="walkin-form-error">{errors.phone}</span>
-            )}
-          </div>
-
-          {/* Email */}
-          <div className="walkin-form-group">
-            <label className="walkin-form-label">
-              <span className="icon">📧</span>
-              Email (Optional)
-            </label>
-            <div className="walkin-input-icon-wrapper">
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                placeholder="email@example.com"
-                disabled={loading}
-                className={`walkin-form-input ${
-                  touched.email && errors.email ? 'error' : ''
-                } ${touched.email && !errors.email && formData.email ? 'success' : ''}`}
-              />
-            </div>
-            {touched.email && errors.email && (
-              <span className="walkin-form-error">{errors.email}</span>
-            )}
-          </div>
-
-          {/* Date of Birth */}
-          <div className="walkin-form-group">
-            <label className="walkin-form-label">
-              <span className="icon">📅</span>
-              Date of Birth (Optional)
-            </label>
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              disabled={loading}
-              className={`walkin-form-input ${
-                touched.dateOfBirth && errors.dateOfBirth ? 'error' : ''
-              }`}
-            />
-            {touched.dateOfBirth && errors.dateOfBirth && (
-              <span className="walkin-form-error">{errors.dateOfBirth}</span>
-            )}
-          </div>
-
-          {/* Gender */}
-          <div className="walkin-form-group">
-            <label className="walkin-form-label">
-              <span className="icon">⚧</span>
-              Gender (Optional)
-            </label>
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              disabled={loading}
-              className="walkin-form-select"
-            >
-              <option value="">Select Gender</option>
-              <option value="MALE">Male</option>
-              <option value="FEMALE">Female</option>
-              <option value="OTHER">Other</option>
-            </select>
-          </div>
-
-          {/* Priority */}
-          <div className="walkin-form-group">
-            <label className="walkin-form-label">
-              <span className="icon">⚡</span>
-              Priority Level
-            </label>
-            <div className="walkin-radio-group">
-              <div className="walkin-radio-item">
-                <input
-                  type="radio"
-                  id="priority-low"
-                  name="priority"
-                  value="LOW"
-                  checked={formData.priority === 'LOW'}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                <label htmlFor="priority-low">Low</label>
-              </div>
-              <div className="walkin-radio-item">
-                <input
-                  type="radio"
-                  id="priority-medium"
-                  name="priority"
-                  value="MEDIUM"
-                  checked={formData.priority === 'MEDIUM'}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                <label htmlFor="priority-medium">Medium</label>
-              </div>
-              <div className="walkin-radio-item">
-                <input
-                  type="radio"
-                  id="priority-high"
-                  name="priority"
-                  value="HIGH"
-                  checked={formData.priority === 'HIGH'}
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                <label htmlFor="priority-high">High</label>
-              </div>
-            </div>
-          </div>
-
-          {/* Visit Information Section */}
-          <div className="walkin-section-title">
-            <span>🏥</span> Visit Information
-          </div>
-
-          {/* Reason for Visit */}
-          <div className="walkin-form-group full-width">
-            <label className="walkin-form-label">
-              <span className="icon">📝</span>
-              Reason for Visit
-              <span className="walkin-required">*</span>
-            </label>
-            <textarea
-              name="reason"
-              value={formData.reason}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="Describe the reason for visit..."
-              disabled={loading}
-              className={`walkin-form-textarea ${
-                touched.reason && errors.reason ? 'error' : ''
-              } ${touched.reason && !errors.reason ? 'success' : ''}`}
-            />
-            {touched.reason && errors.reason && (
-              <span className="walkin-form-error">{errors.reason}</span>
-            )}
-          </div>
-
-          {/* Medical History */}
-          <div className="walkin-form-group full-width">
-            <label className="walkin-form-label">
-              <span className="icon">🏥</span>
-              Medical History (Optional)
-            </label>
-            <div className="walkin-checkbox-group">
-              {['Hypertension', 'Diabetes', 'Asthma', 'Heart Disease', 'Allergies', 'Other'].map(
-                condition => (
-                  <div key={condition} className="walkin-checkbox-item">
-                    <input
-                      type="checkbox"
-                      id={`condition-${condition}`}
-                      value={condition}
-                      checked={formData.medicalHistory.includes(condition)}
-                      onChange={handleChange}
-                      disabled={loading}
-                    />
-                    <label htmlFor={`condition-${condition}`}>{condition}</label>
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-
-          {/* Emergency Contact Section */}
-          <div className="walkin-section-title">
-            <span>🆘</span> Emergency Contact (Optional)
-          </div>
-
-          {/* Emergency Contact Name */}
-          <div className="walkin-form-group">
-            <label className="walkin-form-label">
-              <span className="icon">👥</span>
-              Contact Name
-            </label>
-            <input
-              type="text"
-              name="emergencyContactName"
-              value={formData.emergencyContactName}
-              onChange={handleChange}
-              placeholder="Contact person name"
-              disabled={loading}
-              className="walkin-form-input"
-            />
-          </div>
-
-          {/* Emergency Contact Phone */}
-          <div className="walkin-form-group">
-            <label className="walkin-form-label">
-              <span className="icon">📞</span>
-              Contact Phone
-            </label>
-            <input
-              type="tel"
-              name="emergencyContactPhone"
-              value={formData.emergencyContactPhone}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              placeholder="+251 9XX XXX XXXX"
-              disabled={loading}
-              className={`walkin-form-input ${
-                touched.emergencyContactPhone && errors.emergencyContactPhone ? 'error' : ''
-              }`}
-            />
-            {touched.emergencyContactPhone && errors.emergencyContactPhone && (
-              <span className="walkin-form-error">{errors.emergencyContactPhone}</span>
-            )}
-          </div>
-
-          {/* Form Actions */}
-          <div className="walkin-form-actions">
-            <button
-              type="submit"
-              className="walkin-btn walkin-btn-primary"
-              disabled={loading}
-            >
-              {loading ? '⏳ Registering...' : '✓ Register Walk-in'}
-            </button>
-            <button
-              type="button"
-              className="walkin-btn walkin-btn-secondary"
-              onClick={handleClearForm}
-              disabled={loading}
-            >
-              🗑️ Clear Form
-            </button>
-            <button
-              type="button"
-              className="walkin-btn walkin-btn-secondary"
-              onClick={() => setShowForm(false)}
-              disabled={loading}
-            >
-              ✕ Cancel
-            </button>
-          </div>
-        </div>
-      </form>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 /* ========================================
-   WALK-IN REGISTRATION ENHANCED STYLING
-   MESOB Brand Theme
+   WALK-IN REGISTRATION STYLING
+   MESOB Brand Theme - Phase 3
    ======================================== */
 
 :root {
@@ -151,28 +151,6 @@
   resize: vertical;
   min-height: 80px;
   font-size: 0.9rem;
-}
-
-/* Input with Icon */
-.walkin-input-icon-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.walkin-input-icon-wrapper .walkin-form-input {
-  padding-left: 2.5rem;
-}
-
-.walkin-input-icon {
-  position: absolute;
-  left: 0.75rem;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  color: var(--walkin-primary-blue);
 }
 
 /* Checkbox Group */
@@ -361,54 +339,7 @@
   transform: translateY(-2px);
 }
 
-.walkin-btn-outline {
-  background: transparent;
-  color: var(--walkin-primary-blue);
-  border: 2px solid var(--walkin-primary-blue);
-}
-
-.walkin-btn-outline:hover:not(:disabled) {
-  background: var(--walkin-primary-blue);
-  color: var(--walkin-white);
-}
-
-/* Toggle Button */
-.walkin-btn-toggle {
-  width: 100%;
-  padding: 1rem;
-  background: var(--walkin-primary-blue);
-  color: var(--walkin-white);
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.walkin-btn-toggle:hover:not(:disabled) {
-  background: #2A3F7F;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(53, 80, 160, 0.3);
-}
-
-.walkin-btn-toggle:disabled {
-  background: #9CA3AF;
-  cursor: not-allowed;
-}
-
-/* Section Divider */
-.walkin-section-divider {
-  grid-column: 1 / -1;
-  height: 1px;
-  background: var(--walkin-border-gray);
-  margin: 0.5rem 0;
-}
-
+/* Section Title */
 .walkin-section-title {
   grid-column: 1 / -1;
   font-size: 1rem;
