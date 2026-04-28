@@ -7,6 +7,8 @@ import wellnessRoutes from "./wellness.routes";
 import feedbackRoutes from "./feedback.routes";
 import centersRoutes from "./centers.routes";
 import analyticsRoutes from "./analytics.routes";
+import regionsRoutes from "./regions.routes";
+import hrRoutes from "./hr.routes";
 
 const router = Router();
 
@@ -18,5 +20,7 @@ router.use("/plans", wellnessRoutes);
 router.use("/feedback", feedbackRoutes);
 router.use("/centers", centersRoutes);
 router.use("/analytics", analyticsRoutes);
+router.use("/", regionsRoutes); // Regions and centers at root level
+router.use("/hr", hrRoutes); // HR integration endpoints
 
 export default router;

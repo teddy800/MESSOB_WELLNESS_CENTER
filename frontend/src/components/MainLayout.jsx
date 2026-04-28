@@ -14,7 +14,7 @@ function MainLayout({ children }) {
   const hasManagerAccess = () => {
     return (
       user &&
-      ["MANAGER", "REGIONAL_OFFICE", "FEDERAL_ADMIN"].includes(user.role)
+      ["MANAGER", "REGIONAL_OFFICE", "SYSTEM_ADMIN"].includes(user.role)
     );
   };
 

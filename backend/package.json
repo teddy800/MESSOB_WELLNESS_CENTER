@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && npm run copy:prisma",
+    "copy:prisma": "node -e \"require('fs').cpSync('src/generated', 'dist/generated', {recursive: true})\"",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",

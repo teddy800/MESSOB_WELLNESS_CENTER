@@ -10,13 +10,15 @@ datasource db {
   provider = "postgresql"
 }
 
-// User Roles Enum - Defines access levels in the system
+// User Roles Enum - Defines access levels in the system (7-tier hierarchy)
 enum UserRole {
-  CUSTOMER_STAFF
-  NURSE_OFFICER
-  MANAGER
-  REGIONAL_OFFICE
-  FEDERAL_ADMIN
+  EXTERNAL_PATIENT  // Walk-in patients (no login, no organizational affiliation)
+  STAFF             // Mesob employees seeking healthcare
+  NURSE_OFFICER     // Nurses providing care
+  MANAGER           // Center managers
+  REGIONAL_OFFICE   // Regional managers
+  FEDERAL_OFFICE    // Federal/national level
+  SYSTEM_ADMIN      // System administrators
 }
 
 // Gender Enum
@@ -64,13 +66,18 @@ enum CenterStatus {
 // User Model - Core identity and authentication
 model User {
   id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  password  String   // Hashed password
+  email     String?  @unique // Nullable for external patients
+  password  String?  // Hashed password, nullable for external patients
   fullName  String
-  role      UserRole @default(CUSTOMER_STAFF)
+  role      UserRole @default(STAFF)
+  
+  // Employee and External Patient Fields
+  employeeId String?  // Mesob employee ID (nullable)
+  isExternal Boolean  @default(false) // True for walk-in external patients
+  canLogin   Boolean  @default(true)  // False for external patients
   
   // Center Assignment
-  centerId  String?  @db.Uuid
+  centerId  String?  @db.Uuid // Nullable (null for external patients)
   
   // Demographics
   dateOfBirth DateTime? @db.Date
@@ -104,6 +111,8 @@ model User {
   @@index([role])
   @@index([centerId])
   @@index([createdAt])
+  @@index([employeeId])
+  @@index([isExternal])
   @@map("users")
 }
 
@@ -211,6 +220,11 @@ model Appointment {
   completedAt  DateTime? @db.Timestamptz(3)
   cancelledAt  DateTime? @db.Timestamptz(3)
   cancellationReason String?
+  
+  // SMS Reminder Tracking
+  reminderSentAt DateTime? @db.Timestamptz(3)
+  reminderCount  Int @default(0)
+  lastReminderBy String? @db.Uuid
   
   // Timestamps
   createdAt   DateTime @default(now()) @db.Timestamptz(3)

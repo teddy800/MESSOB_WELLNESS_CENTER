@@ -47,6 +47,15 @@ export const authenticate = async (
       return;
     }
 
+    // Check if user is allowed to login (external patients cannot login)
+    if (!user.canLogin) {
+      res.status(403).json({
+        status: "error",
+        message: "This account cannot login. External patients must visit in person.",
+      });
+      return;
+    }
+
     // Attach user info to request
     req.user = {
       userId: decoded.userId,
@@ -115,13 +124,16 @@ export const authorize = (...allowedRoles: UserRole[]) => {
 /**
  * Role hierarchy helper
  * Higher roles have access to lower role permissions
+ * 7-tier hierarchy: SYSTEM_ADMIN > FEDERAL_OFFICE > REGIONAL_OFFICE > MANAGER > NURSE_OFFICER > STAFF > EXTERNAL_PATIENT
  */
 const roleHierarchy: Record<UserRole, number> = {
-  [UserRole.CUSTOMER_STAFF]: 1,
+  [UserRole.EXTERNAL_PATIENT]: 0,  // Lowest privilege (no login access)
+  [UserRole.STAFF]: 1,
   [UserRole.NURSE_OFFICER]: 2,
   [UserRole.MANAGER]: 3,
   [UserRole.REGIONAL_OFFICE]: 4,
-  [UserRole.FEDERAL_ADMIN]: 5,
+  [UserRole.FEDERAL_OFFICE]: 5,
+  [UserRole.SYSTEM_ADMIN]: 6,      // Highest privilege
 };
 
 /**
@@ -181,7 +193,7 @@ export const authorizeSelfOrAdmin = (userIdParam: string = "userId") => {
     }
 
     const targetUserId = req.params[userIdParam];
-    const adminRoles: UserRole[] = [UserRole.MANAGER, UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_ADMIN];
+    const adminRoles: UserRole[] = [UserRole.MANAGER, UserRole.REGIONAL_OFFICE, UserRole.SYSTEM_ADMIN];
     const isAdmin = adminRoles.includes(req.user.role);
     const isSelf = req.user.userId === targetUserId;
 

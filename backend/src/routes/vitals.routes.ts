@@ -24,7 +24,7 @@ router.post(
     UserRole.NURSE_OFFICER,
     UserRole.MANAGER,
     UserRole.REGIONAL_OFFICE,
-    UserRole.FEDERAL_ADMIN,
+    UserRole.SYSTEM_ADMIN,
   ),
   postBmi,
 );
@@ -36,7 +36,7 @@ router.post(
     UserRole.NURSE_OFFICER,
     UserRole.MANAGER,
     UserRole.REGIONAL_OFFICE,
-    UserRole.FEDERAL_ADMIN,
+    UserRole.SYSTEM_ADMIN,
   ),
   postBloodPressure,
 );

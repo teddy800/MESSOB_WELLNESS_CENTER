@@ -238,9 +238,9 @@ export async function getRiskScoreHandler(req: AuthRequest, res: Response): Prom
     }
 
     // Calculate risk scores
-    const hypertensionRisk = calculateHypertensionRisk(latest.systolicBP, latest.diastolicBP);
-    const diabetesRisk = calculateDiabetesRisk(latest.glucose);
-    const obesityRisk = calculateObesityRisk(latest.bmi);
+    const hypertensionRisk = calculateHypertensionRisk(latest.systolic ?? undefined, latest.diastolic ?? undefined);
+    const diabetesRisk = 0; // Glucose not yet tracked in vitals
+    const obesityRisk = calculateObesityRisk(latest.bmi ?? undefined);
 
     const scores = {
       hypertension: hypertensionRisk,

@@ -12,25 +12,25 @@ import { UserRole } from "../generated/prisma";
 const router = Router();
 
 // All appointment routes require authentication
-// CUSTOMER_STAFF and above can view and create appointments
+// STAFF and above can view and create appointments
 router.get(
   "/",
   authenticate,
-  authorizeMinRole(UserRole.CUSTOMER_STAFF),
+  authorizeMinRole(UserRole.STAFF),
   getAppointments,
 );
 
 router.post(
   "/",
   authenticate,
-  authorizeMinRole(UserRole.CUSTOMER_STAFF),
+  authorizeMinRole(UserRole.STAFF),
   postAppointment,
 );
 
 router.get(
   "/:id",
   authenticate,
-  authorizeMinRole(UserRole.CUSTOMER_STAFF),
+  authorizeMinRole(UserRole.STAFF),
   getAppointment,
 );
 
@@ -42,11 +42,11 @@ router.patch(
   updateAppointment,
 );
 
-// Send SMS reminder - CUSTOMER_STAFF and above can request reminders
+// Send SMS reminder - STAFF and above can request reminders
 router.post(
   "/:id/send-reminder",
   authenticate,
-  authorizeMinRole(UserRole.CUSTOMER_STAFF),
+  authorizeMinRole(UserRole.STAFF),
   sendReminderHandler,
 );
 

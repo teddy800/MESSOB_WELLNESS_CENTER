@@ -23,4 +23,7 @@ router.patch("/users/:userId/toggle", authenticate, authorizeMinRole(UserRole.MA
 // ─── Audit logs ──────────────────────────────────────────────────────────────
 router.get("/audit-logs",           authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getAuditLogs);
 
+// ─── Trends (daily / weekly / monthly) ───────────────────────────────────────
+router.get("/trends",               authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getTrends);
+
 export default router;

@@ -68,11 +68,11 @@ function ProfileSection({ onLogout }) {
 
   const getRoleBadgeClass = (role) => {
     const roleMap = {
-      CUSTOMER_STAFF: 'badge-blue',
+      STAFF: 'badge-blue',
       NURSE_OFFICER: 'badge-green',
       MANAGER: 'badge-purple',
       REGIONAL_OFFICE: 'badge-orange',
-      FEDERAL_ADMIN: 'badge-red',
+      SYSTEM_ADMIN: 'badge-red',
     };
     return roleMap[role] || 'badge-gray';
   };

@@ -1,14 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import Input from "../components/forms/Input";
-import Button from "../components/forms/Button";
+import "../styles/login.css";
 
-const SUGGESTED_CREDENTIALS = {
-  "customer@mesob.et": "Customer123!",
+// Key for localStorage
+const CACHED_CREDENTIALS_KEY = 'mesob_cached_credentials';
+
+// Default test credentials
+const DEFAULT_CREDENTIALS = {
+  "staff@mesob.et": "Staff123!",
   "nurse@mesob.et": "Nurse123!",
   "manager@mesob.et": "Manager123!",
   "regional@mesob.et": "Regional123!",
+  "federal@mesob.et": "Federal123!",
   "admin@mesob.et": "Admin123!",
 };
 
@@ -23,6 +27,36 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [cachedCredentials, setCachedCredentials] = useState({});
+
+  // Load cached credentials on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(CACHED_CREDENTIALS_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setCachedCredentials({ ...DEFAULT_CREDENTIALS, ...parsed });
+      } else {
+        setCachedCredentials(DEFAULT_CREDENTIALS);
+      }
+    } catch (error) {
+      console.error('Error loading cached credentials:', error);
+      setCachedCredentials(DEFAULT_CREDENTIALS);
+    }
+  }, []);
+
+  // Save credentials to cache
+  const cacheCredentials = (email, password) => {
+    try {
+      const cached = localStorage.getItem(CACHED_CREDENTIALS_KEY);
+      const existing = cached ? JSON.parse(cached) : {};
+      const updated = { ...existing, [email]: password };
+      localStorage.setItem(CACHED_CREDENTIALS_KEY, JSON.stringify(updated));
+      setCachedCredentials({ ...DEFAULT_CREDENTIALS, ...updated });
+    } catch (error) {
+      console.error('Error caching credentials:', error);
+    }
+  };
   const validateForm = () => {
     const newErrors = {};
 
@@ -52,11 +86,12 @@ function Login() {
       [name]: value,
     };
 
+    // Auto-fill password when email is selected or matches cached credential
     if (name === "email") {
-      const suggestedPassword =
-        SUGGESTED_CREDENTIALS[value.trim().toLowerCase()];
-      if (suggestedPassword) {
-        nextFormData.password = suggestedPassword;
+      const emailLower = value.trim().toLowerCase();
+      const cachedPassword = cachedCredentials[emailLower];
+      if (cachedPassword) {
+        nextFormData.password = cachedPassword;
       }
     }
 
@@ -84,12 +119,17 @@ function Login() {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
+      // Cache credentials on successful login
+      cacheCredentials(formData.email.toLowerCase(), formData.password);
+      
       const roleRoutes = {
-        CUSTOMER_STAFF: "/dashboard",
+        EXTERNAL_PATIENT: "/dashboard",
+        STAFF: "/dashboard",
         NURSE_OFFICER: "/nurse",
         MANAGER: "/manager",
         REGIONAL_OFFICE: "/regional",
-        FEDERAL_ADMIN: "/admin",
+        FEDERAL_OFFICE: "/admin",
+        SYSTEM_ADMIN: "/admin",
       };
       const route = roleRoutes[result?.user?.role] || "/dashboard";
       navigate(route, { replace: true });
@@ -101,132 +141,132 @@ function Login() {
   };
 
   return (
-    <div className="login-page-wrapper">
-      <header className="app-header">
-        <div className="app-header-left">
-          <img
-            src="/Mesob-short-png.png"
-            alt="MESOB Logo"
-            className="mesob-logo-img"
-          />
-        </div>
-        <h1>MESOB</h1>
-        <div className="app-header-right">
-          <select className="language-selector">
-            <option value="en">English</option>
-            <option value="am">አማርኛ</option>
-          </select>
-        </div>
-      </header>
-
-      <div className="auth-container">
-        <div className="auth-wrapper">
-          <div className="auth-left">
-            <div className="auth-header">
-              <h2>Login to your Account</h2>
-              <p>Access the MESOB Wellness Center System</p>
+    <div className="mesob-auth-wrapper">
+      {/* Animated dots background */}
+      <div className="mesob-dots-container">
+        <div className="mesob-dot" style={{ "--delay": "0s", "--duration": "20s" }}></div>
+        <div className="mesob-dot" style={{ "--delay": "2s", "--duration": "25s" }}></div>
+        <div className="mesob-dot" style={{ "--delay": "4s", "--duration": "30s" }}></div>
+        <div className="mesob-dot" style={{ "--delay": "6s", "--duration": "22s" }}></div>
+        <div className="mesob-dot" style={{ "--delay": "8s", "--duration": "28s" }}></div>
+        <div className="mesob-dot" style={{ "--delay": "10s", "--duration": "24s" }}></div>
+        <div className="mesob-dot" style={{ "--delay": "12s", "--duration": "26s" }}></div>
+        <div className="mesob-dot" style={{ "--delay": "14s", "--duration": "23s" }}></div>
+        <div className="mesob-dot" style={{ "--delay": "16s", "--duration": "27s" }}></div>
+        <div className="mesob-dot" style={{ "--delay": "18s", "--duration": "25s" }}></div>
+      </div>
+      <div className="mesob-auth-container">
+        <div className="mesob-auth-card">
+          {/* Logo and Header Section */}
+          <div className="mesob-logo-section">
+            <div className="mesob-logo-circle">
+              <img
+                src="/Mesob-short-png.png"
+                alt="MESOB Logo"
+              />
             </div>
+            <div className="mesob-title-amharic">
+              በኢትዮጵያ ፌዴራላዊ ዲሞክራሲያዊ ሪፐብሊክ
+            </div>
+            <div className="mesob-title-amharic">
+              የመሶብ አገልግሎት
+            </div>
+            <div className="mesob-title-english">
+              Federal Democratic Republic of Ethiopia
+            </div>
+            <div className="mesob-service-title">
+              MESOB Service
+            </div>
+            <div className="mesob-welcome">
+              Sign In
+            </div>
+            <div className="mesob-subtitle">
+              Access the MESOB Wellness Center System
+            </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="auth-form" noValidate>
-              {serverError && (
-                <div className="alert alert-error" role="alert">
-                  {serverError}
-                </div>
-              )}
+          <form onSubmit={handleSubmit} className="mesob-form" noValidate>
+            {serverError && (
+              <div className="mesob-alert mesob-alert-error" role="alert">
+                {serverError}
+              </div>
+            )}
 
-              <Input
-                label="Email"
+            {/* Email */}
+            <div className="mesob-form-group">
+              <label className="mesob-form-label">
+                Email<span className="mesob-required">*</span>
+              </label>
+              <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                error={errors.email}
                 placeholder="mail@example.com"
-                required
                 disabled={loading}
-                autoComplete="username"
+                className={`mesob-form-input ${errors.email ? "error" : ""}`}
+                autoComplete="username email"
                 list="mesob-email-suggestions"
               />
-
               <datalist id="mesob-email-suggestions">
-                {Object.keys(SUGGESTED_CREDENTIALS).map((email) => (
+                {Object.keys(cachedCredentials).map((email) => (
                   <option key={email} value={email} />
                 ))}
               </datalist>
-
-              <div className="form-group">
-                <label htmlFor="password" className="form-label">
-                  Password
-                  <span className="required-mark">*</span>
-                </label>
-                <div className="password-input-wrapper">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="write your password"
-                    required
-                    disabled={loading}
-                    autoComplete="current-password"
-                    className={`form-input ${errors.password ? "form-input-error" : ""}`}
-                    aria-invalid={errors.password ? "true" : "false"}
-                    aria-describedby={
-                      errors.password ? "password-error" : undefined
-                    }
-                  />
-                  <button
-                    type="button"
-                    className="password-toggle-btn"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    disabled={loading}
-                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
-                  >
-                    {showPassword ? "🙈" : "👁"}
-                  </button>
-                </div>
-                {errors.password && (
-                  <span id="password-error" className="form-error" role="alert">
-                    {errors.password}
-                  </span>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                variant="primary"
-                fullWidth
-                loading={loading}
-                disabled={loading}
-              >
-                Login
-              </Button>
-            </form>
-
-            <div className="auth-footer">
-              <p>
-                Don't have an account?{" "}
-                <Link to="/register" className="auth-link">
-                  Sign up here
-                </Link>
-              </p>
+              {errors.email && (
+                <span className="mesob-form-error">{errors.email}</span>
+              )}
             </div>
-          </div>
 
-          <div className="auth-right">
-            <div className="auth-branding">
-              <div className="auth-logo-container">
-                <div className="auth-logo">🏥</div>
+            {/* Password */}
+            <div className="mesob-form-group">
+              <label className="mesob-form-label">
+                Password<span className="mesob-required">*</span>
+              </label>
+              <div className="mesob-password-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password"
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.password ? "error" : ""}`}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="mesob-password-toggle"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  disabled={loading}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? "🙈" : "👁"}
+                </button>
               </div>
-              <h2>MESOB Wellness Center</h2>
-              <p>
-                Secure, official digital wellness management for MESOB staff and
-                customers.
-              </p>
+              {errors.password && (
+                <span className="mesob-form-error">{errors.password}</span>
+              )}
             </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="mesob-btn mesob-btn-primary"
+              disabled={loading}
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="mesob-footer">
+            <p className="mesob-footer-text">
+              Don't have an account?{" "}
+              <Link to="/register" className="mesob-link">
+                Create one here
+              </Link>
+            </p>
           </div>
         </div>
       </div>
