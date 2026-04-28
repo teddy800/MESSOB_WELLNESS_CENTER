@@ -1,13 +1,18 @@
 import { Router } from "express";
 import {
   getVitalsModuleStatus,
+  postVitals,
   postBmi,
   postBloodPressure,
   getVitalsHistoryHandler,
   getLatestVitalsHandler,
   getRiskScoreHandler,
 } from "../controllers/vitals.controller";
-import { authenticate, authorize, authorizeSelfOrAdmin } from "../middleware/auth.middleware";
+import {
+  authenticate,
+  authorize,
+  authorizeSelfOrAdmin,
+} from "../middleware/auth.middleware";
 import { UserRole } from "../generated/prisma";
 
 const router = Router();
@@ -17,6 +22,18 @@ router.get("/status", getVitalsModuleStatus);
 
 // Protected routes - require authentication
 // Only NURSE_OFFICER and higher roles can record vitals
+router.post(
+  "/",
+  authenticate,
+  authorize(
+    UserRole.NURSE_OFFICER,
+    UserRole.MANAGER,
+    UserRole.REGIONAL_OFFICE,
+    UserRole.FEDERAL_ADMIN,
+  ),
+  postVitals,
+);
+
 router.post(
   "/bmi",
   authenticate,

@@ -101,3 +101,38 @@ export async function updateUserHealthProfile(
     });
   }
 }
+
+export async function searchUsers(searchTerm: string) {
+  return prisma.user.findMany({
+    where: {
+      OR: [
+        {
+          fullName: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+        {
+          email: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+      ],
+      isActive: true,
+    },
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      role: true,
+      phone: true,
+      dateOfBirth: true,
+      gender: true,
+    },
+    take: 20, // Limit results
+    orderBy: {
+      fullName: 'asc',
+    },
+  });
+}
