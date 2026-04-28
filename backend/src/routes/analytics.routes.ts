@@ -18,6 +18,7 @@ router.get("/health/analytics",     authenticate, authorizeMinRole(UserRole.MANA
 // ─── Staff / User management ─────────────────────────────────────────────────
 router.get("/users/staff",          authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getStaffUsers);
 router.post("/users/staff",         authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.createStaffUser);
+router.put("/users/:userId",        authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.updateStaffUser);
 router.patch("/users/:userId/toggle", authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.toggleUserStatus);
 
 // ─── Audit logs ──────────────────────────────────────────────────────────────

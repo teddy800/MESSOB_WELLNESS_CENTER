@@ -50,6 +50,11 @@ export const analyticsService = {
     return response.data;
   },
 
+  async updateStaffUser(userId, userData) {
+    const response = await api.put(`/api/v1/analytics/users/${userId}`, userData);
+    return response.data;
+  },
+
   async toggleUserStatus(userId) {
     const response = await api.patch(`/api/v1/analytics/users/${userId}/toggle`);
     return response.data;
