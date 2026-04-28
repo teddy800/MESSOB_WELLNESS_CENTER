@@ -252,7 +252,7 @@ export async function getQueueAnalytics(req: Request, res: Response) {
 export async function getHealthAnalytics(req: Request, res: Response) {
   try {
     const totalPatients = await prisma.user.count({
-      where: { role: UserRole.CUSTOMER_STAFF },
+      where: { role: UserRole.STAFF },
     });
 
     // BP analytics from vital_records
@@ -378,7 +378,7 @@ export async function getStaffUsers(req: AuthRequest, res: Response) {
             UserRole.NURSE_OFFICER,
             UserRole.MANAGER,
             UserRole.REGIONAL_OFFICE,
-            UserRole.FEDERAL_ADMIN,
+            UserRole.SYSTEM_ADMIN,
           ],
         },
       },
@@ -447,7 +447,7 @@ export async function createStaffUser(req: AuthRequest, res: Response) {
       UserRole.NURSE_OFFICER,
       UserRole.MANAGER,
       UserRole.REGIONAL_OFFICE,
-      UserRole.FEDERAL_ADMIN,
+      UserRole.SYSTEM_ADMIN,
     ];
 
     if (!allowedRoles.includes(role)) {
