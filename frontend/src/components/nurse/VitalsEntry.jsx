@@ -1,5 +1,106 @@
 import React, { useEffect, useState } from "react";
 import api from "../../services/api";
+import { suggestWellnessPlan } from "../../utils/wellnessAI";
+
+// Post-Vitals Actions Component
+function PostVitalsActions({ vitals, onSuccess, onStartNewRecord }) {
+  const [customerInfo, setCustomerInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const actionsRef = React.useRef(null);
+
+  useEffect(() => {
+    // Fetch customer info using userId from vitals
+    const fetchCustomer = async () => {
+      try {
+        const response = await api.get(`/api/v1/users/${vitals.userId}`);
+        setCustomerInfo(response.data.data);
+      } catch (err) {
+        console.error('Failed to fetch customer:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (vitals?.userId) {
+      fetchCustomer();
+    }
+  }, [vitals]);
+
+  useEffect(() => {
+    // Scroll to actions when they appear
+    if (!loading && customerInfo && actionsRef.current) {
+      actionsRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest' 
+      });
+    }
+  }, [loading, customerInfo]);
+
+  if (loading || !customerInfo) {
+    return null;
+  }
+
+  return (
+    <div 
+      ref={actionsRef}
+      style={{
+        marginTop: '1.5rem',
+        padding: '1.5rem',
+        backgroundColor: '#F0FDF4',
+        border: '2px solid #10B981',
+        borderRadius: '8px',
+        animation: 'slideDown 0.3s ease-out',
+      }}
+    >
+      <p style={{ margin: '0 0 1rem 0', color: '#065F46', fontWeight: 600 }}>
+        ✓ Vitals recorded successfully! What would you like to do next?
+      </p>
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        <button
+          onClick={() => {
+            if (onSuccess) {
+              onSuccess({
+                action: 'createWellnessPlan',
+                patientId: customerInfo.id,
+                patientName: customerInfo.fullName,
+                vitals: vitals,
+              });
+            }
+          }}
+          className="btn btn-primary"
+          style={{ flex: 1, minWidth: '200px' }}
+        >
+          📋 Create Wellness Plan for {customerInfo.fullName}
+        </button>
+        <button
+          onClick={() => {
+            const suggested = suggestWellnessPlan(vitals);
+            if (onSuccess) {
+              onSuccess({
+                action: 'createWellnessPlan',
+                patientId: customerInfo.id,
+                patientName: customerInfo.fullName,
+                vitals: vitals,
+                suggestedPlan: suggested,
+              });
+            }
+          }}
+          className="btn btn-primary"
+          style={{ flex: 1, minWidth: '200px', backgroundColor: '#F59E0B' }}
+        >
+          🤖 Generate AI-Suggested Plan
+        </button>
+        <button
+          onClick={onStartNewRecord}
+          className="btn btn-secondary"
+          style={{ flex: 1, minWidth: '200px' }}
+        >
+          ➕ Record New Vitals
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function VitalsEntry({ customerId, onSuccess }) {
   const [loading, setLoading] = useState(false);
@@ -8,6 +109,8 @@ function VitalsEntry({ customerId, onSuccess }) {
   const [customerIdInput, setCustomerIdInput] = useState(customerId || "");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
+  const [showPostVitalsActions, setShowPostVitalsActions] = useState(false);
+  const [lastRecordedVitals, setLastRecordedVitals] = useState(null);
   
   // Search states
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,75 +134,6 @@ function VitalsEntry({ customerId, onSuccess }) {
   useEffect(() => {
     setCustomerIdInput(customerId || "");
   }, [customerId]);
-
-  const validateVitalRange = (value, type) => {
-    const numValue = parseFloat(value);
-    let isValid = true;
-    let errorMsg = '';
-
-    if (type === 'systolicBP') {
-      if (numValue < 70 || numValue > 250) {
-        isValid = false;
-        errorMsg = 'Systolic BP must be between 70-250 mmHg';
-      }
-    } else if (type === 'diastolicBP') {
-      if (numValue < 40 || numValue > 150) {
-        isValid = false;
-        errorMsg = 'Diastolic BP must be between 40-150 mmHg';
-      }
-    } else if (type === 'heartRate') {
-      if (numValue < 30 || numValue > 220) {
-        isValid = false;
-        errorMsg = 'Heart rate must be between 30-220 bpm';
-      }
-    } else if (type === 'bmi') {
-      if (numValue < 10 || numValue > 60) {
-        isValid = false;
-        errorMsg = 'BMI must be between 10-60';
-      }
-    } else if (type === 'glucose') {
-      if (numValue < 20 || numValue > 600) {
-        isValid = false;
-        errorMsg = 'Glucose must be between 20-600 mg/dL';
-      }
-    } else if (type === 'temperature') {
-      if (numValue < 32 || numValue > 45) {
-        isValid = false;
-        errorMsg = 'Temperature must be between 32-45°C';
-      }
-    } else if (type === 'oxygenSaturation') {
-      if (numValue < 50 || numValue > 100) {
-        isValid = false;
-        errorMsg = 'O₂ saturation must be between 50-100%';
-      }
-    }
-
-    return { isValid, errorMsg };
-  };
-
-  const checkForDuplicateVitals = async (userId) => {
-    try {
-      const response = await api.get(`/api/v1/vitals/latest/${userId}`);
-      const latestVital = response.data.data;
-      
-      if (latestVital) {
-        const timeDiff = Date.now() - new Date(latestVital.recordedAt).getTime();
-        const minutesDiff = timeDiff / (1000 * 60);
-        
-        // Warn if vitals recorded within last 5 minutes
-        if (minutesDiff < 5) {
-          return {
-            isDuplicate: true,
-            message: `Vitals were recorded ${Math.round(minutesDiff)} minute(s) ago. Are you sure you want to record again?`
-          };
-        }
-      }
-      return { isDuplicate: false };
-    } catch (err) {
-      // No previous vitals or error - allow recording
-      return { isDuplicate: false };
-    }
-  };
 
   const handleCustomerSelect = (customer) => {
     setSelectedCustomer(customer);
@@ -289,6 +323,14 @@ function VitalsEntry({ customerId, onSuccess }) {
       });
 
       setSuccess("Vitals recorded successfully!");
+      
+      // Store vitals and customer BEFORE resetting form
+      const recordedVitals = response.data.data;
+      
+      setLastRecordedVitals(recordedVitals);
+      setShowPostVitalsActions(true);
+      
+      // Now reset form
       setVitals({
         systolicBP: "",
         diastolicBP: "",
@@ -300,18 +342,22 @@ function VitalsEntry({ customerId, onSuccess }) {
         notes: "",
       });
       setAlerts({});
-      setSelectedCustomer(null);
-      setCustomerIdInput('');
 
-      setTimeout(() => {
-        setSuccess("");
-        if (onSuccess) onSuccess();
-      }, 2000);
+      // Keep success message and actions visible until user takes action
+      // No auto-hide timeout
     } catch (err) {
       setError(err.response?.data?.message || "Failed to record vitals");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStartNewRecord = () => {
+    setSuccess("");
+    setShowPostVitalsActions(false);
+    setLastRecordedVitals(null);
+    setSelectedCustomer(null);
+    setCustomerIdInput('');
   };
 
   return (
@@ -605,6 +651,15 @@ function VitalsEntry({ customerId, onSuccess }) {
           {loading ? "Recording..." : "Submit Vitals"}
         </button>
       </form>
+
+      {/* Post-Vitals Action Buttons */}
+      {showPostVitalsActions && lastRecordedVitals && (
+        <PostVitalsActions
+          vitals={lastRecordedVitals}
+          onSuccess={onSuccess}
+          onStartNewRecord={handleStartNewRecord}
+        />
+      )}
     </div>
   );
 }

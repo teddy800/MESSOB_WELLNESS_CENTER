@@ -47,7 +47,7 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
   try {
     const userId = req.params.id;
 
-    if (!userId) {
+    if (!userId || typeof userId !== 'string') {
       res.status(400).json({
         status: "error",
         message: "User ID is required",

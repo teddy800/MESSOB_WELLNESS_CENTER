@@ -29,7 +29,8 @@ router.post(
     UserRole.NURSE_OFFICER,
     UserRole.MANAGER,
     UserRole.REGIONAL_OFFICE,
-    UserRole.FEDERAL_ADMIN,
+    UserRole.FEDERAL_OFFICE,
+    UserRole.SYSTEM_ADMIN,
   ),
   postVitals,
 );

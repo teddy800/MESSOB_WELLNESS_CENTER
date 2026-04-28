@@ -19,15 +19,46 @@ export const createWellnessPlan = async (
       return;
     }
 
-    const { userId, planText, goals, duration } = req.body;
+    const { 
+      userId, 
+      title,
+      nutritionRecommendations,
+      exerciseRecommendations,
+      stressManagementAdvice,
+      goals, 
+      duration 
+    } = req.body;
 
     // Validate required fields
-    if (!userId || !planText) {
+    if (!userId || !title) {
       res.status(400).json({
         status: "error",
-        message: "userId and planText are required",
+        message: "userId and title are required",
       });
       return;
+    }
+
+    // Build planText from structured fields
+    let planText = `# ${title}\n\n`;
+    
+    if (nutritionRecommendations) {
+      planText += `## 🥗 Nutrition Recommendations\n${nutritionRecommendations}\n\n`;
+    }
+    
+    if (exerciseRecommendations) {
+      planText += `## 🏃 Exercise Recommendations\n${exerciseRecommendations}\n\n`;
+    }
+    
+    if (stressManagementAdvice) {
+      planText += `## 🧘 Stress Management\n${stressManagementAdvice}\n\n`;
+    }
+
+    // Convert goals array to string
+    let goalsString = '';
+    if (Array.isArray(goals) && goals.length > 0) {
+      goalsString = goals.join('\n');
+    } else if (typeof goals === 'string') {
+      goalsString = goals;
     }
 
     // Authorization: Only NURSE_OFFICER and above can create wellness plans
@@ -35,7 +66,8 @@ export const createWellnessPlan = async (
       "NURSE_OFFICER",
       "MANAGER",
       "REGIONAL_OFFICE",
-      "FEDERAL_ADMIN",
+      "FEDERAL_OFFICE",
+      "SYSTEM_ADMIN",
     ];
     if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
@@ -48,7 +80,7 @@ export const createWellnessPlan = async (
     const plan = await WellnessService.createWellnessPlan({
       userId,
       planText,
-      goals,
+      goals: goalsString,
       duration,
     });
 

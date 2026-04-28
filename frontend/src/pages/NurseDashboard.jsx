@@ -42,8 +42,19 @@ function NurseDashboard() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleVitalsSuccess = () => {
-    setSelectedCustomer(null);
+  const handleVitalsSuccess = (data) => {
+    if (data?.action === 'createWellnessPlan') {
+      setSelectedCustomer(data.patientId);
+      setActiveTab('wellness');
+      // Pass vitals and suggested plan to wellness component
+      if (data.suggestedPlan) {
+        // Store in sessionStorage for wellness component to access
+        sessionStorage.setItem('suggestedWellnessPlan', JSON.stringify(data.suggestedPlan));
+      }
+      if (data.vitals) {
+        sessionStorage.setItem('latestVitals', JSON.stringify(data.vitals));
+      }
+    }
     setRefreshKey((prev) => prev + 1);
   };
 
