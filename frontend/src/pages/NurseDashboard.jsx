@@ -34,7 +34,11 @@ function NurseDashboard() {
     setCapacity(newCapacity);
   };
 
-  const handleWalkInSuccess = () => {
+  const handleWalkInSuccess = (data) => {
+    if (data?.action === 'recordVitals' && data?.patientId) {
+      setSelectedCustomer(data.patientId);
+      setActiveTab('vitals');
+    }
     setRefreshKey((prev) => prev + 1);
   };
 
