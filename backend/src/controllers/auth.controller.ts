@@ -38,12 +38,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Public registration always creates CUSTOMER_STAFF
+    // Public registration always creates STAFF
     const registerInput: RegisterInput = {
       email,
       password,
       fullName,
-      role: UserRole.CUSTOMER_STAFF,
+      role: UserRole.STAFF,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       gender,
       phone,
@@ -136,16 +136,16 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
     // Hierarchical role creation rules
     const creatorRole = req.user.role;
     
-    // FEDERAL_ADMIN can create any role
-    if (creatorRole === UserRole.FEDERAL_ADMIN) {
+    // SYSTEM_ADMIN can create any role
+    if (creatorRole === UserRole.SYSTEM_ADMIN) {
       // Can create any role
     }
-    // MANAGER can only create NURSE_OFFICER and CUSTOMER_STAFF
+    // MANAGER can only create NURSE_OFFICER and STAFF
     else if (creatorRole === UserRole.MANAGER) {
-      if (role !== UserRole.NURSE_OFFICER && role !== UserRole.CUSTOMER_STAFF) {
+      if (role !== UserRole.NURSE_OFFICER && role !== UserRole.STAFF) {
         res.status(403).json({
           status: "error",
-          message: "Managers can only create Nurse Officers and Customer Staff",
+          message: "Managers can only create Nurse Officers and Staff",
         });
         return;
       }
