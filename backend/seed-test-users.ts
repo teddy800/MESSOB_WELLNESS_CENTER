@@ -6,10 +6,10 @@ const SALT_ROUNDS = 12;
 
 const testUsers = [
   {
-    email: 'customer@mesob.et',
-    password: 'Customer123!',
-    fullName: 'Customer Staff',
-    role: UserRole.CUSTOMER_STAFF,
+    email: 'staff@mesob.et',
+    password: 'Staff123!',
+    fullName: 'Staff Member',
+    role: UserRole.STAFF,
     phone: '+251911111111',
   },
   {
@@ -34,10 +34,17 @@ const testUsers = [
     phone: '+251944444444',
   },
   {
+    email: 'federal@mesob.et',
+    password: 'Federal123!',
+    fullName: 'Federal Office',
+    role: UserRole.FEDERAL_OFFICE,
+    phone: '+251966666666',
+  },
+  {
     email: 'admin@mesob.et',
     password: 'Admin123!',
-    fullName: 'Federal Admin',
-    role: UserRole.FEDERAL_ADMIN,
+    fullName: 'System Admin',
+    role: UserRole.SYSTEM_ADMIN,
     phone: '+251955555555',
   },
 ];
