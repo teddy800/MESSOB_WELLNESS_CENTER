@@ -1,126 +1,430 @@
 /* ========================================
-   REGISTER PAGE STYLES
+   MESOB BRAND THEME - REGISTRATION PAGE
+   Based on dashboard.mesobcenter.et
    ======================================== */
 
-.register-page-wrapper {
+:root {
+  --mesob-primary-blue: #2B4C7E;
+  --mesob-dark-blue: #1e3a5f;
+  --mesob-accent-orange: #F59E0B;
+  --mesob-gold: #FFA500;
+  --mesob-white: #FFFFFF;
+  --mesob-light-blue: rgba(59, 130, 246, 0.1);
+  --mesob-card-bg: rgba(255, 255, 255, 0.95);
+  --mesob-input-bg: rgba(255, 255, 255, 0.9);
+}
+
+/* Starry Background Pattern */
+.mesob-auth-wrapper {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #1e3a8a 0%, #284394 50%, #312e81 100%);
+  background: linear-gradient(135deg, #1e3a5f 0%, #2B4C7E 50%, #3b5998 100%);
+  position: relative;
+  overflow: hidden;
 }
 
-.register-wrapper {
-  grid-template-columns: 1fr 1fr;
+.mesob-auth-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 20% 30%, white, transparent),
+    radial-gradient(2px 2px at 60% 70%, white, transparent),
+    radial-gradient(1px 1px at 50% 50%, white, transparent),
+    radial-gradient(1px 1px at 80% 10%, white, transparent),
+    radial-gradient(2px 2px at 90% 60%, white, transparent),
+    radial-gradient(1px 1px at 33% 80%, white, transparent),
+    radial-gradient(1px 1px at 15% 90%, white, transparent);
+  background-size: 200% 200%;
+  background-position: 0% 0%;
+  opacity: 0.3;
+  animation: twinkle 20s ease-in-out infinite;
 }
 
-.register-form-section {
-  max-height: 90vh;
-  overflow-y: auto;
-  padding-right: 1rem;
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
 }
 
-.register-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.register-form .form-group {
-  margin-bottom: 0.5rem;
-}
-
-.register-benefits {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.benefit-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 0.95rem;
-}
-
-.benefit-icon {
+/* Auth Container */
+.mesob-auth-container {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: rgba(139, 92, 246, 0.3);
-  border-radius: 50%;
-  color: #8b5cf6;
-  font-weight: bold;
-  flex-shrink: 0;
+  padding: 2rem 1rem;
+  position: relative;
+  z-index: 1;
 }
 
-.auth-link {
-  color: #8b5cf6;
+/* Auth Card */
+.mesob-auth-card {
+  background: #3550A0;
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 650px;
+  width: 100%;
+  padding: 2.5rem;
+  animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Logo Section */
+.mesob-logo-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.mesob-logo-circle {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mesob-logo-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mesob-title-amharic {
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
+.mesob-title-english {
+  font-size: 0.85rem;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.mesob-service-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.mesob-welcome {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--mesob-accent-orange);
+  margin-bottom: 0.25rem;
+}
+
+.mesob-subtitle {
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  margin-bottom: 1.5rem;
+}
+
+/* Form Styles */
+.mesob-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mesob-form-group {
+  margin-bottom: 0.5rem;
+}
+
+.mesob-form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.mesob-form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #FFFFFF;
+  transition: all 0.3s ease;
+}
+
+.mesob-form-input:focus {
+  outline: none;
+  border-color: var(--mesob-accent-orange);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.mesob-form-input:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mesob-form-input.error {
+  border-color: #ef4444;
+}
+
+.mesob-form-error {
+  display: block;
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.mesob-form-success {
+  display: block;
+  color: #059669;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.mesob-form-hint {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #FFFFFF;
+  margin-left: 0.25rem;
+}
+
+/* HR Lookup Section */
+.mesob-hr-section {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.mesob-input-with-button {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.mesob-input-with-button .mesob-form-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.875rem 1rem;
+  font-size: 1rem;
+}
+
+.mesob-input-with-button button {
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  min-width: auto;
+  border-radius: 8px;
+}
+
+/* Buttons */
+.mesob-btn {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mesob-btn-primary {
+  width: 100%;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  background: #FFFFFF;
+  color: #3550A0;
+}
+
+.mesob-btn-primary:hover:not(:disabled) {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.4);
+}
+
+.mesob-btn-secondary {
+  background: var(--mesob-primary-blue);
+  color: white;
+}
+
+.mesob-btn-secondary:hover:not(:disabled) {
+  background: var(--mesob-dark-blue);
+}
+
+.mesob-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  background-color: #d1d5db !important;
+  color: #6b7280 !important;
+}
+
+/* Alerts */
+.mesob-alert {
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.mesob-alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.mesob-alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+/* Footer Links */
+.mesob-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mesob-footer-text {
+  font-size: 0.9rem;
+  color: #FFFFFF;
+}
+
+.mesob-link {
+  color: var(--mesob-gold);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
-.auth-link:hover {
-  color: #7c3aed;
+.mesob-link:hover {
+  color: #FFB84D;
   text-decoration: underline;
 }
 
-/* Scrollbar styling for register form */
-.register-form-section::-webkit-scrollbar {
+/* Scrollable Form Container */
+.mesob-form-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mesob-form-scroll::-webkit-scrollbar {
   width: 6px;
 }
 
-.register-form-section::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+.mesob-form-scroll::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 10px;
 }
 
-.register-form-section::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.5);
+.mesob-form-scroll::-webkit-scrollbar-thumb {
+  background: var(--mesob-accent-orange);
   border-radius: 10px;
 }
 
-.register-form-section::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.7);
+.mesob-form-scroll::-webkit-scrollbar-thumb:hover {
+  background: #d97706;
+}
+
+/* Select Dropdown */
+.mesob-form-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mesob-form-select:focus {
+  outline: none;
+  border-color: var(--mesob-accent-orange);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.mesob-form-select:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mesob-form-select.error {
+  border-color: #ef4444;
+}
+
+/* Required Mark */
+.mesob-required {
+  color: #ef4444;
+  margin-left: 0.25rem;
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
-  .register-wrapper {
-    grid-template-columns: 1fr;
+@media (max-width: 640px) {
+  .mesob-auth-card {
+    padding: 1.5rem;
   }
 
-  .auth-right {
-    display: none;
+  .mesob-logo-circle {
+    width: 80px;
+    height: 80px;
   }
 
-  .register-form-section {
-    max-height: none;
-    padding-right: 0;
+  .mesob-service-title {
+    font-size: 1.1rem;
+  }
+
+  .mesob-input-with-button {
+    flex-direction: column;
+  }
+
+  .mesob-input-with-button button {
+    width: 100%;
+  }
+
+  .mesob-form-scroll {
+    max-height: 50vh;
   }
 }
 
-@media (max-width: 768px) {
-  .register-form {
-    gap: 0.75rem;
+@media (max-width: 480px) {
+  .mesob-auth-container {
+    padding: 1rem 0.5rem;
   }
 
-  .register-form .form-group {
-    margin-bottom: 0.25rem;
-  }
-
-  .auth-footer {
-    text-align: center;
-    margin-top: 1rem;
-  }
-
-  .auth-footer p {
-    font-size: 0.9rem;
+  .mesob-auth-card {
+    padding: 1.25rem;
   }
 }
