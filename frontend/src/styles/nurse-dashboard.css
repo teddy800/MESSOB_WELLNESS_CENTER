@@ -322,124 +322,7 @@
   color: #166534;
 }
 
-/* Register Walk-in */
-.register-walk-in {
-  background: white;
-}
-
-.form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.form-header h3 {
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
-  transition: color 0.3s ease;
-}
-
-.close-btn:hover {
-  color: #333;
-}
-
-.walk-in-form {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-label {
-  margin-bottom: 5px;
-  color: #333;
-  font-weight: 500;
-  font-size: 0.95rem;
-}
-
-.form-input {
-  padding: 10px 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-family: inherit;
-  transition: all 0.3s ease;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.form-input:disabled {
-  background: #f3f4f6;
-  cursor: not-allowed;
-}
-
-.form-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  font-weight: 500;
-}
-
-.btn-primary {
-  background: #2563eb;
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: #1d4ed8;
-}
-
-.btn-secondary {
-  background: #e5e7eb;
-  color: #333;
-}
-
-.btn-secondary:hover:not(:disabled) {
-  background: #d1d5db;
-}
-
-.btn-large {
-  padding: 12px 24px;
-  font-size: 1.05rem;
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.btn.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* Register Walk-in - Styles moved to walkin-enhanced.css */
 
 /* Vitals Entry */
 .vitals-entry {
@@ -554,14 +437,6 @@
   .queue-item-header {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .form-actions .btn {
-    width: 100%;
   }
 }
 

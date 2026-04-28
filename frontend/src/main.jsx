@@ -13,6 +13,7 @@ import "./styles/dashboard-new-features.css";
 import "./styles/manager-dashboard.css";
 import "./styles/nurse-dashboard.css";
 import "./styles/nurse-dashboard-new.css";
+import "./styles/walkin-enhanced.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
