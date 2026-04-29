@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import NurseAnalytics from "../components/nurse/NurseAnalytics";
 import LiveQueuePanel from "../components/nurse/LiveQueuePanel";
 import CapacityTracker from "../components/nurse/CapacityTracker";
 import RegisterWalkIn from "../components/nurse/RegisterWalkIn";
@@ -15,8 +16,8 @@ function NurseDashboard() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["queue", "vitals", "walkin", "wellness", "history", "display"];
-    return tab && allowedTabs.includes(tab) ? tab : "queue";
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "display"];
+    return tab && allowedTabs.includes(tab) ? tab : "analytics";
   });
   const [capacity, setCapacity] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -25,7 +26,7 @@ function NurseDashboard() {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["queue", "vitals", "walkin", "wellness", "history", "display"];
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "display"];
     if (tab && allowedTabs.includes(tab)) {
       setActiveTab(tab);
     }
@@ -112,6 +113,14 @@ function NurseDashboard() {
         
         <nav className="sidebar-nav">
           <button
+            className={`sidebar-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            <span className="nav-icon">📊</span>
+            <span className="nav-label">Analytics</span>
+          </button>
+          
+          <button
             className={`sidebar-nav-item ${activeTab === 'queue' ? 'active' : ''}`}
             onClick={() => setActiveTab('queue')}
           >
@@ -164,6 +173,7 @@ function NurseDashboard() {
       <main className="nurse-main-content">
         <div className="nurse-content-header">
           <h1>
+            {activeTab === 'analytics' && '📊 Analytics'}
             {activeTab === 'queue' && '📋 Queue Management'}
             {activeTab === 'vitals' && '💉 Record Vitals'}
             {activeTab === 'walkin' && '🚶 Register Walk-in'}
@@ -174,6 +184,12 @@ function NurseDashboard() {
         </div>
 
         <div className="nurse-content-body">
+        {activeTab === "analytics" && (
+          <div className="analytics-section">
+            <NurseAnalytics />
+          </div>
+        )}
+
         {activeTab === "queue" && (
           <div className="queue-section">
             <div className="queue-main">

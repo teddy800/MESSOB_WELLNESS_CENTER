@@ -73,16 +73,18 @@ function CallNextControl({ onNavigateToVitals }) {
     }
   };
 
-  const handleMarkCompleted = async () => {
+  const handleMarkNoShow = async () => {
     try {
       setLoading(true);
       setError('');
 
+      // Mark appointment as NO_SHOW
       await api.patch(`/api/v1/appointments/${currentCustomer?.appointmentId}`, {
-        status: 'COMPLETED',
+        status: 'NO_SHOW',
+        cancellationReason: 'Patient did not show up',
       });
 
-      setSuccess('Appointment marked as completed');
+      setSuccess(`${currentCustomer?.customerName} marked as No-Show`);
       setShowRecordVitalsButton(false);
       
       // Refresh queue to show next customer
@@ -91,7 +93,7 @@ function CallNextControl({ onNavigateToVitals }) {
         fetchCurrentCustomer();
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to mark as completed');
+      setError(err.response?.data?.message || 'Failed to mark as no-show');
     } finally {
       setLoading(false);
     }
@@ -134,13 +136,24 @@ function CallNextControl({ onNavigateToVitals }) {
                   📢 Call Next
                 </button>
               ) : (
-                <button
-                  className="btn btn-primary btn-large"
-                  onClick={handleRecordVitals}
-                  disabled={loading}
-                >
-                  💉 Record Vitals
-                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button
+                    className="btn btn-primary btn-large"
+                    onClick={handleRecordVitals}
+                    disabled={loading}
+                    style={{ flex: 1 }}
+                  >
+                    💉 Record Vitals
+                  </button>
+                  <button
+                    className="btn btn-danger btn-large"
+                    onClick={handleMarkNoShow}
+                    disabled={loading}
+                    style={{ flex: 1 }}
+                  >
+                    ❌ Mark No-Show
+                  </button>
+                </div>
               )}
             </div>
 

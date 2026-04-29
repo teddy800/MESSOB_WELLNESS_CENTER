@@ -217,6 +217,29 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
     }
   };
 
+  const handleBackToQueue = async () => {
+    try {
+      setLoading(true);
+      
+      // Mark appointment as COMPLETED
+      if (appointmentId) {
+        await api.patch(`/api/v1/appointments/${appointmentId}`, {
+          status: 'COMPLETED',
+        });
+      }
+      
+      // Call the parent callback to navigate back to queue
+      if (onBackToQueue) {
+        onBackToQueue();
+      }
+    } catch (err) {
+      console.error('Failed to mark appointment as completed:', err);
+      setError('Failed to complete appointment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="card wellness-plan-creation">
       <h3>🎯 Create Wellness Plan</h3>
@@ -252,14 +275,17 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
             </button>
             {onBackToQueue && (
               <button
-                onClick={onBackToQueue}
+                onClick={handleBackToQueue}
+                disabled={loading}
                 className="btn btn-secondary"
                 style={{
                   flex: 1,
                   minWidth: '150px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.6 : 1,
                 }}
               >
-                ← Back to Queue
+                {loading ? '⏳ Processing...' : '← Back to Queue'}
               </button>
             )}
           </div>
