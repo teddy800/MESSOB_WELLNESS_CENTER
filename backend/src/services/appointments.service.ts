@@ -18,10 +18,56 @@ interface Appointment {
 }
 
 export async function createAppointment(input: AppointmentInput): Promise<Appointment> {
+  // Parse the date from scheduledAt
+  const appointmentDate = new Date(input.scheduledAt);
+  appointmentDate.setHours(0, 0, 0, 0);
+
+  // Service hours: 2:30 AM to 11:30 AM
+  const SERVICE_START_HOUR = 2; // 2:30 AM
+  const SERVICE_START_MINUTE = 30;
+  const SERVICE_END_HOUR = 11; // 11:30 AM
+  const SERVICE_END_MINUTE = 30;
+  const TIME_PER_CUSTOMER_MINUTES = 15; // 15 minutes per customer
+
+  // Get all appointments for this date to find the next available slot
+  const existingAppointments = await prisma.appointment.findMany({
+    where: {
+      scheduledAt: {
+        gte: appointmentDate,
+        lt: new Date(appointmentDate.getTime() + 24 * 60 * 60 * 1000),
+      },
+    },
+    orderBy: { scheduledAt: 'asc' },
+  });
+
+  // Calculate next available time slot
+  let nextSlotTime = new Date(appointmentDate);
+  nextSlotTime.setHours(SERVICE_START_HOUR, SERVICE_START_MINUTE, 0, 0);
+
+  // If there are existing appointments, find the next available slot after the last one
+  if (existingAppointments.length > 0) {
+    const lastAppointment = existingAppointments[existingAppointments.length - 1];
+    nextSlotTime = new Date(lastAppointment.scheduledAt);
+    nextSlotTime.setMinutes(nextSlotTime.getMinutes() + TIME_PER_CUSTOMER_MINUTES);
+  }
+
+  // Check if the calculated time is within service hours
+  const hours = nextSlotTime.getHours();
+  const minutes = nextSlotTime.getMinutes();
+  const totalMinutes = hours * 60 + minutes;
+  const serviceEndTotalMinutes = SERVICE_END_HOUR * 60 + SERVICE_END_MINUTE;
+
+  // If time exceeds service hours, move to next day at service start time
+  if (totalMinutes > serviceEndTotalMinutes) {
+    nextSlotTime = new Date(appointmentDate);
+    nextSlotTime.setDate(nextSlotTime.getDate() + 1);
+    nextSlotTime.setHours(SERVICE_START_HOUR, SERVICE_START_MINUTE, 0, 0);
+  }
+
   const appointment = await prisma.appointment.create({
     data: {
-      userId: input.patientId, // Use UUID directly
-      scheduledAt: new Date(input.scheduledAt),
+      userId: input.patientId,
+      scheduledAt: nextSlotTime,
       reason: input.reason,
       status: AppointmentStatus.PENDING,
     },
@@ -144,4 +190,62 @@ export async function updateAppointmentStatus(
       },
     },
   });
+}
+
+
+export async function getQueueAppointments(dateString?: string) {
+  let startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+  
+  // If a date is provided, use that date instead of today
+  if (dateString) {
+    const providedDate = new Date(dateString);
+    startDate = new Date(providedDate);
+    startDate.setHours(0, 0, 0, 0);
+  }
+  
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 1);
+
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      scheduledAt: {
+        gte: startDate,
+        lt: endDate,
+      },
+      status: {
+        in: [
+          AppointmentStatus.CONFIRMED,
+          AppointmentStatus.PENDING,
+          AppointmentStatus.IN_PROGRESS,
+          AppointmentStatus.COMPLETED,
+        ],
+      },
+    },
+    orderBy: { scheduledAt: 'asc' },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+        },
+      },
+    },
+  });
+
+  return appointments.map((apt) => ({
+    id: apt.id,
+    appointmentId: apt.id,
+    customerName: apt.user.fullName,
+    customerId: apt.userId,
+    checkInTime: apt.scheduledAt.toISOString(),
+    scheduledAt: apt.scheduledAt.toISOString(),
+    reason: apt.reason,
+    status: apt.status === AppointmentStatus.IN_PROGRESS ? 'IN_SERVICE' : 
+            apt.status === AppointmentStatus.COMPLETED ? 'COMPLETED' : 'WAITING',
+    type: 'ONLINE', // Default to ONLINE, can be enhanced later
+    notes: apt.notes || undefined,
+  }));
 }
