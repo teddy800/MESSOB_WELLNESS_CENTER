@@ -134,29 +134,13 @@ function CallNextControl({ onNavigateToVitals }) {
                   📢 Call Next
                 </button>
               ) : (
-                <>
-                  <button
-                    className="btn btn-primary btn-large"
-                    onClick={handleRecordVitals}
-                    disabled={loading}
-                  >
-                    💉 Record Vitals
-                  </button>
-                  <button
-                    className="btn btn-success btn-large"
-                    onClick={handleMarkCompleted}
-                    disabled={loading}
-                  >
-                    ✓ Mark Completed
-                  </button>
-                  <button
-                    className="btn btn-secondary btn-large"
-                    onClick={handleBackToQueue}
-                    disabled={loading}
-                  >
-                    ← Back to Queue
-                  </button>
-                </>
+                <button
+                  className="btn btn-primary btn-large"
+                  onClick={handleRecordVitals}
+                  disabled={loading}
+                >
+                  💉 Record Vitals
+                </button>
               )}
             </div>
 

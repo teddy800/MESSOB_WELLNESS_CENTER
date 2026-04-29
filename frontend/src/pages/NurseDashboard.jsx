@@ -77,8 +77,25 @@ function NurseDashboard() {
     setActiveTab('vitals');
   };
 
-  const handleBackToQueue = () => {
-    setActiveTab('queue');
+  const handleBackToQueue = async () => {
+    try {
+      // Mark appointment as completed
+      if (selectedAppointmentId) {
+        await api.patch(`/api/v1/appointments/${selectedAppointmentId}`, {
+          status: 'COMPLETED',
+        });
+      }
+      // Reset selected customer and appointment
+      setSelectedCustomer(null);
+      setSelectedAppointmentId(null);
+      // Navigate to queue
+      setActiveTab('queue');
+    } catch (err) {
+      console.error('Failed to mark as completed:', err);
+      setSelectedCustomer(null);
+      setSelectedAppointmentId(null);
+      setActiveTab('queue');
+    }
   };
 
   const handleWellnessSuccess = () => {

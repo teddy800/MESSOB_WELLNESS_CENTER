@@ -208,25 +208,7 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      // Reset form after successful PDF download
-      setTimeout(() => {
-        setFormData({
-          title: '',
-          nutritionRecommendations: '',
-          exerciseRecommendations: '',
-          stressManagementAdvice: '',
-          goals: '',
-          duration: '30',
-        });
-        setSelectedCustomerId('');
-        setSelectedCustomerName('');
-        setLatestVitals(null);
-        setSuggestedPlan(null);
-        setSearchTerm('');
-        setSearchResults([]);
-        setCreatedPlanId(null);
-        if (onSuccess) onSuccess();
-      }, 500);
+      // Keep the buttons visible - don't reset form
     } catch (err) {
       console.error('Failed to download PDF:', err);
       setError('Failed to generate PDF');
@@ -242,7 +224,7 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div ref={successRef} className="alert alert-success">{success}</div>}
       
-      {/* PDF Download Button - persists until clicked */}
+      {/* PDF Download and Back to Queue Buttons */}
       {createdPlanId && !success && (
         <div style={{
           marginBottom: '1.5rem',
