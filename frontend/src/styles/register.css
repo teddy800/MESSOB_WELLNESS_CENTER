@@ -17,35 +17,13 @@
 /* Starry Background Pattern */
 .mesob-auth-wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1e3a5f 0%, #2B4C7E 50%, #3b5998 100%);
+  background: linear-gradient(180deg, #0a1428 0%, #1a2d5c 50%, #2E4998 100%);
   position: relative;
   overflow: hidden;
-}
-
-.mesob-auth-wrapper::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
   background-image: 
-    radial-gradient(2px 2px at 20% 30%, white, transparent),
-    radial-gradient(2px 2px at 60% 70%, white, transparent),
-    radial-gradient(1px 1px at 50% 50%, white, transparent),
-    radial-gradient(1px 1px at 80% 10%, white, transparent),
-    radial-gradient(2px 2px at 90% 60%, white, transparent),
-    radial-gradient(1px 1px at 33% 80%, white, transparent),
-    radial-gradient(1px 1px at 15% 90%, white, transparent);
-  background-size: 200% 200%;
-  background-position: 0% 0%;
-  opacity: 0.3;
-  animation: twinkle 20s ease-in-out infinite;
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.5; }
+    linear-gradient(0deg, transparent 24%, rgba(100, 150, 200, 0.08) 25%, rgba(100, 150, 200, 0.08) 26%, transparent 27%, transparent 74%, rgba(100, 150, 200, 0.08) 75%, rgba(100, 150, 200, 0.08) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(100, 150, 200, 0.08) 25%, rgba(100, 150, 200, 0.08) 26%, transparent 27%, transparent 74%, rgba(100, 150, 200, 0.08) 75%, rgba(100, 150, 200, 0.08) 76%, transparent 77%, transparent);
+  background-size: 50px 50px;
 }
 
 /* Auth Container */
@@ -56,7 +34,7 @@
   justify-content: center;
   padding: 2rem 1rem;
   position: relative;
-  z-index: 1;
+  z-index: 10;
 }
 
 /* Auth Card */

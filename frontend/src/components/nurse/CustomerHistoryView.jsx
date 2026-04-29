@@ -7,12 +7,59 @@ function CustomerHistoryView({ customerId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('vitals');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState(customerId || '');
+  const [selectedCustomerName, setSelectedCustomerName] = useState('');
+  const [expandedPlanId, setExpandedPlanId] = useState(null);
 
   useEffect(() => {
-    if (customerId) {
+    if (selectedCustomerId) {
       fetchCustomerHistory();
     }
-  }, [customerId]);
+  }, [selectedCustomerId]);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!searchTerm.trim()) {
+      setError('Please enter a search term');
+      return;
+    }
+
+    try {
+      setSearching(true);
+      setError('');
+      const response = await api.get(`/api/v1/users?search=${encodeURIComponent(searchTerm)}`);
+      setSearchResults(response.data.data || []);
+      
+      if (response.data.data.length === 0) {
+        setError('No customers found');
+      }
+    } catch (err) {
+      setError('Failed to search customers');
+      console.error(err);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setSelectedCustomerId(customer.id);
+    setSelectedCustomerName(customer.fullName);
+    setSearchResults([]);
+    setSearchTerm('');
+    setError('');
+  };
+
+  const handleClearCustomer = () => {
+    setSelectedCustomerId('');
+    setSelectedCustomerName('');
+    setVitalsHistory([]);
+    setWellnessPlans([]);
+  };
 
   const fetchCustomerHistory = async () => {
     try {
@@ -20,12 +67,12 @@ function CustomerHistoryView({ customerId }) {
       setError('');
 
       // Fetch vitals history
-      const vitalsResponse = await api.get(`/api/v1/vitals/${customerId}`);
-      const vitalsData = vitalsResponse.data.data;
+      const vitalsResponse = await api.get(`/api/v1/vitals/history/${selectedCustomerId}`);
+      const vitalsData = vitalsResponse.data.data?.records || [];
       setVitalsHistory(Array.isArray(vitalsData) ? vitalsData : []);
 
       // Fetch wellness plans
-      const plansResponse = await api.get(`/api/v1/plans/${customerId}`);
+      const plansResponse = await api.get(`/api/v1/plans/${selectedCustomerId}`);
       const plansData = plansResponse.data.data;
       setWellnessPlans(Array.isArray(plansData) ? plansData : []);
     } catch (err) {
@@ -36,18 +83,86 @@ function CustomerHistoryView({ customerId }) {
     }
   };
 
-  if (!customerId) {
+  if (!selectedCustomerId) {
     return (
       <div className="card customer-history">
-        <h3>📋 Customer History</h3>
-        <p className="empty-text">Select a customer to view history</p>
+        <h3>📚 Customer History</h3>
+        
+        <div className="inline-search">
+          <h4>🔍 Search Customer</h4>
+          <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '1rem' }}>
+            Search by name, email, or customer ID
+          </p>
+          
+          <form onSubmit={handleSearch} className="search-form">
+            <div className="search-input-group">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Enter name, email, or ID..."
+                className="form-input"
+                disabled={searching}
+              />
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="btn btn-primary"
+                disabled={searching || !searchTerm.trim()}
+              >
+                {searching ? 'Searching...' : '🔍 Search'}
+              </button>
+            </div>
+          </form>
+
+          {error && <div className="alert alert-error">{error}</div>}
+
+          {searchResults.length > 0 && (
+            <div className="search-results-inline">
+              <p className="results-count">{searchResults.length} customer(s) found</p>
+              <div className="results-list-inline">
+                {searchResults.map((customer) => (
+                  <div key={customer.id} className="result-item-inline">
+                    <div className="customer-info-inline">
+                      <p className="customer-name-inline">{customer.fullName}</p>
+                      <p className="customer-details-inline">Email: {customer.email}</p>
+                      <p className="customer-details-inline">ID: {customer.id}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectCustomer(customer)}
+                      className="btn btn-small btn-primary"
+                    >
+                      Select
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="card customer-history">
-      <h3>📋 Customer History</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h3>📚 Customer History</h3>
+        <button
+          type="button"
+          onClick={handleClearCustomer}
+          className="btn btn-small btn-secondary"
+        >
+          Change Customer
+        </button>
+      </div>
+
+      <div className="customer-id-display" style={{ marginBottom: '1rem' }}>
+        <strong>Customer:</strong> {selectedCustomerName}
+        <br />
+        <small style={{ color: '#666' }}>ID: {selectedCustomerId}</small>
+      </div>
 
       {error && <div className="alert alert-error">{error}</div>}
 
@@ -85,8 +200,8 @@ function CustomerHistoryView({ customerId }) {
                 </div>
                 <div className="history-item-content">
                   <div className="vital-row">
-                    {vital.systolicBP && (
-                      <span>BP: {vital.systolicBP}/{vital.diastolicBP}</span>
+                    {vital.systolic && (
+                      <span>BP: {vital.systolic}/{vital.diastolic}</span>
                     )}
                     {vital.heartRate && (
                       <span>HR: {vital.heartRate} bpm</span>
@@ -96,8 +211,8 @@ function CustomerHistoryView({ customerId }) {
                     )}
                   </div>
                   <div className="vital-row">
-                    {vital.glucose && (
-                      <span>Glucose: {vital.glucose} mg/dL</span>
+                    {vital.weightKg && (
+                      <span>Weight: {vital.weightKg} kg</span>
                     )}
                     {vital.temperature && (
                       <span>Temp: {vital.temperature}°C</span>
@@ -121,26 +236,40 @@ function CustomerHistoryView({ customerId }) {
           ) : (
             wellnessPlans.map((plan, idx) => (
               <div key={idx} className="history-item">
-                <div className="history-item-header">
-                  <span className="plan-title">{plan.title}</span>
-                  <span className={`status-badge ${plan.isActive ? 'status-active' : 'status-inactive'}`}>
-                    {plan.isActive ? 'Active' : 'Inactive'}
+                <div 
+                  className="history-item-header"
+                  onClick={() => setExpandedPlanId(expandedPlanId === plan.id ? null : plan.id)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div style={{ flex: 1 }}>
+                    <span className="plan-title">{plan.title || 'Wellness Plan'}</span>
+                    <span className={`status-badge ${plan.isActive ? 'status-active' : 'status-inactive'}`}>
+                      {plan.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '1.2rem' }}>
+                    {expandedPlanId === plan.id ? '▼' : '▶'}
                   </span>
                 </div>
-                <div className="history-item-content">
-                  {plan.nutritionRecommendations && (
-                    <p><strong>🥗 Nutrition:</strong> {plan.nutritionRecommendations}</p>
-                  )}
-                  {plan.exerciseRecommendations && (
-                    <p><strong>🏃 Exercise:</strong> {plan.exerciseRecommendations}</p>
-                  )}
-                  {plan.stressManagementAdvice && (
-                    <p><strong>🧘 Stress:</strong> {plan.stressManagementAdvice}</p>
-                  )}
-                  {plan.duration && (
-                    <p><strong>Duration:</strong> {plan.duration} days</p>
-                  )}
-                </div>
+                {expandedPlanId === plan.id && (
+                  <div className="history-item-content">
+                    {plan.planText && (
+                      <p><strong>Plan Details:</strong></p>
+                    )}
+                    {plan.planText && (
+                      <p style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{plan.planText}</p>
+                    )}
+                    {plan.goals && (
+                      <p><strong>Goals:</strong> {plan.goals}</p>
+                    )}
+                    {plan.duration && (
+                      <p><strong>Duration:</strong> {plan.duration} days</p>
+                    )}
+                    <p style={{ fontSize: '0.85rem', color: '#999', marginTop: '0.5rem' }}>
+                      Created: {new Date(plan.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
               </div>
             ))
           )}
