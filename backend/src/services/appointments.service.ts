@@ -18,11 +18,20 @@ interface Appointment {
 }
 
 export async function createAppointment(input: AppointmentInput): Promise<Appointment> {
-  // Parse the date from scheduledAt
-  const appointmentDate = new Date(input.scheduledAt);
-  appointmentDate.setHours(0, 0, 0, 0);
+  // Parse the date from scheduledAt - handle both YYYY-MM-DD and ISO formats
+  let appointmentDate: Date;
+  
+  if (input.scheduledAt.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    // Date string format (YYYY-MM-DD) - create UTC date to avoid timezone issues
+    const [year, month, day] = input.scheduledAt.split('-').map(Number);
+    appointmentDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+  } else {
+    // ISO format - parse normally
+    appointmentDate = new Date(input.scheduledAt);
+    appointmentDate.setUTCHours(0, 0, 0, 0);
+  }
 
-  // Service hours: 2:30 AM to 11:30 AM
+  // Service hours: 2:30 AM to 11:30 AM (UTC)
   const SERVICE_START_HOUR = 2; // 2:30 AM
   const SERVICE_START_MINUTE = 30;
   const SERVICE_END_HOUR = 11; // 11:30 AM
@@ -30,11 +39,15 @@ export async function createAppointment(input: AppointmentInput): Promise<Appoin
   const TIME_PER_CUSTOMER_MINUTES = 15; // 15 minutes per customer
 
   // Get all appointments for this date to find the next available slot
+  const startOfDay = new Date(appointmentDate);
+  const endOfDay = new Date(appointmentDate);
+  endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
+  
   const existingAppointments = await prisma.appointment.findMany({
     where: {
       scheduledAt: {
-        gte: appointmentDate,
-        lt: new Date(appointmentDate.getTime() + 24 * 60 * 60 * 1000),
+        gte: startOfDay,
+        lt: endOfDay,
       },
     },
     orderBy: { scheduledAt: 'asc' },
@@ -42,26 +55,26 @@ export async function createAppointment(input: AppointmentInput): Promise<Appoin
 
   // Calculate next available time slot
   let nextSlotTime = new Date(appointmentDate);
-  nextSlotTime.setHours(SERVICE_START_HOUR, SERVICE_START_MINUTE, 0, 0);
+  nextSlotTime.setUTCHours(SERVICE_START_HOUR, SERVICE_START_MINUTE, 0, 0);
 
   // If there are existing appointments, find the next available slot after the last one
   if (existingAppointments.length > 0) {
     const lastAppointment = existingAppointments[existingAppointments.length - 1];
     nextSlotTime = new Date(lastAppointment.scheduledAt);
-    nextSlotTime.setMinutes(nextSlotTime.getMinutes() + TIME_PER_CUSTOMER_MINUTES);
+    nextSlotTime.setUTCMinutes(nextSlotTime.getUTCMinutes() + TIME_PER_CUSTOMER_MINUTES);
   }
 
   // Check if the calculated time is within service hours
-  const hours = nextSlotTime.getHours();
-  const minutes = nextSlotTime.getMinutes();
+  const hours = nextSlotTime.getUTCHours();
+  const minutes = nextSlotTime.getUTCMinutes();
   const totalMinutes = hours * 60 + minutes;
   const serviceEndTotalMinutes = SERVICE_END_HOUR * 60 + SERVICE_END_MINUTE;
 
   // If time exceeds service hours, move to next day at service start time
   if (totalMinutes > serviceEndTotalMinutes) {
     nextSlotTime = new Date(appointmentDate);
-    nextSlotTime.setDate(nextSlotTime.getDate() + 1);
-    nextSlotTime.setHours(SERVICE_START_HOUR, SERVICE_START_MINUTE, 0, 0);
+    nextSlotTime.setUTCDate(nextSlotTime.getUTCDate() + 1);
+    nextSlotTime.setUTCHours(SERVICE_START_HOUR, SERVICE_START_MINUTE, 0, 0);
   }
 
   const appointment = await prisma.appointment.create({
