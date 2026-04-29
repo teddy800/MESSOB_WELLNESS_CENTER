@@ -20,6 +20,7 @@ function NurseDashboard() {
   });
   const [capacity, setCapacity] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
@@ -48,7 +49,6 @@ function NurseDashboard() {
       setActiveTab('wellness');
       // Pass vitals and suggested plan to wellness component
       if (data.suggestedPlan) {
-        // Store in sessionStorage for wellness component to access
         sessionStorage.setItem('suggestedWellnessPlan', JSON.stringify(data.suggestedPlan));
       }
       if (data.vitals) {
@@ -56,6 +56,29 @@ function NurseDashboard() {
       }
     }
     setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleNavigateToWellness = (customerInfo) => {
+    setSelectedCustomer(customerInfo.customerId);
+    setSelectedAppointmentId(customerInfo.appointmentId);
+    setActiveTab('wellness');
+    // Pass vitals and suggested plan to wellness component
+    if (customerInfo.suggestedPlan) {
+      sessionStorage.setItem('suggestedWellnessPlan', JSON.stringify(customerInfo.suggestedPlan));
+    }
+    if (customerInfo.vitals) {
+      sessionStorage.setItem('latestVitals', JSON.stringify(customerInfo.vitals));
+    }
+  };
+
+  const handleNavigateToVitals = (customerInfo) => {
+    setSelectedCustomer(customerInfo.customerId);
+    setSelectedAppointmentId(customerInfo.appointmentId);
+    setActiveTab('vitals');
+  };
+
+  const handleBackToQueue = () => {
+    setActiveTab('queue');
   };
 
   const handleWellnessSuccess = () => {
@@ -141,7 +164,7 @@ function NurseDashboard() {
             </div>
             <div className="queue-sidebar">
               <CapacityTracker onCapacityUpdate={handleCapacityUpdate} />
-              <CallNextControl />
+              <CallNextControl onNavigateToVitals={handleNavigateToVitals} />
             </div>
           </div>
         )}
@@ -151,6 +174,7 @@ function NurseDashboard() {
             <VitalsEntry
               customerId={selectedCustomer}
               onSuccess={handleVitalsSuccess}
+              onNavigateToWellness={handleNavigateToWellness}
             />
           </div>
         )}
@@ -168,7 +192,9 @@ function NurseDashboard() {
           <div className="wellness-section">
             <WellnessPlanCreation
               customerId={selectedCustomer}
+              appointmentId={selectedAppointmentId}
               onSuccess={handleWellnessSuccess}
+              onBackToQueue={handleBackToQueue}
             />
           </div>
         )}

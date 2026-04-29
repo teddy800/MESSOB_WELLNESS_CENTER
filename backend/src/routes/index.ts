@@ -10,6 +10,7 @@ import analyticsRoutes from "./analytics.routes";
 import regionsRoutes from "./regions.routes";
 import hrRoutes from "./hr.routes";
 import patientsRoutes from "./patients.routes";
+import reportsRoutes from "./reports.routes";
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.use("/feedback", feedbackRoutes);
 router.use("/centers", centersRoutes);
 router.use("/analytics", analyticsRoutes);
 router.use("/patients", patientsRoutes);
+router.use("/reports", reportsRoutes);
 router.use("/", regionsRoutes); // Regions and centers at root level
 router.use("/hr", hrRoutes); // HR integration endpoints
 

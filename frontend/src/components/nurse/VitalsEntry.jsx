@@ -3,7 +3,7 @@ import api from "../../services/api";
 import { suggestWellnessPlan } from "../../utils/wellnessAI";
 
 // Post-Vitals Actions Component
-function PostVitalsActions({ vitals, onSuccess, onStartNewRecord }) {
+function PostVitalsActions({ vitals, onSuccess, onStartNewRecord, onNavigateToWellness }) {
   const [customerInfo, setCustomerInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const actionsRef = React.useRef(null);
@@ -53,16 +53,15 @@ function PostVitalsActions({ vitals, onSuccess, onStartNewRecord }) {
       }}
     >
       <p style={{ margin: '0 0 1rem 0', color: '#065F46', fontWeight: 600 }}>
-        ✓ Vitals recorded successfully! What would you like to do next?
+        ✓ Vitals recorded successfully for {customerInfo.fullName}!
       </p>
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <button
           onClick={() => {
-            if (onSuccess) {
-              onSuccess({
-                action: 'createWellnessPlan',
-                patientId: customerInfo.id,
-                patientName: customerInfo.fullName,
+            if (onNavigateToWellness) {
+              onNavigateToWellness({
+                customerId: customerInfo.id,
+                customerName: customerInfo.fullName,
                 vitals: vitals,
               });
             }
@@ -70,16 +69,15 @@ function PostVitalsActions({ vitals, onSuccess, onStartNewRecord }) {
           className="btn btn-primary"
           style={{ flex: 1, minWidth: '200px' }}
         >
-          📋 Create Wellness Plan for {customerInfo.fullName}
+          📋 Create Wellness Plan
         </button>
         <button
           onClick={() => {
             const suggested = suggestWellnessPlan(vitals);
-            if (onSuccess) {
-              onSuccess({
-                action: 'createWellnessPlan',
-                patientId: customerInfo.id,
-                patientName: customerInfo.fullName,
+            if (onNavigateToWellness) {
+              onNavigateToWellness({
+                customerId: customerInfo.id,
+                customerName: customerInfo.fullName,
                 vitals: vitals,
                 suggestedPlan: suggested,
               });
@@ -102,7 +100,7 @@ function PostVitalsActions({ vitals, onSuccess, onStartNewRecord }) {
   );
 }
 
-function VitalsEntry({ customerId, onSuccess }) {
+function VitalsEntry({ customerId, onSuccess, onNavigateToWellness }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -658,6 +656,7 @@ function VitalsEntry({ customerId, onSuccess }) {
           vitals={lastRecordedVitals}
           onSuccess={onSuccess}
           onStartNewRecord={handleStartNewRecord}
+          onNavigateToWellness={onNavigateToWellness}
         />
       )}
     </div>

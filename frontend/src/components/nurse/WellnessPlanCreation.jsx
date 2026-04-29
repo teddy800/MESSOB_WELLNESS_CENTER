@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import WellnessPlanTemplates from './WellnessPlanTemplates';
 
-function WellnessPlanCreation({ customerId, onSuccess }) {
+function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQueue }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -16,6 +16,8 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
   const [vitalsLoading, setVitalsLoading] = useState(false);
   const [showVitalsCollapsed, setShowVitalsCollapsed] = useState(false);
   const [suggestedPlan, setSuggestedPlan] = useState(null);
+  const [createdPlanId, setCreatedPlanId] = useState(null);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
   const successRef = React.useRef(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -165,6 +167,7 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
       });
 
       setSuccess('Wellness plan created successfully!');
+      setCreatedPlanId(response.data.data.id);
       
       // Scroll to success message
       setTimeout(() => {
@@ -176,9 +179,37 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
         }
       }, 100);
       
-      // Reset everything to initial state after 5 seconds
+      // Hide success message after 5 seconds, but keep PDF button visible
       setTimeout(() => {
-        // Reset everything to initial state
+        setSuccess('');
+      }, 5000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create wellness plan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setGeneratingPDF(true);
+      const response = await api.post(
+        `/api/v1/reports/combined/${selectedCustomerId}?includeVitals=true&includeWellnessPlan=true`,
+        {},
+        { responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `health-report-${selectedCustomerId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      // Reset form after successful PDF download
+      setTimeout(() => {
         setFormData({
           title: '',
           nutritionRecommendations: '',
@@ -193,13 +224,14 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
         setSuggestedPlan(null);
         setSearchTerm('');
         setSearchResults([]);
-        setSuccess('');
+        setCreatedPlanId(null);
         if (onSuccess) onSuccess();
-      }, 5000);
+      }, 500);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create wellness plan');
+      console.error('Failed to download PDF:', err);
+      setError('Failed to generate PDF');
     } finally {
-      setLoading(false);
+      setGeneratingPDF(false);
     }
   };
 
@@ -209,6 +241,48 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
 
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div ref={successRef} className="alert alert-success">{success}</div>}
+      
+      {/* PDF Download Button - persists until clicked */}
+      {createdPlanId && !success && (
+        <div style={{
+          marginBottom: '1.5rem',
+          padding: '1rem',
+          backgroundColor: '#EFF6FF',
+          border: '2px solid #3550A0',
+          borderRadius: '8px',
+        }}>
+          <p style={{ margin: '0 0 1rem 0', color: '#1E40AF', fontWeight: 600 }}>
+            📄 Your wellness plan is ready!
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={generatingPDF}
+              className="btn btn-primary"
+              style={{
+                cursor: generatingPDF ? 'not-allowed' : 'pointer',
+                opacity: generatingPDF ? 0.6 : 1,
+                flex: 1,
+                minWidth: '200px',
+              }}
+            >
+              {generatingPDF ? '📄 Generating PDF...' : '📄 Download Health Report PDF'}
+            </button>
+            {onBackToQueue && (
+              <button
+                onClick={onBackToQueue}
+                className="btn btn-secondary"
+                style={{
+                  flex: 1,
+                  minWidth: '150px',
+                }}
+              >
+                ← Back to Queue
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Latest Vitals Display */}
       {latestVitals && (
