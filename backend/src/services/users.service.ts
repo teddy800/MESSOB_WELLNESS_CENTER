@@ -16,6 +16,7 @@ export async function getUserProfile(userId: string) {
       emergencyContactPhone: true,
       isActive: true,
       isVerified: true,
+      isExternal: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -129,6 +130,7 @@ export async function searchUsers(searchTerm: string) {
       phone: true,
       dateOfBirth: true,
       gender: true,
+      isExternal: true,
     },
     take: 20, // Limit results
     orderBy: {

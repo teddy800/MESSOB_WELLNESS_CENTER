@@ -7,6 +7,7 @@ import {
   getVitalsHistoryHandler,
   getLatestVitalsHandler,
   getRiskScoreHandler,
+  getAllVitalsHandler,
 } from "../controllers/vitals.controller";
 import {
   authenticate,
@@ -19,6 +20,20 @@ const router = Router();
 
 // Public route - no authentication required
 router.get("/status", getVitalsModuleStatus);
+
+// Get all vitals (for analytics) - only nurses and above
+router.get(
+  "/all",
+  authenticate,
+  authorize(
+    UserRole.NURSE_OFFICER,
+    UserRole.MANAGER,
+    UserRole.REGIONAL_OFFICE,
+    UserRole.FEDERAL_OFFICE,
+    UserRole.SYSTEM_ADMIN,
+  ),
+  getAllVitalsHandler,
+);
 
 // Protected routes - require authentication
 // Only NURSE_OFFICER and higher roles can record vitals
