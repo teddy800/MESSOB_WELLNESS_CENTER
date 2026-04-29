@@ -585,7 +585,7 @@ const ManagersTab = ({ loading, centers, regions, onRefresh }) => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    role: 'MANAGER',
+    role: 'NURSE_OFFICER',
     password: '',
     phone: '',
     centerId: '',
@@ -714,7 +714,7 @@ const ManagersTab = ({ loading, centers, regions, onRefresh }) => {
     setFormData({
       fullName: '',
       email: '',
-      role: 'MANAGER',
+      role: 'NURSE_OFFICER',
       password: '',
       phone: '',
       centerId: '',
@@ -730,21 +730,24 @@ const ManagersTab = ({ loading, centers, regions, onRefresh }) => {
   const totalManagers = managers.length;
   const activeManagers = managers.filter(m => m.isActive).length;
   const managersByRole = {
+    NURSE_OFFICER: managers.filter(m => m.role === 'NURSE_OFFICER').length,
     MANAGER: managers.filter(m => m.role === 'MANAGER').length,
     REGIONAL_OFFICE: managers.filter(m => m.role === 'REGIONAL_OFFICE').length,
-    NURSE_OFFICER: managers.filter(m => m.role === 'NURSE_OFFICER').length,
+    FEDERAL_OFFICE: managers.filter(m => m.role === 'FEDERAL_OFFICE').length,
     SYSTEM_ADMIN: managers.filter(m => m.role === 'SYSTEM_ADMIN').length,
   };
 
   return (
     <div className="users-content">
       {/* Stats Row */}
-      <div className="mgr-kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: '1.5rem' }}>
+      <div className="mgr-kpi-grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)', marginBottom: '1.5rem' }}>
         {[
-          { icon: '👔', label: 'Total Managers', value: totalManagers, color: '#284394' },
+          { icon: '👔', label: 'Total Staff', value: totalManagers, color: '#284394' },
           { icon: '✅', label: 'Active', value: activeManagers, color: '#22c55e' },
+          { icon: '👨‍⚕️', label: 'Nurse Officers', value: managersByRole.NURSE_OFFICER, color: '#10b981' },
           { icon: '🏢', label: 'Center Managers', value: managersByRole.MANAGER, color: '#2563eb' },
           { icon: '🌍', label: 'Regional Officers', value: managersByRole.REGIONAL_OFFICE, color: '#7c3aed' },
+          { icon: '🏛️', label: 'Federal Officers', value: managersByRole.FEDERAL_OFFICE, color: '#f59e0b' },
         ].map(c => (
           <div key={c.label} className="mgr-kpi-card">
             <div className="mgr-kpi-icon" style={{ background: c.color + '18', color: c.color }}>{c.icon}</div>
@@ -775,9 +778,10 @@ const ManagersTab = ({ loading, centers, regions, onRefresh }) => {
             style={{ minWidth: '180px' }}
           >
             <option value="all">All Roles</option>
+            <option value="NURSE_OFFICER">Nurse Officer</option>
             <option value="MANAGER">Center Manager</option>
             <option value="REGIONAL_OFFICE">Regional Officer</option>
-            <option value="NURSE_OFFICER">Nurse Officer</option>
+            <option value="FEDERAL_OFFICE">Federal Officer</option>
             <option value="SYSTEM_ADMIN">System Admin</option>
           </select>
           <Button onClick={() => setShowModal(true)}>+ Create Manager</Button>
@@ -816,12 +820,16 @@ const ManagersTab = ({ loading, centers, regions, onRefresh }) => {
                       borderRadius: '4px',
                       fontSize: '0.8rem',
                       fontWeight: 600,
-                      background: manager.role === 'MANAGER' ? '#dbeafe' : 
+                      background: manager.role === 'NURSE_OFFICER' ? '#d1fae5' :
+                                 manager.role === 'MANAGER' ? '#dbeafe' : 
                                  manager.role === 'REGIONAL_OFFICE' ? '#e9d5ff' :
-                                 manager.role === 'NURSE_OFFICER' ? '#d1fae5' : '#fef3c7',
-                      color: manager.role === 'MANAGER' ? '#1e40af' :
+                                 manager.role === 'FEDERAL_OFFICE' ? '#fef3c7' :
+                                 manager.role === 'SYSTEM_ADMIN' ? '#fee2e2' : '#f3f4f6',
+                      color: manager.role === 'NURSE_OFFICER' ? '#065f46' :
+                             manager.role === 'MANAGER' ? '#1e40af' :
                              manager.role === 'REGIONAL_OFFICE' ? '#6b21a8' :
-                             manager.role === 'NURSE_OFFICER' ? '#065f46' : '#92400e',
+                             manager.role === 'FEDERAL_OFFICE' ? '#92400e' :
+                             manager.role === 'SYSTEM_ADMIN' ? '#991b1b' : '#374151',
                     }}>
                       {manager.role.replace(/_/g, ' ')}
                     </span>
@@ -909,8 +917,12 @@ const ManagersTab = ({ loading, centers, regions, onRefresh }) => {
                     <option value="NURSE_OFFICER">Nurse Officer</option>
                     <option value="MANAGER">Center Manager</option>
                     <option value="REGIONAL_OFFICE">Regional Officer</option>
+                    <option value="FEDERAL_OFFICE">Federal Officer</option>
                     <option value="SYSTEM_ADMIN">System Admin</option>
                   </select>
+                  <small style={{ color: '#6b7280', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block' }}>
+                    ℹ️ Select the appropriate role for this staff member
+                  </small>
                 </div>
 
                 <Input
