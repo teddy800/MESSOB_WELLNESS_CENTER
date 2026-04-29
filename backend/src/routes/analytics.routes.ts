@@ -10,7 +10,7 @@ router.get("/settings",      authenticate, analyticsController.getSystemSettings
 router.put("/settings",      authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.updateSystemSettings);
 
 // ─── Manager+ only ───────────────────────────────────────────────────────────
-router.get("/capacity",             authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getCapacityInfo);
+router.get("/capacity",             authenticate, authorizeMinRole(UserRole.NURSE_OFFICER), analyticsController.getCapacityInfo);
 router.get("/appointments/stats",   authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getBookingStats);
 router.get("/queue/analytics",      authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getQueueAnalytics);
 router.get("/health/analytics",     authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getHealthAnalytics);

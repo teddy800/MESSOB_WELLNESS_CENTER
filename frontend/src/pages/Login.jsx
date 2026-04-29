@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import AnimatedWaveBackground from "../components/AnimatedWaveBackground";
 import "../styles/login.css";
 
 // Key for localStorage
@@ -142,19 +143,8 @@ function Login() {
 
   return (
     <div className="mesob-auth-wrapper">
-      {/* Animated dots background */}
-      <div className="mesob-dots-container">
-        <div className="mesob-dot" style={{ "--delay": "0s", "--duration": "20s" }}></div>
-        <div className="mesob-dot" style={{ "--delay": "2s", "--duration": "25s" }}></div>
-        <div className="mesob-dot" style={{ "--delay": "4s", "--duration": "30s" }}></div>
-        <div className="mesob-dot" style={{ "--delay": "6s", "--duration": "22s" }}></div>
-        <div className="mesob-dot" style={{ "--delay": "8s", "--duration": "28s" }}></div>
-        <div className="mesob-dot" style={{ "--delay": "10s", "--duration": "24s" }}></div>
-        <div className="mesob-dot" style={{ "--delay": "12s", "--duration": "26s" }}></div>
-        <div className="mesob-dot" style={{ "--delay": "14s", "--duration": "23s" }}></div>
-        <div className="mesob-dot" style={{ "--delay": "16s", "--duration": "27s" }}></div>
-        <div className="mesob-dot" style={{ "--delay": "18s", "--duration": "25s" }}></div>
-      </div>
+      {/* Animated wave background with particles */}
+      <AnimatedWaveBackground />
       <div className="mesob-auth-container">
         <div className="mesob-auth-card">
           {/* Logo and Header Section */}
@@ -178,10 +168,10 @@ function Login() {
               MESOB Service
             </div>
             <div className="mesob-welcome">
-              Sign In
+              Welcome
             </div>
             <div className="mesob-subtitle">
-              Access the MESOB Wellness Center System
+              Sign in to your account
             </div>
           </div>
 
@@ -195,19 +185,22 @@ function Login() {
             {/* Email */}
             <div className="mesob-form-group">
               <label className="mesob-form-label">
-                Email<span className="mesob-required">*</span>
+                Username<span className="mesob-required">*</span>
               </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="mail@example.com"
-                disabled={loading}
-                className={`mesob-form-input ${errors.email ? "error" : ""}`}
-                autoComplete="username email"
-                list="mesob-email-suggestions"
-              />
+              <div className="mesob-input-icon-wrapper">
+                <span className="mesob-input-icon">👤</span>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Username"
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.email ? "error" : ""}`}
+                  autoComplete="username email"
+                  list="mesob-email-suggestions"
+                />
+              </div>
               <datalist id="mesob-email-suggestions">
                 {Object.keys(cachedCredentials).map((email) => (
                   <option key={email} value={email} />
@@ -224,12 +217,13 @@ function Login() {
                 Password<span className="mesob-required">*</span>
               </label>
               <div className="mesob-password-wrapper">
+                <span className="mesob-input-icon">🔒</span>
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Enter your password"
+                  placeholder="Password"
                   disabled={loading}
                   className={`mesob-form-input ${errors.password ? "error" : ""}`}
                   autoComplete="current-password"
@@ -255,7 +249,7 @@ function Login() {
               className="mesob-btn mesob-btn-primary"
               disabled={loading}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? "Signing in..." : "Login"}
             </button>
           </form>
 
