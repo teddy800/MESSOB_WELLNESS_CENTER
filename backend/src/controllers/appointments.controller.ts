@@ -265,7 +265,8 @@ export async function sendReminderHandler(req: AuthRequest, res: Response): Prom
 
 export async function getQueueHandler(req: AuthRequest, res: Response): Promise<void> {
   try {
-    const queue = await getQueueAppointments();
+    const date = req.query.date as string | undefined;
+    const queue = await getQueueAppointments(date);
 
     res.status(200).json({
       status: "success",

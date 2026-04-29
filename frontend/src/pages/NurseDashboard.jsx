@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import NurseAnalytics from "../components/nurse/NurseAnalytics";
 import LiveQueuePanel from "../components/nurse/LiveQueuePanel";
 import CapacityTracker from "../components/nurse/CapacityTracker";
 import RegisterWalkIn from "../components/nurse/RegisterWalkIn";
@@ -15,16 +16,17 @@ function NurseDashboard() {
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["queue", "vitals", "walkin", "wellness", "history", "display"];
-    return tab && allowedTabs.includes(tab) ? tab : "queue";
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "display"];
+    return tab && allowedTabs.includes(tab) ? tab : "analytics";
   });
   const [capacity, setCapacity] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["queue", "vitals", "walkin", "wellness", "history", "display"];
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "display"];
     if (tab && allowedTabs.includes(tab)) {
       setActiveTab(tab);
     }
@@ -42,9 +44,59 @@ function NurseDashboard() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  const handleVitalsSuccess = () => {
-    setSelectedCustomer(null);
+  const handleVitalsSuccess = (data) => {
+    if (data?.action === 'createWellnessPlan') {
+      setSelectedCustomer(data.patientId);
+      setActiveTab('wellness');
+      // Pass vitals and suggested plan to wellness component
+      if (data.suggestedPlan) {
+        sessionStorage.setItem('suggestedWellnessPlan', JSON.stringify(data.suggestedPlan));
+      }
+      if (data.vitals) {
+        sessionStorage.setItem('latestVitals', JSON.stringify(data.vitals));
+      }
+    }
     setRefreshKey((prev) => prev + 1);
+  };
+
+  const handleNavigateToWellness = (customerInfo) => {
+    setSelectedCustomer(customerInfo.customerId);
+    setSelectedAppointmentId(customerInfo.appointmentId);
+    setActiveTab('wellness');
+    // Pass vitals and suggested plan to wellness component
+    if (customerInfo.suggestedPlan) {
+      sessionStorage.setItem('suggestedWellnessPlan', JSON.stringify(customerInfo.suggestedPlan));
+    }
+    if (customerInfo.vitals) {
+      sessionStorage.setItem('latestVitals', JSON.stringify(customerInfo.vitals));
+    }
+  };
+
+  const handleNavigateToVitals = (customerInfo) => {
+    setSelectedCustomer(customerInfo.customerId);
+    setSelectedAppointmentId(customerInfo.appointmentId);
+    setActiveTab('vitals');
+  };
+
+  const handleBackToQueue = async () => {
+    try {
+      // Mark appointment as completed
+      if (selectedAppointmentId) {
+        await api.patch(`/api/v1/appointments/${selectedAppointmentId}`, {
+          status: 'COMPLETED',
+        });
+      }
+      // Reset selected customer and appointment
+      setSelectedCustomer(null);
+      setSelectedAppointmentId(null);
+      // Navigate to queue
+      setActiveTab('queue');
+    } catch (err) {
+      console.error('Failed to mark as completed:', err);
+      setSelectedCustomer(null);
+      setSelectedAppointmentId(null);
+      setActiveTab('queue');
+    }
   };
 
   const handleWellnessSuccess = () => {
@@ -60,6 +112,14 @@ function NurseDashboard() {
         </div>
         
         <nav className="sidebar-nav">
+          <button
+            className={`sidebar-nav-item ${activeTab === 'analytics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('analytics')}
+          >
+            <span className="nav-icon">📊</span>
+            <span className="nav-label">Analytics</span>
+          </button>
+          
           <button
             className={`sidebar-nav-item ${activeTab === 'queue' ? 'active' : ''}`}
             onClick={() => setActiveTab('queue')}
@@ -113,6 +173,7 @@ function NurseDashboard() {
       <main className="nurse-main-content">
         <div className="nurse-content-header">
           <h1>
+            {activeTab === 'analytics' && '📊 Analytics'}
             {activeTab === 'queue' && '📋 Queue Management'}
             {activeTab === 'vitals' && '💉 Record Vitals'}
             {activeTab === 'walkin' && '🚶 Register Walk-in'}
@@ -123,6 +184,12 @@ function NurseDashboard() {
         </div>
 
         <div className="nurse-content-body">
+        {activeTab === "analytics" && (
+          <div className="analytics-section">
+            <NurseAnalytics />
+          </div>
+        )}
+
         {activeTab === "queue" && (
           <div className="queue-section">
             <div className="queue-main">
@@ -130,7 +197,7 @@ function NurseDashboard() {
             </div>
             <div className="queue-sidebar">
               <CapacityTracker onCapacityUpdate={handleCapacityUpdate} />
-              <CallNextControl />
+              <CallNextControl onNavigateToVitals={handleNavigateToVitals} />
             </div>
           </div>
         )}
@@ -140,6 +207,7 @@ function NurseDashboard() {
             <VitalsEntry
               customerId={selectedCustomer}
               onSuccess={handleVitalsSuccess}
+              onNavigateToWellness={handleNavigateToWellness}
             />
           </div>
         )}
@@ -157,7 +225,9 @@ function NurseDashboard() {
           <div className="wellness-section">
             <WellnessPlanCreation
               customerId={selectedCustomer}
+              appointmentId={selectedAppointmentId}
               onSuccess={handleWellnessSuccess}
+              onBackToQueue={handleBackToQueue}
             />
           </div>
         )}

@@ -18,10 +18,18 @@ function CapacityTracker() {
     try {
       setLoading(true);
       const response = await api.get('/api/v1/analytics/capacity');
-      setCapacity(response.data.data);
+      const data = response.data.data;
+      
+      // Map backend response to component state
+      setCapacity({
+        booked: data.slotsUsed || 0,
+        available: data.slotsRemaining || 0,
+        total: data.dailyLimit || 100,
+        utilizationPct: data.utilizationPct || 0,
+      });
       setError('');
     } catch (err) {
-      // If endpoint doesn't exist, calculate from appointments
+      // If endpoint fails, calculate from appointments
       fetchAppointmentsCount();
     } finally {
       setLoading(false);

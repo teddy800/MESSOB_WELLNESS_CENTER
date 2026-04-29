@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import WellnessPlanTemplates from './WellnessPlanTemplates';
 
-function WellnessPlanCreation({ customerId, onSuccess }) {
+function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQueue }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -12,6 +12,13 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
   const [searching, setSearching] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState(customerId || '');
   const [selectedCustomerName, setSelectedCustomerName] = useState('');
+  const [latestVitals, setLatestVitals] = useState(null);
+  const [vitalsLoading, setVitalsLoading] = useState(false);
+  const [showVitalsCollapsed, setShowVitalsCollapsed] = useState(false);
+  const [suggestedPlan, setSuggestedPlan] = useState(null);
+  const [createdPlanId, setCreatedPlanId] = useState(null);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const successRef = React.useRef(null);
   const [formData, setFormData] = useState({
     title: '',
     nutritionRecommendations: '',
@@ -21,12 +28,59 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
     duration: '30',
   });
 
+  useEffect(() => {
+    // Load suggested plan and vitals from sessionStorage if available
+    const storedPlan = sessionStorage.getItem('suggestedWellnessPlan');
+    const storedVitals = sessionStorage.getItem('latestVitals');
+    
+    if (storedPlan) {
+      const plan = JSON.parse(storedPlan);
+      setSuggestedPlan(plan);
+      setFormData({
+        title: plan.title,
+        nutritionRecommendations: plan.nutrition,
+        exerciseRecommendations: plan.exercise,
+        stressManagementAdvice: plan.stressManagement,
+        goals: plan.goals,
+        duration: '30',
+      });
+      sessionStorage.removeItem('suggestedWellnessPlan');
+    }
+    
+    if (storedVitals) {
+      setLatestVitals(JSON.parse(storedVitals));
+      sessionStorage.removeItem('latestVitals');
+    }
+  }, []);
+
+  useEffect(() => {
+    // Fetch latest vitals when customer is selected
+    if (selectedCustomerId && !latestVitals) {
+      fetchLatestVitals();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCustomerId]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value,
     }));
+  };
+
+  const fetchLatestVitals = async () => {
+    try {
+      setVitalsLoading(true);
+      const response = await api.get(`/api/v1/vitals/latest/${selectedCustomerId}`);
+      if (response.data.data) {
+        setLatestVitals(response.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch vitals:', err);
+    } finally {
+      setVitalsLoading(false);
+    }
   };
 
   const handleSearch = async (e) => {
@@ -113,23 +167,74 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
       });
 
       setSuccess('Wellness plan created successfully!');
-      setFormData({
-        title: '',
-        nutritionRecommendations: '',
-        exerciseRecommendations: '',
-        stressManagementAdvice: '',
-        goals: '',
-        duration: '30',
-      });
-      setSelectedCustomerId('');
-      setSelectedCustomerName('');
-
+      setCreatedPlanId(response.data.data.id);
+      
+      // Scroll to success message
+      setTimeout(() => {
+        if (successRef.current) {
+          successRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
+      }, 100);
+      
+      // Hide success message after 5 seconds, but keep PDF button visible
       setTimeout(() => {
         setSuccess('');
-        if (onSuccess) onSuccess();
-      }, 2000);
+      }, 5000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create wellness plan');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    try {
+      setGeneratingPDF(true);
+      const response = await api.post(
+        `/api/v1/reports/combined/${selectedCustomerId}?includeVitals=true&includeWellnessPlan=true`,
+        {},
+        { responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `health-report-${selectedCustomerId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      // Keep the buttons visible - don't reset form
+    } catch (err) {
+      console.error('Failed to download PDF:', err);
+      setError('Failed to generate PDF');
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
+  const handleBackToQueue = async () => {
+    try {
+      setLoading(true);
+      
+      // Mark appointment as COMPLETED
+      if (appointmentId) {
+        await api.patch(`/api/v1/appointments/${appointmentId}`, {
+          status: 'COMPLETED',
+        });
+      }
+      
+      // Call the parent callback to navigate back to queue
+      if (onBackToQueue) {
+        onBackToQueue();
+      }
+    } catch (err) {
+      console.error('Failed to mark appointment as completed:', err);
+      setError('Failed to complete appointment');
     } finally {
       setLoading(false);
     }
@@ -140,7 +245,145 @@ function WellnessPlanCreation({ customerId, onSuccess }) {
       <h3>🎯 Create Wellness Plan</h3>
 
       {error && <div className="alert alert-error">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
+      {success && <div ref={successRef} className="alert alert-success">{success}</div>}
+      
+      {/* PDF Download and Back to Queue Buttons */}
+      {createdPlanId && !success && (
+        <div style={{
+          marginBottom: '1.5rem',
+          padding: '1rem',
+          backgroundColor: '#EFF6FF',
+          border: '2px solid #3550A0',
+          borderRadius: '8px',
+        }}>
+          <p style={{ margin: '0 0 1rem 0', color: '#1E40AF', fontWeight: 600 }}>
+            📄 Your wellness plan is ready!
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={handleDownloadPDF}
+              disabled={generatingPDF}
+              className="btn btn-primary"
+              style={{
+                cursor: generatingPDF ? 'not-allowed' : 'pointer',
+                opacity: generatingPDF ? 0.6 : 1,
+                flex: 1,
+                minWidth: '200px',
+              }}
+            >
+              {generatingPDF ? '📄 Generating PDF...' : '📄 Download Health Report PDF'}
+            </button>
+            {onBackToQueue && (
+              <button
+                onClick={handleBackToQueue}
+                disabled={loading}
+                className="btn btn-secondary"
+                style={{
+                  flex: 1,
+                  minWidth: '150px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.6 : 1,
+                }}
+              >
+                {loading ? '⏳ Processing...' : '← Back to Queue'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Latest Vitals Display */}
+      {latestVitals && (
+        <div style={{
+          marginBottom: '1.5rem',
+          padding: '1rem',
+          backgroundColor: '#F9FAFB',
+          border: '2px solid #E5E7EB',
+          borderRadius: '8px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h4 style={{ margin: 0, color: '#3550A0', fontSize: '1rem', fontWeight: 600 }}>
+              📊 Latest Vitals
+            </h4>
+            <button
+              type="button"
+              onClick={() => setShowVitalsCollapsed(!showVitalsCollapsed)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1.2rem',
+                color: '#6B7280',
+              }}
+            >
+              {showVitalsCollapsed ? '▶' : '▼'}
+            </button>
+          </div>
+          
+          {!showVitalsCollapsed && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+              gap: '1rem',
+            }}>
+              {latestVitals.systolicBP && (
+                <div style={{ padding: '0.75rem', backgroundColor: '#FFFFFF', borderRadius: '6px', border: '1px solid #E5E7EB' }}>
+                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>BP</p>
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#1F2937' }}>
+                    {latestVitals.systolicBP}/{latestVitals.diastolicBP}
+                  </p>
+                </div>
+              )}
+              {latestVitals.heartRate && (
+                <div style={{ padding: '0.75rem', backgroundColor: '#FFFFFF', borderRadius: '6px', border: '1px solid #E5E7EB' }}>
+                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>Heart Rate</p>
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#1F2937' }}>{latestVitals.heartRate} bpm</p>
+                </div>
+              )}
+              {latestVitals.bmi && (
+                <div style={{ padding: '0.75rem', backgroundColor: '#FFFFFF', borderRadius: '6px', border: '1px solid #E5E7EB' }}>
+                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>BMI</p>
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#1F2937' }}>{latestVitals.bmi.toFixed(1)}</p>
+                </div>
+              )}
+              {latestVitals.glucose && (
+                <div style={{ padding: '0.75rem', backgroundColor: '#FFFFFF', borderRadius: '6px', border: '1px solid #E5E7EB' }}>
+                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>Glucose</p>
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#1F2937' }}>{latestVitals.glucose} mg/dL</p>
+                </div>
+              )}
+              {latestVitals.temperature && (
+                <div style={{ padding: '0.75rem', backgroundColor: '#FFFFFF', borderRadius: '6px', border: '1px solid #E5E7EB' }}>
+                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>Temp</p>
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#1F2937' }}>{latestVitals.temperature}°C</p>
+                </div>
+              )}
+              {latestVitals.oxygenSaturation && (
+                <div style={{ padding: '0.75rem', backgroundColor: '#FFFFFF', borderRadius: '6px', border: '1px solid #E5E7EB' }}>
+                  <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#6B7280', fontWeight: 600 }}>O₂</p>
+                  <p style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#1F2937' }}>{latestVitals.oxygenSaturation}%</p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.8rem', color: '#6B7280' }}>
+            Recorded: {new Date(latestVitals.recordedAt).toLocaleString()}
+          </p>
+          
+          {suggestedPlan && (
+            <p style={{ margin: '0.75rem 0 0 0', fontSize: '0.85rem', color: '#0C4A6E', backgroundColor: '#DBEAFE', padding: '0.5rem', borderRadius: '4px' }}>
+              💡 AI-suggested plan based on vitals. Please review and edit as needed.
+            </p>
+          )}
+        </div>
+      )}
+
+      {vitalsLoading && (
+        <div style={{ padding: '1rem', textAlign: 'center', color: '#6B7280' }}>
+          Loading vitals...
+        </div>
+      )}
 
       {/* Customer Search Section */}
       {!selectedCustomerId ? (
