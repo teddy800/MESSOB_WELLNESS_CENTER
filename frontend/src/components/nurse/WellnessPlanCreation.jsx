@@ -179,10 +179,10 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
         }
       }, 100);
       
-      // Hide success message after 5 seconds, but keep PDF button visible
+      // Hide success message after 2 seconds, but keep PDF button visible
       setTimeout(() => {
         setSuccess('');
-      }, 5000);
+      }, 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create wellness plan');
     } finally {
@@ -217,24 +217,43 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
     }
   };
 
-  const handleBackToQueue = async () => {
+  const handleMarkAsCompleted = async () => {
     try {
       setLoading(true);
-      
-      // Mark appointment as COMPLETED
+      setError('');
+
       if (appointmentId) {
+        // For appointment patients: mark the appointment as COMPLETED
         await api.patch(`/api/v1/appointments/${appointmentId}`, {
           status: 'COMPLETED',
         });
       }
-      
-      // Call the parent callback to navigate back to queue
-      if (onBackToQueue) {
-        onBackToQueue();
-      }
+      // For walk-in patients: no appointment needed, just mark as completed
+
+      setSuccess('Patient marked as completed!');
+      setTimeout(() => {
+        setSuccess('');
+        // Navigate back to queue
+        if (onBackToQueue) {
+          onBackToQueue();
+        } else {
+          // Reset form for next patient if no callback
+          setSelectedCustomerId('');
+          setSelectedCustomerName('');
+          setCreatedPlanId(null);
+          setFormData({
+            title: '',
+            nutritionRecommendations: '',
+            exerciseRecommendations: '',
+            stressManagementAdvice: '',
+            goals: '',
+            duration: '30',
+          });
+        }
+      }, 1500);
     } catch (err) {
-      console.error('Failed to mark appointment as completed:', err);
-      setError('Failed to complete appointment');
+      console.error('Failed to mark patient as completed:', err);
+      setError('Failed to mark patient as completed');
     } finally {
       setLoading(false);
     }
@@ -247,7 +266,7 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div ref={successRef} className="alert alert-success">{success}</div>}
       
-      {/* PDF Download and Back to Queue Buttons */}
+      {/* PDF Download and Mark as Completed Buttons */}
       {createdPlanId && !success && (
         <div style={{
           marginBottom: '1.5rem',
@@ -275,7 +294,7 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
             </button>
             {onBackToQueue && (
               <button
-                onClick={handleBackToQueue}
+                onClick={handleMarkAsCompleted}
                 disabled={loading}
                 className="btn btn-secondary"
                 style={{
@@ -285,7 +304,7 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
                   opacity: loading ? 0.6 : 1,
                 }}
               >
-                {loading ? '⏳ Processing...' : '← Back to Queue'}
+                {loading ? '⏳ Processing...' : '✓ Mark as Completed'}
               </button>
             )}
           </div>
