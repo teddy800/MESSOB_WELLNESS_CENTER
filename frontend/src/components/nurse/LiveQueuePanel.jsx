@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import CustomerHistoryPanel from './CustomerHistoryPanel';
 
 function LiveQueuePanel() {
   const [queue, setQueue] = useState([]);
@@ -7,6 +8,7 @@ function LiveQueuePanel() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   useEffect(() => {
     fetchQueue();
@@ -73,6 +75,14 @@ function LiveQueuePanel() {
     <div className="card live-queue-panel">
       <h2>📋 Live Queue</h2>
 
+      {/* Show customer history if one is selected */}
+      {selectedCustomer && (
+        <CustomerHistoryPanel 
+          customer={selectedCustomer}
+          onClose={() => setSelectedCustomer(null)}
+        />
+      )}
+
       {error && <div className="alert alert-error">{error}</div>}
 
       <div className="queue-controls">
@@ -98,10 +108,16 @@ function LiveQueuePanel() {
             Waiting
           </button>
           <button 
+            className={`filter-btn ${filter === 'IN_PROGRESS' ? 'active' : ''}`}
+            onClick={() => setFilter('IN_PROGRESS')}
+          >
+            In Progress (Called)
+          </button>
+          <button 
             className={`filter-btn ${filter === 'IN_SERVICE' ? 'active' : ''}`}
             onClick={() => setFilter('IN_SERVICE')}
           >
-            In Service
+            In Service (Recording)
           </button>
           <button 
             className={`filter-btn ${filter === 'COMPLETED' ? 'active' : ''}`}
@@ -128,7 +144,9 @@ function LiveQueuePanel() {
                 </span>
                 <span className="appointment-type">{getAppointmentType(item.type)}</span>
                 <span className={`status-badge ${getStatusColor(item.status)}`}>
-                  {item.status}
+                  {item.status === 'IN_SERVICE' ? 'In Service (Recording)' : 
+                   item.status === 'IN_PROGRESS' ? 'In Progress (Called)' : 
+                   item.status}
                 </span>
               </div>
 
@@ -139,14 +157,23 @@ function LiveQueuePanel() {
               </div>
 
               <div className="queue-item-actions">
+                {/* Show Send Reminder only for WAITING and IN_PROGRESS */}
+                {(item.status === 'WAITING' || item.status === 'IN_PROGRESS') && (
+                  <button 
+                    className="btn btn-small btn-primary"
+                    onClick={() => handleSendReminder(item.appointmentId, item.customerName)}
+                    title="Send SMS reminder to customer"
+                  >
+                    📱 Send Reminder
+                  </button>
+                )}
                 <button 
-                  className="btn btn-small btn-primary"
-                  onClick={() => handleSendReminder(item.appointmentId, item.customerName)}
-                  title="Send SMS reminder to customer"
+                  className="btn btn-small btn-secondary"
+                  onClick={() => setSelectedCustomer(item)}
+                  title="View customer history and details"
                 >
-                  📱 Send Reminder
+                  👁️ View Details
                 </button>
-                <button className="btn btn-small btn-secondary">View Details</button>
               </div>
             </div>
           ))}
