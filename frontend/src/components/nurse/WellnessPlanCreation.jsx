@@ -240,6 +240,61 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
     }
   };
 
+  const handleMarkAsCompleted = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      if (appointmentId) {
+        // For appointment patients: mark the appointment as COMPLETED
+        await api.patch(`/api/v1/appointments/${appointmentId}`, {
+          status: 'COMPLETED',
+        });
+      } else {
+        // For walk-in patients: create a temporary appointment record and mark as completed
+        const response = await api.post('/api/v1/appointments', {
+          patientId: selectedCustomerId,
+          scheduledAt: new Date().toISOString(),
+          reason: 'Walk-in Service',
+        });
+
+        const walkInAppointmentId = response.data.data.id;
+
+        // Mark the walk-in appointment as COMPLETED
+        await api.patch(`/api/v1/appointments/${walkInAppointmentId}`, {
+          status: 'COMPLETED',
+        });
+      }
+
+      setSuccess('Patient marked as completed!');
+      setTimeout(() => {
+        setSuccess('');
+        // Navigate back to queue
+        if (onBackToQueue) {
+          onBackToQueue();
+        } else {
+          // Reset form for next patient if no callback
+          setSelectedCustomerId('');
+          setSelectedCustomerName('');
+          setCreatedPlanId(null);
+          setFormData({
+            title: '',
+            nutritionRecommendations: '',
+            exerciseRecommendations: '',
+            stressManagementAdvice: '',
+            goals: '',
+            duration: '30',
+          });
+        }
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to mark patient as completed:', err);
+      setError('Failed to mark patient as completed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="card wellness-plan-creation">
       <h3>🎯 Create Wellness Plan</h3>
@@ -273,21 +328,21 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
             >
               {generatingPDF ? '📄 Generating PDF...' : '📄 Download Health Report PDF'}
             </button>
-            {onBackToQueue && (
-              <button
-                onClick={handleBackToQueue}
-                disabled={loading}
-                className="btn btn-secondary"
-                style={{
-                  flex: 1,
-                  minWidth: '150px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.6 : 1,
-                }}
-              >
-                {loading ? '⏳ Processing...' : '← Back to Queue'}
-              </button>
-            )}
+            <button
+              onClick={handleMarkAsCompleted}
+              disabled={loading}
+              className="btn btn-success"
+              style={{
+                flex: 1,
+                minWidth: '150px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.6 : 1,
+                backgroundColor: '#10b981',
+              }}
+              title="Mark patient as completed and return to queue"
+            >
+              {loading ? '⏳ Processing...' : '✓ Mark as Completed'}
+            </button>
           </div>
         </div>
       )}

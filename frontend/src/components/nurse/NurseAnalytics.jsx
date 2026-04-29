@@ -210,7 +210,7 @@ function NurseAnalytics() {
         pendingAppointments: pending,
         inProgressAppointments: inProgress,
         noShowAppointments: noShow,
-        totalPatientsToday: total,
+        totalPatientsToday: completed,
         capacityUtilization: utilizationPct,
         averageWaitTime: averageWaitTime,
         completionRate: completionRate,
@@ -415,6 +415,14 @@ function NurseAnalytics() {
             <p className="card-value">{analytics.totalPatientsToday}</p>
           </div>
         </div>
+
+        <div className="analytics-card">
+          <div className="card-icon">❌</div>
+          <div className="card-content">
+            <p className="card-label">No-Show</p>
+            <p className="card-value">{analytics.noShowAppointments}</p>
+          </div>
+        </div>
       </div>
 
       {/* Performance Metrics */}
@@ -450,30 +458,6 @@ function NurseAnalytics() {
 
           <div className="metric-item">
             <p><strong>Average Wait Time:</strong> {analytics.averageWaitTime} min</p>
-          </div>
-        </div>
-
-        <div className="card metrics-card">
-          <h3>Appointment Breakdown</h3>
-          
-          <div className="breakdown-item">
-            <span>⏳ Pending</span>
-            <span className="breakdown-value">{analytics.pendingAppointments}</span>
-          </div>
-
-          <div className="breakdown-item">
-            <span>🔄 In Service</span>
-            <span className="breakdown-value">{analytics.inProgressAppointments}</span>
-          </div>
-
-          <div className="breakdown-item">
-            <span>✅ Completed</span>
-            <span className="breakdown-value">{analytics.completedAppointments}</span>
-          </div>
-
-          <div className="breakdown-item">
-            <span>❌ No-Show</span>
-            <span className="breakdown-value" title="Patient didn't show up for scheduled appointment">{analytics.noShowAppointments}</span>
           </div>
         </div>
       </div>
