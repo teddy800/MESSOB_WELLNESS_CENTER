@@ -3,6 +3,92 @@ import { AuthRequest } from "../middleware/auth.middleware";
 import * as UsersService from "../services/users.service";
 
 /**
+ * GET /api/v1/users
+ * Search users by name or email
+ */
+export const searchUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const search = req.query.search as string;
+
+    if (!search || search.trim().length < 2) {
+      res.status(400).json({
+        status: "error",
+        message: "Search term must be at least 2 characters",
+      });
+      return;
+    }
+
+    const users = await UsersService.searchUsers(search.trim());
+
+    res.status(200).json({
+      status: "success",
+      data: users.map(user => ({
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        isExternal: user.isExternal,
+      })),
+    });
+  } catch (error) {
+    console.error("Search users error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to search users",
+    });
+  }
+};
+
+/**
+ * GET /api/v1/users/:id
+ * Get user by ID
+ */
+export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.params.id;
+
+    if (!userId || typeof userId !== 'string') {
+      res.status(400).json({
+        status: "error",
+        message: "User ID is required",
+      });
+      return;
+    }
+
+    const user = await UsersService.getUserProfile(userId);
+
+    if (!user) {
+      res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
+        isExternal: user.isExternal,
+      },
+    });
+  } catch (error) {
+    console.error("Get user by ID error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve user",
+    });
+  }
+};
+
+/**
  * GET /api/v1/users/me
  * Get current user profile
  */

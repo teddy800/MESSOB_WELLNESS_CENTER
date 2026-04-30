@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import Input from "../components/forms/Input";
-import Button from "../components/forms/Button";
+import AnimatedWaveBackground from "../components/AnimatedWaveBackground";
+import "../styles/register.css";
 
 function Register() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
+    employeeId: "",
     fullName: "",
     email: "",
     password: "",
@@ -14,6 +15,8 @@ function Register() {
     phone: "",
     dateOfBirth: "",
     gender: "",
+    region: "",
+    centerId: "",
     emergencyContactName: "",
     emergencyContactPhone: "",
   });
@@ -22,6 +25,146 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  
+  // HR lookup state
+  const [hrLoading, setHrLoading] = useState(false);
+  const [hrError, setHrError] = useState("");
+  const [hrSuccess, setHrSuccess] = useState("");
+  
+  // Regions and centers state
+  const [regions, setRegions] = useState([]);
+  const [centers, setCenters] = useState([]);
+  const [regionsLoading, setRegionsLoading] = useState(false);
+  const [centersLoading, setCentersLoading] = useState(false);
+
+  // Fetch regions on mount
+  useEffect(() => {
+    fetchRegions();
+  }, []);
+
+  // Fetch centers when region changes
+  useEffect(() => {
+    if (formData.region) {
+      fetchCenters(formData.region);
+    } else {
+      setCenters([]);
+      setFormData(prev => ({ ...prev, centerId: "" }));
+    }
+  }, [formData.region]);
+
+  const fetchRegions = async () => {
+    setRegionsLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/regions`);
+      const data = await response.json();
+      if (data.success) {
+        setRegions(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching regions:", error);
+    } finally {
+      setRegionsLoading(false);
+    }
+  };
+
+  const fetchCenters = async (region) => {
+    setCentersLoading(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/v1/centers?region=${encodeURIComponent(region)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setCenters(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching centers:", error);
+      setCenters([]);
+    } finally {
+      setCentersLoading(false);
+    }
+  };
+
+  const handleFetchFromHR = async () => {
+    if (!formData.employeeId.trim()) {
+      setHrError("Please enter an employee ID");
+      return;
+    }
+
+    setHrLoading(true);
+    setHrError("");
+    setHrSuccess("");
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/v1/hr/employee/${formData.employeeId}`,
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Employee not found in HR system");
+      }
+
+      // Auto-fill form with HR data
+      const employee = data.data;
+      setFormData(prev => ({
+        ...prev,
+        fullName: employee.fullName || prev.fullName,
+        email: employee.email || prev.email,
+        phone: employee.phone || prev.phone,
+        dateOfBirth: employee.dateOfBirth || prev.dateOfBirth,
+        gender: employee.gender || prev.gender,
+        region: employee.region || prev.region,
+        centerId: employee.centerId || prev.centerId,
+      }));
+
+      setHrSuccess("Employee data loaded successfully! Please review and complete the form.");
+    } catch (error) {
+      setHrError(error.message || "Failed to fetch employee data");
+    } finally {
+      setHrLoading(false);
+    }
+  };
+
+  const scrollToFirstError = (errorFields) => {
+    const fieldOrder = [
+      "employeeId",
+      "fullName",
+      "email",
+      "password",
+      "confirmPassword",
+      "phone",
+      "dateOfBirth",
+      "gender",
+      "region",
+      "centerId",
+      "emergencyContactName",
+      "emergencyContactPhone",
+    ];
+
+    const firstErrorField = fieldOrder.find((field) => errorFields[field]);
+    if (firstErrorField) {
+      const element = document.querySelector(`[name="${firstErrorField}"]`);
+      if (element) {
+        const scrollContainer = document.querySelector(".mesob-form-scroll");
+        if (scrollContainer) {
+          const elementRect = element.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+          const scrollTop = scrollContainer.scrollTop;
+          const elementTop = elementRect.top - containerRect.top + scrollTop;
+          scrollContainer.scrollTo({
+            top: elementTop - 50,
+            behavior: "smooth",
+          });
+        }
+      }
+    }
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -77,6 +220,14 @@ function Register() {
       newErrors.gender = "Gender is required";
     }
 
+    if (!formData.region) {
+      newErrors.region = "Region is required";
+    }
+
+    if (!formData.centerId) {
+      newErrors.centerId = "Health center is required";
+    }
+
     if (!formData.emergencyContactName.trim()) {
       newErrors.emergencyContactName = "Emergency contact name is required";
     }
@@ -90,6 +241,12 @@ function Register() {
     }
 
     setErrors(newErrors);
+    
+    // Auto-scroll to first error field
+    if (Object.keys(newErrors).length > 0) {
+      setTimeout(() => scrollToFirstError(newErrors), 0);
+    }
+    
     return Object.keys(newErrors).length === 0;
   };
 
@@ -106,6 +263,7 @@ function Register() {
       }));
     }
     setServerError("");
+    setHrError("");
   };
 
   const handleSubmit = async (e) => {
@@ -134,6 +292,7 @@ function Register() {
             phone: formData.phone,
             dateOfBirth: formData.dateOfBirth,
             gender: formData.gender,
+            centerId: formData.centerId,
             emergencyContactName: formData.emergencyContactName,
             emergencyContactPhone: formData.emergencyContactPhone,
           }),
@@ -160,131 +319,213 @@ function Register() {
   };
 
   return (
-    <div className="register-page-wrapper">
-      <header className="app-header">
-        <div className="app-header-left">
-          <img
-            src="/Mesob-short-png.png"
-            alt="MESOB Logo"
-            className="mesob-logo-img"
-          />
-        </div>
-        <h1>MESOB</h1>
-        <div className="app-header-right">
-          <select className="language-selector">
-            <option value="en">English</option>
-            <option value="am">አማርኛ</option>
-          </select>
-        </div>
-      </header>
-
-      <div className="auth-container">
-        <div className="auth-wrapper register-wrapper">
-          <div className="auth-left register-form-section">
-            <div className="auth-header">
-              <h2>Create Your Account</h2>
-              <p>Join MESOB Wellness Center System</p>
+    <div className="mesob-auth-wrapper">
+      {/* Animated wave background with particles */}
+      <AnimatedWaveBackground />
+      <div className="mesob-auth-container">
+        <div className="mesob-auth-card">
+          {/* Logo and Header Section */}
+          <div className="mesob-logo-section">
+            <div className="mesob-logo-circle">
+              <img
+                src="/Mesob-short-png.png"
+                alt="MESOB Logo"
+              />
             </div>
+            <div className="mesob-title-amharic">
+              በኢትዮጵያ ፌዴራላዊ ዲሞክራሲያዊ ሪፐብሊክ
+            </div>
+            <div className="mesob-title-amharic">
+              የመሶብ አገልግሎት
+            </div>
+            <div className="mesob-title-english">
+              Federal Democratic Republic of Ethiopia
+            </div>
+            <div className="mesob-service-title">
+              MESOB Service
+            </div>
+            <div className="mesob-welcome">
+              Create Account
+            </div>
+            <div className="mesob-subtitle">
+              Join the MESOB Wellness Center System
+            </div>
+          </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="auth-form register-form"
-              noValidate
-            >
-              {serverError && (
-                <div className="alert alert-error" role="alert">
-                  {serverError}
+          <form onSubmit={handleSubmit} className="mesob-form" noValidate>
+            {serverError && (
+              <div className="mesob-alert mesob-alert-error" role="alert">
+                {serverError}
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="mesob-alert mesob-alert-success" role="alert">
+                {successMessage}
+              </div>
+            )}
+
+            {/* Scrollable Form Content */}
+            <div className="mesob-form-scroll">
+              {/* Employee ID Lookup Section */}
+              <div className="mesob-hr-section">
+                <div className="mesob-form-group">
+                  <label className="mesob-form-label">
+                    Employee ID (Optional)
+                    <span className="mesob-form-hint"> - Auto-fill from HR system</span>
+                  </label>
+                  <div className="mesob-input-with-button">
+                    <input
+                      type="text"
+                      name="employeeId"
+                      value={formData.employeeId}
+                      onChange={handleChange}
+                      placeholder="e.g., EMP001"
+                      disabled={loading || hrLoading}
+                      className="mesob-form-input"
+                    />
+                    <button
+                      type="button"
+                      className="mesob-btn mesob-btn-secondary"
+                      onClick={handleFetchFromHR}
+                      disabled={loading || hrLoading || !formData.employeeId.trim()}
+                    >
+                      {hrLoading ? "Loading..." : "Search"}
+                    </button>
+                  </div>
+                  {hrError && (
+                    <span className="mesob-form-error">{hrError}</span>
+                  )}
+                  {hrSuccess && (
+                    <span className="mesob-form-success">{hrSuccess}</span>
+                  )}
                 </div>
-              )}
+              </div>
 
-              {successMessage && (
-                <div className="alert alert-success" role="alert">
-                  {successMessage}
-                </div>
-              )}
+              {/* Full Name */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Full Name<span className="mesob-required">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  placeholder="John Doe"
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.fullName ? "error" : ""}`}
+                />
+                {errors.fullName && (
+                  <span className="mesob-form-error">{errors.fullName}</span>
+                )}
+              </div>
 
-              <Input
-                label="Full Name"
-                type="text"
-                name="fullName"
-                value={formData.fullName}
-                onChange={handleChange}
-                error={errors.fullName}
-                placeholder="John Doe"
-                required
-                disabled={loading}
-              />
+              {/* Email */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Email<span className="mesob-required">*</span>
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="mail@example.com"
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.email ? "error" : ""}`}
+                />
+                {errors.email && (
+                  <span className="mesob-form-error">{errors.email}</span>
+                )}
+              </div>
 
-              <Input
-                label="Email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                error={errors.email}
-                placeholder="mail@example.com"
-                required
-                disabled={loading}
-              />
+              {/* Password */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Password<span className="mesob-required">*</span>
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Min 8 chars with uppercase, lowercase, numbers, special chars"
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.password ? "error" : ""}`}
+                />
+                {errors.password && (
+                  <span className="mesob-form-error">{errors.password}</span>
+                )}
+              </div>
 
-              <Input
-                label="Password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={errors.password}
-                placeholder="Min 8 chars, uppercase, lowercase, numbers, special chars"
-                required
-                disabled={loading}
-              />
+              {/* Confirm Password */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Confirm Password<span className="mesob-required">*</span>
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.confirmPassword ? "error" : ""}`}
+                />
+                {errors.confirmPassword && (
+                  <span className="mesob-form-error">{errors.confirmPassword}</span>
+                )}
+              </div>
 
-              <Input
-                label="Confirm Password"
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                error={errors.confirmPassword}
-                placeholder="Confirm your password"
-                required
-                disabled={loading}
-              />
+              {/* Phone */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Phone Number<span className="mesob-required">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+251 9XX XXX XXXX"
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.phone ? "error" : ""}`}
+                />
+                {errors.phone && (
+                  <span className="mesob-form-error">{errors.phone}</span>
+                )}
+              </div>
 
-              <Input
-                label="Phone Number"
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                error={errors.phone}
-                placeholder="+251 9XX XXX XXXX"
-                required
-                disabled={loading}
-              />
+              {/* Date of Birth */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Date of Birth<span className="mesob-required">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.dateOfBirth ? "error" : ""}`}
+                />
+                {errors.dateOfBirth && (
+                  <span className="mesob-form-error">{errors.dateOfBirth}</span>
+                )}
+              </div>
 
-              <Input
-                label="Date of Birth"
-                type="date"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-                error={errors.dateOfBirth}
-                required
-                disabled={loading}
-              />
-
-              <div className="form-group">
-                <label className="form-label">
-                  Gender
-                  <span className="required-mark">*</span>
+              {/* Gender */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Gender<span className="mesob-required">*</span>
                 </label>
                 <select
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
                   disabled={loading}
-                  className={`form-input ${errors.gender ? "form-input-error" : ""}`}
+                  className={`mesob-form-select ${errors.gender ? "error" : ""}`}
                 >
                   <option value="">Select Gender</option>
                   <option value="MALE">Male</option>
@@ -292,84 +533,125 @@ function Register() {
                   <option value="OTHER">Other</option>
                 </select>
                 {errors.gender && (
-                  <span className="form-error">{errors.gender}</span>
+                  <span className="mesob-form-error">{errors.gender}</span>
                 )}
               </div>
 
-              <Input
-                label="Emergency Contact Name"
-                type="text"
-                name="emergencyContactName"
-                value={formData.emergencyContactName}
-                onChange={handleChange}
-                error={errors.emergencyContactName}
-                placeholder="Contact person name"
-                required
-                disabled={loading}
-              />
-
-              <Input
-                label="Emergency Contact Phone"
-                type="tel"
-                name="emergencyContactPhone"
-                value={formData.emergencyContactPhone}
-                onChange={handleChange}
-                error={errors.emergencyContactPhone}
-                placeholder="+251 9XX XXX XXXX"
-                required
-                disabled={loading}
-              />
-
-              <Button
-                type="submit"
-                variant="primary"
-                fullWidth
-                loading={loading}
-                disabled={loading}
-              >
-                Create Account
-              </Button>
-            </form>
-
-            <div className="auth-footer">
-              <p>
-                Already have an account?{" "}
-                <Link to="/login" className="auth-link">
-                  Sign in here
-                </Link>
-              </p>
-            </div>
-          </div>
-
-          <div className="auth-right">
-            <div className="auth-branding">
-              <div className="auth-logo-container">
-                <div className="auth-logo">🏥</div>
+              {/* Region */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Region<span className="mesob-required">*</span>
+                </label>
+                <select
+                  name="region"
+                  value={formData.region}
+                  onChange={handleChange}
+                  disabled={loading || regionsLoading}
+                  className={`mesob-form-select ${errors.region ? "error" : ""}`}
+                >
+                  <option value="">
+                    {regionsLoading ? "Loading regions..." : "Select Region"}
+                  </option>
+                  {regions.map((region) => (
+                    <option key={region} value={region}>
+                      {region}
+                    </option>
+                  ))}
+                </select>
+                {errors.region && (
+                  <span className="mesob-form-error">{errors.region}</span>
+                )}
               </div>
-              <h2>MESOB Wellness Center</h2>
-              <p>
-                Join thousands of MESOB staff and customers tracking their
-                health and wellness journey.
-              </p>
-              <div className="register-benefits">
-                <div className="benefit-item">
-                  <span className="benefit-icon">✓</span>
-                  <span>Book wellness appointments</span>
-                </div>
-                <div className="benefit-item">
-                  <span className="benefit-icon">✓</span>
-                  <span>Track your health metrics</span>
-                </div>
-                <div className="benefit-item">
-                  <span className="benefit-icon">✓</span>
-                  <span>Get personalized wellness plans</span>
-                </div>
-                <div className="benefit-item">
-                  <span className="benefit-icon">✓</span>
-                  <span>Secure health records</span>
-                </div>
+
+              {/* Health Center */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Health Center<span className="mesob-required">*</span>
+                </label>
+                <select
+                  name="centerId"
+                  value={formData.centerId}
+                  onChange={handleChange}
+                  disabled={loading || centersLoading || !formData.region}
+                  className={`mesob-form-select ${errors.centerId ? "error" : ""}`}
+                >
+                  <option value="">
+                    {!formData.region
+                      ? "Select region first"
+                      : centersLoading
+                      ? "Loading centers..."
+                      : centers.length === 0
+                      ? "No centers available"
+                      : "Select Health Center"}
+                  </option>
+                  {centers.map((center) => (
+                    <option key={center.id} value={center.id}>
+                      {center.name} - {center.city}
+                    </option>
+                  ))}
+                </select>
+                {errors.centerId && (
+                  <span className="mesob-form-error">{errors.centerId}</span>
+                )}
+              </div>
+
+              {/* Emergency Contact Name */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Emergency Contact Name<span className="mesob-required">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="emergencyContactName"
+                  value={formData.emergencyContactName}
+                  onChange={handleChange}
+                  placeholder="Contact person name"
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.emergencyContactName ? "error" : ""}`}
+                />
+                {errors.emergencyContactName && (
+                  <span className="mesob-form-error">{errors.emergencyContactName}</span>
+                )}
+              </div>
+
+              {/* Emergency Contact Phone */}
+              <div className="mesob-form-group">
+                <label className="mesob-form-label">
+                  Emergency Contact Phone<span className="mesob-required">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="emergencyContactPhone"
+                  value={formData.emergencyContactPhone}
+                  onChange={handleChange}
+                  placeholder="+251 9XX XXX XXXX"
+                  disabled={loading}
+                  className={`mesob-form-input ${errors.emergencyContactPhone ? "error" : ""}`}
+                />
+                {errors.emergencyContactPhone && (
+                  <span className="mesob-form-error">{errors.emergencyContactPhone}</span>
+                )}
               </div>
             </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="mesob-btn mesob-btn-primary"
+              disabled={loading}
+            >
+              {loading ? "Creating Account..." : "Create Account"}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="mesob-footer">
+            <p className="mesob-footer-text">
+              Already have an account?{" "}
+              <Link to="/login" className="mesob-link">
+                Sign in here
+              </Link>
+            </p>
           </div>
         </div>
       </div>

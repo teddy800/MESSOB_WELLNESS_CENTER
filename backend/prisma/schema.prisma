@@ -10,13 +10,15 @@ datasource db {
   provider = "postgresql"
 }
 
-// User Roles Enum - Defines access levels in the system
+// User Roles Enum - Defines access levels in the system (7-tier hierarchy)
 enum UserRole {
-  CUSTOMER_STAFF
-  NURSE_OFFICER
-  MANAGER
-  REGIONAL_OFFICE
-  FEDERAL_ADMIN
+  EXTERNAL_PATIENT  // Walk-in patients (no login, no organizational affiliation)
+  STAFF             // Mesob employees seeking healthcare
+  NURSE_OFFICER     // Nurses providing care
+  MANAGER           // Center managers
+  REGIONAL_OFFICE   // Regional managers
+  FEDERAL_OFFICE    // Federal/national level
+  SYSTEM_ADMIN      // System administrators
 }
 
 // Gender Enum
@@ -46,12 +48,16 @@ enum BloodPressureCategory {
 
 // Appointment Status Enum
 enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  NO_SHOW
+  WAITING       // Patient waiting in queue (replaces PENDING)
+  IN_PROGRESS   // Patient called, nurse preparing
+  IN_SERVICE    // Vitals being recorded/wellness plan being created
+  COMPLETED     // Service finished
+  CANCELLED     // Appointment cancelled
+  NO_SHOW       // Patient did not show up
+  
+  // Legacy statuses (kept for backward compatibility)
+  PENDING       // @deprecated Use WAITING instead
+  CONFIRMED     // @deprecated Not used in current workflow
 }
 
 // Center Status Enum
@@ -64,13 +70,18 @@ enum CenterStatus {
 // User Model - Core identity and authentication
 model User {
   id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  password  String   // Hashed password
+  email     String?  @unique // Nullable for external patients
+  password  String?  // Hashed password, nullable for external patients
   fullName  String
-  role      UserRole @default(CUSTOMER_STAFF)
+  role      UserRole @default(STAFF)
+  
+  // Employee and External Patient Fields
+  employeeId String?  // Mesob employee ID (nullable)
+  isExternal Boolean  @default(false) // True for walk-in external patients
+  canLogin   Boolean  @default(true)  // False for external patients
   
   // Center Assignment
-  centerId  String?  @db.Uuid
+  centerId  String?  @db.Uuid // Nullable (null for external patients)
   
   // Demographics
   dateOfBirth DateTime? @db.Date
@@ -104,6 +115,8 @@ model User {
   @@index([role])
   @@index([centerId])
   @@index([createdAt])
+  @@index([employeeId])
+  @@index([isExternal])
   @@map("users")
 }
 
@@ -198,7 +211,7 @@ model Appointment {
   // Appointment Details
   scheduledAt DateTime @db.Timestamptz(3)
   reason      String
-  status      AppointmentStatus @default(PENDING)
+  status      AppointmentStatus @default(WAITING)
   
   // Additional Information
   notes       String?
@@ -211,6 +224,11 @@ model Appointment {
   completedAt  DateTime? @db.Timestamptz(3)
   cancelledAt  DateTime? @db.Timestamptz(3)
   cancellationReason String?
+  
+  // SMS Reminder Tracking
+  reminderSentAt DateTime? @db.Timestamptz(3)
+  reminderCount  Int @default(0)
+  lastReminderBy String? @db.Uuid // User who sent the last reminder
   
   // Timestamps
   createdAt   DateTime @default(now()) @db.Timestamptz(3)

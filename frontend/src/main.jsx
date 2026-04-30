@@ -12,6 +12,9 @@ import "./styles/dashboard-priority2.css";
 import "./styles/dashboard-new-features.css";
 import "./styles/manager-dashboard.css";
 import "./styles/nurse-dashboard.css";
+import "./styles/nurse-dashboard-new.css";
+import "./styles/nurse-analytics.css";
+import "./styles/walkin.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

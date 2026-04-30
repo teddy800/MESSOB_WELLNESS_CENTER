@@ -1,210 +1,374 @@
 /* ========================================
-   LOGIN PAGE STYLES
+   MESOB BRAND THEME - LOGIN PAGE
+   Based on dashboard.mesobcenter.et
    ======================================== */
 
-.login-page-wrapper {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, #1e3a8a 0%, #284394 50%, #312e81 100%);
+:root {
+  --mesob-primary-blue: #2B4C7E;
+  --mesob-dark-blue: #1e3a5f;
+  --mesob-accent-orange: #F59E0B;
+  --mesob-gold: #FFA500;
+  --mesob-white: #FFFFFF;
+  --mesob-light-blue: rgba(59, 130, 246, 0.1);
+  --mesob-card-bg: rgba(255, 255, 255, 0.95);
+  --mesob-input-bg: rgba(255, 255, 255, 0.9);
 }
 
-.auth-container {
-  flex: 1;
+/* Starry Background Pattern */
+.mesob-auth-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a1428 0%, #1a2d5c 50%, #2E4998 100%);
+  position: relative;
+  overflow: hidden;
+  background-image: 
+    linear-gradient(0deg, transparent 24%, rgba(100, 150, 200, 0.08) 25%, rgba(100, 150, 200, 0.08) 26%, transparent 27%, transparent 74%, rgba(100, 150, 200, 0.08) 75%, rgba(100, 150, 200, 0.08) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(100, 150, 200, 0.08) 25%, rgba(100, 150, 200, 0.08) 26%, transparent 27%, transparent 74%, rgba(100, 150, 200, 0.08) 75%, rgba(100, 150, 200, 0.08) 76%, transparent 77%, transparent);
+  background-size: 50px 50px;
+}
+
+/* Animated dots container - now using Canvas */
+.mesob-dots-container {
+  display: none;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.5; }
+}
+
+/* Auth Container */
+.mesob-auth-container {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
   position: relative;
-  background: transparent;
+  z-index: 10;
 }
 
-.auth-wrapper {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  max-width: 1000px;
-  width: 100%;
-  background: white;
-  border-radius: 20px;
-  overflow: hidden;
+/* Auth Card */
+.mesob-auth-card {
+  background: #3550A0;
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 880px;
+  width: 100%;
+  padding: 3.5rem;
+  animation: slideUp 0.5s ease-out;
 }
 
-.auth-left {
-  padding: 3rem;
-  background: white;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.auth-right {
-  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #3b82f6 100%);
-  padding: 3rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: white;
+/* Logo Section */
+.mesob-logo-section {
   text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.auth-right::before {
-  content: '';
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
-  background-size: 30px 30px;
-  animation: float 20s linear infinite;
-}
-
-@keyframes float {
-  from { transform: translate(0, 0); }
-  to { transform: translate(50px, 50px); }
-}
-
-.auth-branding {
-  position: relative;
-  z-index: 1;
-}
-
-.auth-logo-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.auth-logo {
-  width: 80px;
-  height: 80px;
-  background: white;
-  border-radius: 50%;
+.mesob-logo-circle {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  font-size: 2rem;
 }
 
-.auth-branding h2 {
-  font-size: 2rem;
-  margin: 0 0 0.5rem;
-  font-weight: 700;
+.mesob-logo-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.auth-branding p {
-  font-size: 1rem;
-  opacity: 0.95;
-  margin: 0;
-  line-height: 1.6;
-}
-
-.auth-header {
-  margin-bottom: 2rem;
-}
-
-.auth-header h2 {
-  margin: 0 0 0.5rem;
-  color: #1e293b;
-  font-size: 1.75rem;
-  font-weight: 700;
-}
-
-.auth-header p {
-  margin: 0;
-  color: #64748b;
+.mesob-title-amharic {
   font-size: 0.95rem;
+  color: #FFFFFF;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
 }
 
-.auth-form {
+.mesob-title-english {
+  font-size: 0.85rem;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.mesob-service-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.mesob-welcome {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--mesob-accent-orange);
+  margin-bottom: 0.25rem;
+}
+
+.mesob-subtitle {
+  font-size: 0.95rem;
+  color: #FFFFFF;
+  margin-bottom: 1.5rem;
+}
+
+/* Form Styles */
+.mesob-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
-.auth-footer {
+.mesob-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.mesob-form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 0.5rem;
+}
+
+.mesob-form-input {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #FFFFFF;
+  transition: all 0.3s ease;
+}
+
+.mesob-form-input:focus {
+  outline: none;
+  border-color: var(--mesob-accent-orange);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.mesob-form-input:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mesob-form-input.error {
+  border-color: #ef4444;
+}
+
+.mesob-form-error {
+  display: block;
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.mesob-form-success {
+  display: block;
+  color: #059669;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.mesob-form-hint {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #FFFFFF;
+  margin-left: 0.25rem;
+}
+
+/* Password Input Wrapper */
+.mesob-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mesob-password-wrapper .mesob-form-input {
+  padding-right: 2.5rem;
+  padding-left: 2.5rem;
+}
+
+.mesob-input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.mesob-input-icon-wrapper .mesob-form-input {
+  padding-left: 2.5rem;
+}
+
+.mesob-input-icon {
+  position: absolute;
+  left: 0.75rem;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.mesob-password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+}
+
+.mesob-password-toggle:hover:not(:disabled) {
+  opacity: 0.7;
+}
+
+.mesob-password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Buttons */
+.mesob-btn {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mesob-btn-primary {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  background: #FFFFFF;
+  color: #3550A0;
+  border-radius: 12px;
+}
+
+.mesob-btn-primary:hover:not(:disabled) {
+  background: #f0f0f0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.4);
+}
+
+.mesob-btn-secondary {
+  background: var(--mesob-primary-blue);
+  color: white;
+}
+
+.mesob-btn-secondary:hover:not(:disabled) {
+  background: var(--mesob-dark-blue);
+}
+
+.mesob-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  background-color: #d1d5db !important;
+  color: #6b7280 !important;
+}
+
+/* Alerts */
+.mesob-alert {
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.mesob-alert-error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.mesob-alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+/* Footer Links */
+.mesob-footer {
+  text-align: center;
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #e2e8f0;
-  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.auth-footer p {
-  margin: 0;
-  color: #64748b;
+.mesob-footer-text {
   font-size: 0.9rem;
+  color: #FFFFFF;
 }
 
-.auth-link {
-  color: #8b5cf6;
+.mesob-link {
+  color: var(--mesob-gold);
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s ease;
 }
 
-.auth-link:hover {
-  color: #7c3aed;
+.mesob-link:hover {
+  color: #FFB84D;
   text-decoration: underline;
 }
 
-.auth-hint {
-  font-size: 0.85rem;
-  color: #64748b;
-  margin: 0;
-  padding: 0.75rem;
-  background: #f1f5f9;
-  border-radius: 8px;
-}
-
-.password-input-wrapper {
-  position: relative;
-}
-
-.password-input-wrapper .form-input {
-  padding-right: 2.8rem;
-}
-
-.password-toggle-btn {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0.2rem;
-}
-
-.password-toggle-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+/* Required Mark */
+.mesob-required {
+  color: #ef4444;
+  margin-left: 0.25rem;
 }
 
 /* Responsive */
-@media (max-width: 900px) {
-  .auth-wrapper {
-    grid-template-columns: 1fr;
+@media (max-width: 640px) {
+  .mesob-auth-card {
+    padding: 1.5rem;
   }
 
-  .auth-right {
-    display: none;
+  .mesob-logo-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .mesob-service-title {
+    font-size: 1.1rem;
   }
 }
 
-@media (max-width: 600px) {
-  .auth-left {
-    padding: 2rem 1.5rem;
+@media (max-width: 480px) {
+  .mesob-auth-container {
+    padding: 1rem 0.5rem;
   }
 
-  .auth-header h2 {
-    font-size: 1.5rem;
-  }
-
-  .auth-form {
-    gap: 1rem;
+  .mesob-auth-card {
+    padding: 1.25rem;
   }
 }

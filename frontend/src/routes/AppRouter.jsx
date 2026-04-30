@@ -18,7 +18,7 @@ function AppRouter() {
       <Route
         path="/dashboard"
         element={
-          <RoleBasedRoute allowedRoles={["CUSTOMER_STAFF"]}>
+          <RoleBasedRoute allowedRoles={["STAFF"]}>
             <MainLayout>
               <Dashboard />
             </MainLayout>
@@ -52,7 +52,7 @@ function AppRouter() {
       <Route
         path="/regional"
         element={
-          <RoleBasedRoute allowedRoles={["REGIONAL_OFFICE"]}>
+          <RoleBasedRoute allowedRoles={["REGIONAL_OFFICE", "FEDERAL_OFFICE"]}>
             <MainLayout>
               <RegionalDashboard />
             </MainLayout>
@@ -62,7 +62,7 @@ function AppRouter() {
       <Route
         path="/admin"
         element={
-          <RoleBasedRoute allowedRoles={["FEDERAL_ADMIN"]}>
+          <RoleBasedRoute allowedRoles={["SYSTEM_ADMIN"]}>
             <MainLayout>
               <AdminDashboard />
             </MainLayout>
