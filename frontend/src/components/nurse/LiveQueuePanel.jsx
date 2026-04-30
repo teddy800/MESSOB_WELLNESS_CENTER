@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import QuickHistoryModal from './QuickHistoryModal';
 
-function LiveQueuePanel({ refreshTrigger }) {
+function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedCustomerForHistory, setSelectedCustomerForHistory] = useState(null);
 
   useEffect(() => {
     fetchQueue();
@@ -70,13 +73,33 @@ function LiveQueuePanel({ refreshTrigger }) {
     return type === 'ONLINE' ? '📅 Online' : '🚶 Walk-in';
   };
 
-  const handleSendReminder = async (appointmentId, customerName) => {
+  const handleSendReminder = async (appointmentId, customerName, customerEmail) => {
     try {
-      await api.post(`/api/v1/appointments/${appointmentId}/send-reminder`);
-      alert(`✅ SMS reminder sent to ${customerName}`);
+      // Send email reminder
+      await api.post(`/api/v1/appointments/${appointmentId}/send-reminder`, {
+        type: 'email',
+        email: customerEmail,
+      });
+      alert(`✅ Email reminder sent to ${customerEmail}`);
     } catch (err) {
-      alert("❌ Failed to send SMS reminder");
+      alert("❌ Failed to send email reminder");
       console.error(err);
+    }
+  };
+
+  const handleViewDetails = (customerId, customerName) => {
+    // Show quick history modal instead of navigating
+    setSelectedCustomerForHistory({ customerId, customerName });
+    setShowHistoryModal(true);
+  };
+
+  const handleViewFullDetails = () => {
+    // Navigate to full history view
+    if (onNavigateToHistory && selectedCustomerForHistory) {
+      onNavigateToHistory({
+        customerId: selectedCustomerForHistory.customerId,
+        customerName: selectedCustomerForHistory.customerName,
+      });
     }
   };
 
@@ -156,14 +179,25 @@ function LiveQueuePanel({ refreshTrigger }) {
               </div>
 
               <div className="queue-item-actions">
-                <button 
-                  className="btn btn-small btn-primary"
-                  onClick={() => handleSendReminder(item.appointmentId, item.customerName)}
-                  title="Send SMS reminder to customer"
-                >
-                  📱 Send Reminder
-                </button>
-                <button className="btn btn-small btn-secondary">View Details</button>
+                {/* Only show Send Reminder and View Details for WAITING and IN_PROGRESS */}
+                {(item.status === 'WAITING' || item.status === 'IN_PROGRESS') && (
+                  <>
+                    <button 
+                      className="btn btn-small btn-primary"
+                      onClick={() => handleSendReminder(item.appointmentId, item.customerName, item.customerEmail)}
+                      title="Send email reminder to customer"
+                    >
+                      📧 Send Email
+                    </button>
+                    <button 
+                      className="btn btn-small btn-secondary"
+                      onClick={() => handleViewDetails(item.customerId, item.customerName)}
+                      title="View patient history"
+                    >
+                      📋 View History
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -177,6 +211,15 @@ function LiveQueuePanel({ refreshTrigger }) {
       >
         🔄 Refresh Queue
       </button>
+
+      {showHistoryModal && selectedCustomerForHistory && (
+        <QuickHistoryModal
+          customerId={selectedCustomerForHistory.customerId}
+          customerName={selectedCustomerForHistory.customerName}
+          onClose={() => setShowHistoryModal(false)}
+          onViewDetails={handleViewFullDetails}
+        />
+      )}
     </div>
   );
 }

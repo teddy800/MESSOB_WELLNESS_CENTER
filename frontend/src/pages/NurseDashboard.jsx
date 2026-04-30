@@ -94,6 +94,16 @@ function NurseDashboard() {
     setActiveTab('queue');
   };
 
+  const handleNavigateToHistory = (customerInfo) => {
+    // Store customer info in sessionStorage for CustomerHistoryView to read
+    sessionStorage.setItem('selectedCustomerForHistory', JSON.stringify({
+      id: customerInfo.customerId,
+      fullName: customerInfo.customerName,
+    }));
+    // Navigate to history tab
+    setActiveTab('history');
+  };
+
   const handleWellnessSuccess = () => {
     setRefreshKey((prev) => prev + 1);
   };
@@ -179,7 +189,7 @@ function NurseDashboard() {
         {activeTab === "queue" && (
           <div className="queue-section">
             <div className="queue-main">
-              <LiveQueuePanel key={refreshKey} refreshTrigger={queueRefreshTrigger} />
+              <LiveQueuePanel key={refreshKey} refreshTrigger={queueRefreshTrigger} onNavigateToHistory={handleNavigateToHistory} />
             </div>
             <div className="queue-sidebar">
               <CapacityTracker onCapacityUpdate={handleCapacityUpdate} />

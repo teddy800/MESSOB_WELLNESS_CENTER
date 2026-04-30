@@ -265,6 +265,7 @@ export async function getQueueAppointments(dateString?: string) {
     appointmentId: apt.id,
     customerName: apt.user.fullName,
     customerId: apt.userId,
+    customerEmail: apt.user.email,
     checkInTime: apt.scheduledAt.toISOString(),
     scheduledAt: apt.scheduledAt.toISOString(),
     reason: apt.reason,
