@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import WellnessPlanTemplates from './WellnessPlanTemplates';
 
-function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQueue }) {
+function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQueue, onStatusChanged }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -169,6 +169,29 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
       setSuccess('Wellness plan created successfully!');
       setCreatedPlanId(response.data.data.id);
       
+      // For walk-in users (no appointmentId), automatically mark as completed
+      if (!appointmentId) {
+        console.log('🟢 Walk-in user - automatically marking as completed');
+        try {
+          // Trigger queue refresh to update analytics
+          if (onStatusChanged) {
+            console.log('🔄 Triggering analytics refresh for walk-in completion');
+            onStatusChanged();
+          }
+          
+          // Auto-navigate back after a short delay
+          setTimeout(() => {
+            setSuccess('');
+            if (onBackToQueue) {
+              console.log('🔄 Navigating back to queue...');
+              onBackToQueue();
+            }
+          }, 2000);
+        } catch (err) {
+          console.error('Error in walk-in completion:', err);
+        }
+      }
+      
       // Scroll to success message
       setTimeout(() => {
         if (successRef.current) {
@@ -179,10 +202,12 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
         }
       }, 100);
       
-      // Hide success message after 5 seconds, but keep PDF button visible
-      setTimeout(() => {
-        setSuccess('');
-      }, 5000);
+      // Hide success message after 2 seconds (for staff with appointments)
+      if (appointmentId) {
+        setTimeout(() => {
+          setSuccess('');
+        }, 2000);
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create wellness plan');
     } finally {
@@ -217,25 +242,71 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
     }
   };
 
-  const handleBackToQueue = async () => {
+  const handleMarkAsCompleted = async () => {
     try {
       setLoading(true);
+      setError('');
+
+      console.log('🟢 Marking as COMPLETED');
+      console.log('📋 Details:', { appointmentId, customerId: selectedCustomerId });
       
-      // Mark appointment as COMPLETED
+      if (!selectedCustomerId) {
+        console.warn('⚠️ No customer ID provided');
+        setError('No customer ID available');
+        setLoading(false);
+        return;
+      }
+
+      // If there's an appointmentId, update the appointment status to COMPLETED
       if (appointmentId) {
-        await api.patch(`/api/v1/appointments/${appointmentId}`, {
-          status: 'COMPLETED',
-        });
+        console.log('🟢 Marking appointment as COMPLETED:', appointmentId);
+        
+        try {
+          const response = await api.patch(`/api/v1/appointments/${appointmentId}`, {
+            status: 'COMPLETED',
+          });
+          
+          console.log('✅ Full response:', response);
+          console.log('✅ Response data:', response.data);
+          console.log('✅ Appointment object:', response.data?.data);
+          console.log('🎯 Response status:', response.data?.data?.status);
+          
+          // Verify the status was updated
+          if (response.data?.data?.status === 'COMPLETED') {
+            console.log('✓ Status confirmed as COMPLETED');
+          } else {
+            console.warn('⚠ Status may not have updated correctly:', response.data?.data?.status);
+          }
+        } catch (appointmentError) {
+          console.error('Error updating appointment status:', appointmentError);
+          console.error('Error response:', appointmentError.response?.data);
+          throw appointmentError;
+        }
+      } else {
+        // For walk-in/external users without appointment, just mark as completed in wellness
+        console.log('🟢 Walk-in user (no appointmentId) - skipping appointment update');
+      }
+
+      setSuccess('Patient marked as completed!');
+      
+      // Trigger queue refresh immediately
+      if (onStatusChanged) {
+        console.log('🔄 Triggering queue refresh after completion');
+        onStatusChanged();
       }
       
-      // Call the parent callback to navigate back to queue
-      if (onBackToQueue) {
-        onBackToQueue();
-      }
+      // Wait a moment for success message, then navigate back and refresh queue
+      setTimeout(() => {
+        setLoading(false);
+        if (onBackToQueue) {
+          console.log('🔄 Navigating back to queue and refreshing...');
+          onBackToQueue();
+        }
+      }, 1500);
     } catch (err) {
-      console.error('Failed to mark appointment as completed:', err);
-      setError('Failed to complete appointment');
-    } finally {
+      console.error('Failed to mark patient as completed:', err);
+      console.error('Error details:', err.response?.data);
+      setError('Failed to mark patient as completed: ' + (err.response?.data?.message || err.message));
       setLoading(false);
     }
   };
@@ -247,7 +318,7 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div ref={successRef} className="alert alert-success">{success}</div>}
       
-      {/* PDF Download and Back to Queue Buttons */}
+      {/* PDF Download and Mark as Completed Buttons */}
       {createdPlanId && !success && (
         <div style={{
           marginBottom: '1.5rem',
@@ -273,9 +344,10 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
             >
               {generatingPDF ? '📄 Generating PDF...' : '📄 Download Health Report PDF'}
             </button>
-            {onBackToQueue && (
+            {/* Only show "Mark as Completed" button for staff with appointments */}
+            {onBackToQueue && appointmentId && (
               <button
-                onClick={handleBackToQueue}
+                onClick={handleMarkAsCompleted}
                 disabled={loading}
                 className="btn btn-secondary"
                 style={{
@@ -285,7 +357,7 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
                   opacity: loading ? 0.6 : 1,
                 }}
               >
-                {loading ? '⏳ Processing...' : '← Back to Queue'}
+                {loading ? '⏳ Processing...' : '✓ Mark as Completed'}
               </button>
             )}
           </div>

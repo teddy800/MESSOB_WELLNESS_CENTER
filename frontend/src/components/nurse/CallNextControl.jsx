@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 
-function CallNextControl({ onNavigateToVitals }) {
+function CallNextControl({ onNavigateToVitals, onStatusChanged }) {
   const [currentCustomer, setCurrentCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,18 +43,37 @@ function CallNextControl({ onNavigateToVitals }) {
       setLoading(true);
       setError('');
 
+      console.log('🔵 Calling next customer:', currentCustomer?.customerName);
+      console.log('📋 Appointment ID:', currentCustomer?.appointmentId);
+      console.log('📊 Current status:', currentCustomer?.status);
+
       // Update appointment status to IN_PROGRESS
-      await api.patch(`/api/v1/appointments/${currentCustomer?.appointmentId}`, {
+      const response = await api.patch(`/api/v1/appointments/${currentCustomer?.appointmentId}`, {
         status: 'IN_PROGRESS',
       });
 
+      console.log('✅ Status update response:', response.data);
+      console.log('🎯 New status:', response.data?.data?.status);
+
+      // Update local state with new status
+      setCurrentCustomer(prev => ({
+        ...prev,
+        status: 'IN_PROGRESS'
+      }));
+
       setSuccess(`Called: ${currentCustomer?.customerName}`);
       setShowRecordVitalsButton(true);
+      
+      // Trigger queue refresh
+      if (onStatusChanged) {
+        onStatusChanged();
+      }
       
       setTimeout(() => {
         setSuccess('');
       }, 2000);
     } catch (err) {
+      console.error('❌ Failed to update status:', err);
       setError(err.response?.data?.message || 'Failed to call next customer');
       console.error(err);
     } finally {
@@ -62,15 +81,53 @@ function CallNextControl({ onNavigateToVitals }) {
     }
   };
 
-  const handleRecordVitals = () => {
-    // Pass customer info to VitalsEntry via NurseDashboard
-    if (onNavigateToVitals) {
-      onNavigateToVitals({
-        customerId: currentCustomer.customerId,
-        customerName: currentCustomer.customerName,
-        appointmentId: currentCustomer.appointmentId,
+  const handleRecordVitals = async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      console.log('🟠 Record Vitals clicked - updating status to IN_SERVICE');
+      console.log('📋 Appointment ID:', currentCustomer?.appointmentId);
+
+      // Update appointment status to IN_SERVICE immediately when Record Vitals is clicked
+      const response = await api.patch(`/api/v1/appointments/${currentCustomer?.appointmentId}`, {
+        status: 'IN_SERVICE',
       });
+
+      console.log('✅ Status update response:', response.data);
+      console.log('🎯 New status:', response.data?.data?.status);
+
+      // Update local state with new status
+      setCurrentCustomer(prev => ({
+        ...prev,
+        status: 'IN_SERVICE'
+      }));
+
+      // Trigger queue refresh
+      if (onStatusChanged) {
+        onStatusChanged();
+      }
+
+      // Pass customer info to VitalsEntry via NurseDashboard
+      if (onNavigateToVitals) {
+        onNavigateToVitals({
+          customerId: currentCustomer.customerId,
+          customerName: currentCustomer.customerName,
+          appointmentId: currentCustomer.appointmentId,
+        });
+      }
+    } catch (err) {
+      console.error('❌ Failed to update status:', err);
+      setError(err.response?.data?.message || 'Failed to update status');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleBackToQueue = () => {
+    setShowRecordVitalsButton(false);
+    setError('');
+    setSuccess('');
   };
 
   const handleMarkNoShow = async () => {
@@ -97,12 +154,6 @@ function CallNextControl({ onNavigateToVitals }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleBackToQueue = () => {
-    setShowRecordVitalsButton(false);
-    setError('');
-    setSuccess('');
   };
 
   return (
