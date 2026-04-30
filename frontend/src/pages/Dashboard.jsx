@@ -36,84 +36,30 @@ function Dashboard() {
         </p>
       </div>
 
-      <div className="dashboard-layout">
-        <aside className="dashboard-sidebar">
-          <nav className="sidebar-nav">
-            <button
-              className={`sidebar-nav-item ${activeTab === 'appointments' ? 'active' : ''}`}
-              onClick={() => setActiveTab('appointments')}
-            >
-              <span className="nav-icon">📅</span>
-              <span className="nav-label">Appointments</span>
-            </button>
-            
-            <button
-              className={`sidebar-nav-item ${activeTab === 'health' ? 'active' : ''}`}
-              onClick={() => setActiveTab('health')}
-            >
-              <span className="nav-icon">❤️</span>
-              <span className="nav-label">Health</span>
-            </button>
-            
-            <button
-              className={`sidebar-nav-item ${activeTab === 'wellness' ? 'active' : ''}`}
-              onClick={() => setActiveTab('wellness')}
-            >
-              <span className="nav-icon">🎯</span>
-              <span className="nav-label">Wellness</span>
-            </button>
-            
-            <button
-              className={`sidebar-nav-item ${activeTab === 'records' ? 'active' : ''}`}
-              onClick={() => setActiveTab('records')}
-            >
-              <span className="nav-icon">📊</span>
-              <span className="nav-label">Records</span>
-            </button>
-            
-            <button
-              className={`sidebar-nav-item ${activeTab === 'feedback' ? 'active' : ''}`}
-              onClick={() => setActiveTab('feedback')}
-            >
-              <span className="nav-icon">💬</span>
-              <span className="nav-label">Give Feedback</span>
-            </button>
-            
-            <button
-              className={`sidebar-nav-item ${activeTab === 'profile' ? 'active' : ''}`}
-              onClick={() => setActiveTab('profile')}
-            >
-              <span className="nav-icon">👤</span>
-              <span className="nav-label">Profile</span>
-            </button>
-          </nav>
-        </aside>
+      <div className="dashboard-content">
+        {activeTab === "appointments" && (
+          <>
+            <BookingCalendar />
+            <MyAppointments />
+            <AppointmentReminders />
+          </>
+        )}
 
-        <main className="dashboard-content">
-          {activeTab === "appointments" && (
-            <>
-              <BookingCalendar />
-              <MyAppointments />
-              <AppointmentReminders />
-            </>
-          )}
+        {activeTab === "health" && (
+          <>
+            <HealthAlerts />
+            <RiskScoring />
+            <HealthJourney />
+          </>
+        )}
 
-          {activeTab === "health" && (
-            <>
-              <HealthAlerts />
-              <RiskScoring />
-              <HealthJourney />
-            </>
-          )}
+        {activeTab === "wellness" && <WellnessPlan />}
 
-          {activeTab === "wellness" && <WellnessPlan />}
+        {activeTab === "records" && <LongitudinalRecords />}
 
-          {activeTab === "records" && <LongitudinalRecords />}
+        {activeTab === "feedback" && <FeedbackForm />}
 
-          {activeTab === "feedback" && <FeedbackForm />}
-
-          {activeTab === "profile" && <ProfileSection onLogout={logout} />}
-        </main>
+        {activeTab === "profile" && <ProfileSection onLogout={logout} />}
       </div>
     </div>
   );
