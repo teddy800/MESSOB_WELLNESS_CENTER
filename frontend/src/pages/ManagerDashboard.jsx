@@ -9,7 +9,8 @@ import {
 } from 'recharts';
 
 // ─── Role guard ───────────────────────────────────────────────────────────────
-const MANAGER_ROLES = ['MANAGER', 'REGIONAL_OFFICE', 'SYSTEM_ADMIN'];
+// MANAGER role only — REGIONAL_OFFICE uses /regional, SYSTEM_ADMIN uses /admin
+const MANAGER_ROLES = ['MANAGER'];
 
 // ─── Root Component ───────────────────────────────────────────────────────────
 const ManagerDashboard = () => {
@@ -74,7 +75,7 @@ const ManagerDashboard = () => {
       <div className="dashboard-container">
         <div className="access-denied">
           <h2>🚫 Access Denied</h2>
-          <p>Manager role required to access this dashboard.</p>
+          <p>Center Manager role required to access this dashboard.</p>
         </div>
       </div>
     );

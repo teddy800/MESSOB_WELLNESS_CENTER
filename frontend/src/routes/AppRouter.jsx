@@ -52,7 +52,7 @@ function AppRouter() {
       <Route
         path="/regional"
         element={
-          <RoleBasedRoute allowedRoles={["REGIONAL_OFFICE"]}>
+          <RoleBasedRoute allowedRoles={["REGIONAL_OFFICE", "FEDERAL_OFFICE"]}>
             <MainLayout>
               <RegionalDashboard />
             </MainLayout>

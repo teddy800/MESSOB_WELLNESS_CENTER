@@ -46,12 +46,21 @@ export const regionalService = {
   },
 
   // ─── Combined Dashboard Data ────────────────────────────────────────────────
+  // Fetches centers (always available) + analytics (best-effort, may 403 for lower roles)
   async getDashboardData(region) {
-    const [analytics, centers, allRegions] = await Promise.all([
-      region ? this.getRegionalAnalytics(region) : this.getAllAnalytics(),
+    const [centersResult, analyticsResult] = await Promise.allSettled([
       this.getCenters(region),
-      this.getRegions(),
+      region ? this.getRegionalAnalytics(region) : this.getAllAnalytics(),
     ]);
-    return { analytics, centers, allRegions };
+
+    // Centers: extract .data array from { status, data: [...] } response shape
+    const centersRaw = centersResult.status === 'fulfilled' ? centersResult.value : null;
+    const centers = centersRaw?.data ?? centersRaw ?? [];
+
+    // Analytics: may fail with 403 for REGIONAL_OFFICE/FEDERAL_OFFICE on getAllAnalytics
+    const analyticsRaw = analyticsResult.status === 'fulfilled' ? analyticsResult.value : null;
+    const analytics = analyticsRaw?.data ?? analyticsRaw ?? null;
+
+    return { analytics, centers };
   },
 };

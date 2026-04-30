@@ -336,10 +336,12 @@ export const getAllAnalytics = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    if (req.user.role !== UserRole.SYSTEM_ADMIN) {
+    // Allow REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN to view all analytics
+    const allowedRoles: UserRole[] = [UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_OFFICE, UserRole.SYSTEM_ADMIN];
+    if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
-        message: "Only SYSTEM_ADMIN can view all analytics",
+        message: "Only REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN can view all analytics",
       });
       return;
     }

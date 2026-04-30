@@ -35,9 +35,11 @@ const RegionalDashboard = () => {
       ]);
 
       if (dashboardData.status === 'fulfilled') {
-        setAnalytics(dashboardData.value.analytics);
-        const fetchedCenters = dashboardData.value.centers || [];
-        setCenters(fetchedCenters);
+        const { analytics, centers } = dashboardData.value;
+        // analytics may be null if the user's role can't access it — that's fine
+        setAnalytics(analytics);
+        // centers is already the unwrapped array from getDashboardData
+        setCenters(Array.isArray(centers) ? centers : []);
       }
       if (trends.status === 'fulfilled') {
         setTrendsData(trends.value.data);
@@ -91,7 +93,7 @@ const RegionalDashboard = () => {
         <div>
           <h1>Center Management Dashboard</h1>
           <p className="dashboard-subtitle">
-            Create & Manage Health Centers — Welcome, {user?.fullName}
+            {user?.role === 'FEDERAL_OFFICE' ? 'Federal Office' : 'Regional Office'} — Create & Manage Health Centers — Welcome, {user?.fullName}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
