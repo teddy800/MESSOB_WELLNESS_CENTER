@@ -120,7 +120,7 @@ const RegionalDashboard = () => {
 
       {/* Center Statistics Bar */}
       <div style={{ 
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+        background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)', 
         padding: '1rem 1.5rem', 
         borderRadius: '12px', 
         marginBottom: '1.5rem',
@@ -128,7 +128,7 @@ const RegionalDashboard = () => {
         gap: '2rem',
         alignItems: 'center',
         color: 'white',
-        boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+        boxShadow: '0 4px 12px rgba(76, 111, 190, 0.3)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{ fontSize: '1.5rem' }}>🏥</span>
@@ -238,7 +238,7 @@ const OverviewTab = ({ loading, analytics, centers, selectedCenter, centerStats 
       {/* Selection Info Banner */}
       {!isAllCenters && (
         <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)',
           padding: '1rem 1.5rem',
           borderRadius: '12px',
           marginBottom: '1.5rem',
@@ -246,7 +246,7 @@ const OverviewTab = ({ loading, analytics, centers, selectedCenter, centerStats 
           display: 'flex',
           alignItems: 'center',
           gap: '1rem',
-          boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+          boxShadow: '0 4px 12px rgba(76, 111, 190, 0.3)'
         }}>
           <span style={{ fontSize: '2rem' }}>🏥</span>
           <div style={{ flex: 1 }}>
@@ -386,16 +386,16 @@ const OverviewTab = ({ loading, analytics, centers, selectedCenter, centerStats 
           }}>
             {centers.slice(0, 6).map((center) => (
               <div key={center.id} style={{
-                background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)',
                 padding: '1rem',
                 borderRadius: '12px',
-                border: '2px solid #e5e7eb',
+                border: '2px solid rgba(255, 255, 255, 0.2)',
                 transition: 'all 0.3s ease',
                 cursor: 'pointer'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+                e.currentTarget.style.boxShadow = '0 8px 16px rgba(76, 111, 190, 0.4)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
@@ -403,8 +403,8 @@ const OverviewTab = ({ loading, analytics, centers, selectedCenter, centerStats 
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
                   <div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#1e293b' }}>{center.name}</div>
-                    <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.25rem' }}>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>{center.name}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.85)', marginTop: '0.25rem' }}>
                       📍 {center.city}, {center.region}
                     </div>
                   </div>
@@ -414,12 +414,12 @@ const OverviewTab = ({ loading, analytics, centers, selectedCenter, centerStats 
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#2563eb' }}>{center._count?.staff || 0}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>👥 Staff</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff' }}>{center._count?.staff || 0}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.85)' }}>👥 Staff</div>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#22c55e' }}>{center.capacity || 0}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>📊 Capacity</div>
+                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff' }}>{center.capacity || 0}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.85)' }}>📊 Capacity</div>
                   </div>
                 </div>
               </div>
@@ -453,6 +453,7 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
     code: '',
     region: '',
     city: '',
+    address: '',
     capacity: '',
     phone: '',
     email: '',
@@ -504,6 +505,7 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
       code: '',
       region: '',
       city: '',
+      address: '',
       capacity: '',
       phone: '',
       email: '',
@@ -519,6 +521,7 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
       code: center.code || '',
       region: center.region || '',
       city: center.city || '',
+      address: center.address || '',
       capacity: center.capacity || '',
       phone: center.phone || '',
       email: center.email || '',
@@ -531,19 +534,40 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
     e.preventDefault();
     setFormError('');
 
-    if (!formData.name || !formData.code || !formData.region || !formData.city) {
-      setFormError('Name, code, region, and city are required.');
+    if (!formData.name || !formData.code || !formData.region || !formData.city || !formData.address) {
+      setFormError('Name, code, region, city, and address are required.');
       return;
     }
 
     setSaving(true);
     try {
-      // TODO: Implement center creation/update API
-      console.log('Center data:', formData);
+      const centerData = {
+        name: formData.name,
+        code: formData.code,
+        region: formData.region,
+        city: formData.city,
+        address: formData.address,
+        phone: formData.phone || undefined,
+        email: formData.email || undefined,
+        capacity: formData.capacity ? parseInt(formData.capacity) : undefined,
+      };
+
+      if (editingCenter) {
+        // Update existing center
+        await regionalService.updateCenter(editingCenter.id, {
+          ...centerData,
+          status: formData.status,
+        });
+      } else {
+        // Create new center
+        await regionalService.createCenter(centerData);
+      }
+
       setShowModal(false);
       if (onRefresh) onRefresh();
     } catch (err) {
       setFormError(err?.response?.data?.message || 'Failed to save center.');
+      console.error('Center save error:', err);
     } finally {
       setSaving(false);
     }
@@ -557,6 +581,7 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
       code: '',
       region: '',
       city: '',
+      address: '',
       capacity: '',
       phone: '',
       email: '',
@@ -607,21 +632,21 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
         }}>
           {sortedCenters.map((center) => (
             <div key={center.id} style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)',
               padding: '1.5rem',
               borderRadius: '16px',
               color: 'white',
-              boxShadow: '0 8px 24px rgba(102, 126, 234, 0.3)',
+              boxShadow: '0 8px 24px rgba(76, 111, 190, 0.3)',
               transition: 'all 0.3s ease',
               cursor: 'pointer'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-8px)';
-              e.currentTarget.style.boxShadow = '0 12px 32px rgba(102, 126, 234, 0.4)';
+              e.currentTarget.style.boxShadow = '0 12px 32px rgba(76, 111, 190, 0.4)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.3)';
+              e.currentTarget.style.boxShadow = '0 8px 24px rgba(76, 111, 190, 0.3)';
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
                 <div style={{ flex: 1 }}>
@@ -800,6 +825,14 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
                   placeholder="Addis Ababa"
                 />
               </div>
+
+              <Input
+                label="Address *"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                required
+                placeholder="Bole Road, Near Edna Mall"
+              />
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <Input

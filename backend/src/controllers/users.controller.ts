@@ -28,6 +28,7 @@ export const searchUsers = async (req: AuthRequest, res: Response): Promise<void
         email: user.email,
         phone: user.phone,
         role: user.role,
+        isExternal: user.isExternal,
       })),
     });
   } catch (error) {
@@ -75,6 +76,7 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
         role: user.role,
         dateOfBirth: user.dateOfBirth,
         gender: user.gender,
+        isExternal: user.isExternal,
       },
     });
   } catch (error) {

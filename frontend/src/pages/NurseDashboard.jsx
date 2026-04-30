@@ -9,14 +9,13 @@ import VitalsEntry from "../components/nurse/VitalsEntry";
 import CallNextControl from "../components/nurse/CallNextControl";
 import WellnessPlanCreation from "../components/nurse/WellnessPlanCreation";
 import CustomerHistoryView from "../components/nurse/CustomerHistoryView";
-import QueueDisplayScreen from "../components/nurse/QueueDisplayScreen";
 
 function NurseDashboard() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "display"];
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history"];
     return tab && allowedTabs.includes(tab) ? tab : "analytics";
   });
   const [capacity, setCapacity] = useState(null);
@@ -26,7 +25,7 @@ function NurseDashboard() {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "display"];
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history"];
     if (tab && allowedTabs.includes(tab)) {
       setActiveTab(tab);
     }
@@ -159,14 +158,6 @@ function NurseDashboard() {
             <span className="nav-icon">📚</span>
             <span className="nav-label">History</span>
           </button>
-          
-          <button
-            className={`sidebar-nav-item ${activeTab === 'display' ? 'active' : ''}`}
-            onClick={() => setActiveTab('display')}
-          >
-            <span className="nav-icon">📺</span>
-            <span className="nav-label">Display</span>
-          </button>
         </nav>
       </aside>
 
@@ -179,7 +170,6 @@ function NurseDashboard() {
             {activeTab === 'walkin' && '🚶 Register Walk-in'}
             {activeTab === 'wellness' && '🎯 Create Wellness Plan'}
             {activeTab === 'history' && '📚 Customer History'}
-            {activeTab === 'display' && '📺 Queue Display'}
           </h1>
         </div>
 
@@ -235,12 +225,6 @@ function NurseDashboard() {
         {activeTab === "history" && (
           <div className="history-section">
             <CustomerHistoryView customerId={selectedCustomer} />
-          </div>
-        )}
-
-        {activeTab === "display" && (
-          <div className="display-section">
-            <QueueDisplayScreen />
           </div>
         )}
         </div>
