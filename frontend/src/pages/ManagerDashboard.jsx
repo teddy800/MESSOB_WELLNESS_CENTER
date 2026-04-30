@@ -683,6 +683,13 @@ const UsersTab = ({ loading, users, onRefresh }) => {
       setFormError('All fields are required.');
       return;
     }
+    
+    // Manager can only create NURSE_OFFICER role
+    if (newUser.role !== 'NURSE_OFFICER') {
+      setFormError('Managers can only create Nurse Officer accounts.');
+      return;
+    }
+    
     setSaving(true);
     try {
       await analyticsService.createStaffUser(newUser);
@@ -714,7 +721,7 @@ const UsersTab = ({ loading, users, onRefresh }) => {
     <div className="users-content">
       <div className="users-header">
         <h3>Staff Management ({users.length} staff)</h3>
-        <Button onClick={() => setShowModal(true)}>+ Create Staff</Button>
+        <Button onClick={() => setShowModal(true)}>+ Create Nurse Officer</Button>
       </div>
 
       {users.length === 0 ? (
@@ -772,7 +779,7 @@ const UsersTab = ({ loading, users, onRefresh }) => {
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
-              <h3>Create Staff User</h3>
+              <h3>Create Nurse Officer</h3>
               <button onClick={() => { setShowModal(false); setFormError(''); }}>×</button>
             </div>
             <form onSubmit={handleCreate}>
@@ -807,16 +814,17 @@ const UsersTab = ({ loading, users, onRefresh }) => {
                   value={newUser.role}
                   onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                   className="form-input"
+                  disabled
                 >
                   <option value="NURSE_OFFICER">Nurse Officer</option>
-                  <option value="MANAGER">Manager</option>
-                  <option value="REGIONAL_OFFICE">Regional Office</option>
-                  <option value="SYSTEM_ADMIN">System Admin</option>
                 </select>
+                <small style={{ color: '#6b7280', fontSize: '0.85rem', marginTop: '0.25rem', display: 'block' }}>
+                  ℹ️ Center Managers can only create Nurse Officer accounts
+                </small>
               </div>
               <div className="modal-actions">
                 <Button type="submit" disabled={saving}>
-                  {saving ? 'Creating…' : 'Create User'}
+                  {saving ? 'Creating…' : 'Create Nurse Officer'}
                 </Button>
                 <Button type="button" onClick={() => { setShowModal(false); setFormError(''); }}>
                   Cancel
