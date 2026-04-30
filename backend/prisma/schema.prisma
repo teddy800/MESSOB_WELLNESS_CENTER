@@ -48,12 +48,16 @@ enum BloodPressureCategory {
 
 // Appointment Status Enum
 enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  NO_SHOW
+  WAITING       // Patient waiting in queue (replaces PENDING)
+  IN_PROGRESS   // Patient called, nurse preparing
+  IN_SERVICE    // Vitals being recorded/wellness plan being created
+  COMPLETED     // Service finished
+  CANCELLED     // Appointment cancelled
+  NO_SHOW       // Patient did not show up
+  
+  // Legacy statuses (kept for backward compatibility)
+  PENDING       // @deprecated Use WAITING instead
+  CONFIRMED     // @deprecated Not used in current workflow
 }
 
 // Center Status Enum
@@ -207,7 +211,7 @@ model Appointment {
   // Appointment Details
   scheduledAt DateTime @db.Timestamptz(3)
   reason      String
-  status      AppointmentStatus @default(PENDING)
+  status      AppointmentStatus @default(WAITING)
   
   // Additional Information
   notes       String?

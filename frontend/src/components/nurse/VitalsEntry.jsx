@@ -3,7 +3,7 @@ import api from "../../services/api";
 import { suggestWellnessPlan } from "../../utils/wellnessAI";
 
 // Post-Vitals Actions Component
-function PostVitalsActions({ vitals, onSuccess, onStartNewRecord, onNavigateToWellness }) {
+function PostVitalsActions({ vitals, appointmentId, onSuccess, onStartNewRecord, onNavigateToWellness }) {
   const [customerInfo, setCustomerInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const actionsRef = React.useRef(null);
@@ -54,6 +54,8 @@ function PostVitalsActions({ vitals, onSuccess, onStartNewRecord, onNavigateToWe
     >
       <p style={{ margin: '0 0 1rem 0', color: '#065F46', fontWeight: 600 }}>
         ✓ Vitals recorded successfully for {customerInfo.fullName}!
+        {appointmentId && ' (Appointment)'}
+        {!appointmentId && ' (Walk-in)'}
       </p>
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
         <button
@@ -62,6 +64,7 @@ function PostVitalsActions({ vitals, onSuccess, onStartNewRecord, onNavigateToWe
               onNavigateToWellness({
                 customerId: customerInfo.id,
                 customerName: customerInfo.fullName,
+                appointmentId: appointmentId || null,
                 vitals: vitals,
               });
             }
@@ -78,6 +81,7 @@ function PostVitalsActions({ vitals, onSuccess, onStartNewRecord, onNavigateToWe
               onNavigateToWellness({
                 customerId: customerInfo.id,
                 customerName: customerInfo.fullName,
+                appointmentId: appointmentId || null,
                 vitals: vitals,
                 suggestedPlan: suggested,
               });
@@ -100,7 +104,7 @@ function PostVitalsActions({ vitals, onSuccess, onStartNewRecord, onNavigateToWe
   );
 }
 
-function VitalsEntry({ customerId, onSuccess, onNavigateToWellness }) {
+function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellness }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -109,6 +113,7 @@ function VitalsEntry({ customerId, onSuccess, onNavigateToWellness }) {
   const [showSearch, setShowSearch] = useState(false);
   const [showPostVitalsActions, setShowPostVitalsActions] = useState(false);
   const [lastRecordedVitals, setLastRecordedVitals] = useState(null);
+  const [currentAppointmentId, setCurrentAppointmentId] = useState(appointmentId || null);
   
   // Search states
   const [searchTerm, setSearchTerm] = useState('');
@@ -131,7 +136,8 @@ function VitalsEntry({ customerId, onSuccess, onNavigateToWellness }) {
 
   useEffect(() => {
     setCustomerIdInput(customerId || "");
-  }, [customerId]);
+    setCurrentAppointmentId(appointmentId || null);
+  }, [customerId, appointmentId]);
 
   const handleCustomerSelect = (customer) => {
     setSelectedCustomer(customer);
@@ -654,6 +660,7 @@ function VitalsEntry({ customerId, onSuccess, onNavigateToWellness }) {
       {showPostVitalsActions && lastRecordedVitals && (
         <PostVitalsActions
           vitals={lastRecordedVitals}
+          appointmentId={currentAppointmentId}
           onSuccess={onSuccess}
           onStartNewRecord={handleStartNewRecord}
           onNavigateToWellness={onNavigateToWellness}

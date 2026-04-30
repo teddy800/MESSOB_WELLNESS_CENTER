@@ -1,17 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
+import QuickHistoryModal from './QuickHistoryModal';
 
-function LiveQueuePanel() {
+function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedCustomerForHistory, setSelectedCustomerForHistory] = useState(null);
 
   useEffect(() => {
     fetchQueue();
-    // Removed auto-refresh - queue only refreshes when user clicks refresh button
   }, []);
+
+  // Refresh queue when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger) {
+      console.log('🔄 Queue refresh triggered');
+      fetchQueue();
+    }
+  }, [refreshTrigger]);
 
   const fetchQueue = async () => {
     try {
@@ -42,13 +52,17 @@ function LiveQueuePanel() {
       item.appointmentId?.includes(searchTerm) ||
       item.customerId?.includes(searchTerm);
     
-    if (filter === 'all') return matchesSearch;
+    if (filter === 'all') {
+      // Show all statuses except COMPLETED by default
+      return matchesSearch && item.status !== 'COMPLETED';
+    }
     return matchesSearch && item.status === filter;
   });
 
   const getStatusColor = (status) => {
     const colors = {
       WAITING: 'status-waiting',
+      IN_PROGRESS: 'status-in-progress',
       IN_SERVICE: 'status-in-service',
       COMPLETED: 'status-completed',
     };
@@ -59,13 +73,33 @@ function LiveQueuePanel() {
     return type === 'ONLINE' ? '📅 Online' : '🚶 Walk-in';
   };
 
-  const handleSendReminder = async (appointmentId, customerName) => {
+  const handleSendReminder = async (appointmentId, customerName, customerEmail) => {
     try {
-      await api.post(`/api/v1/appointments/${appointmentId}/send-reminder`);
-      alert(`✅ SMS reminder sent to ${customerName}`);
+      // Send email reminder
+      await api.post(`/api/v1/appointments/${appointmentId}/send-reminder`, {
+        type: 'email',
+        email: customerEmail,
+      });
+      alert(`✅ Email reminder sent to ${customerEmail}`);
     } catch (err) {
-      alert("❌ Failed to send SMS reminder");
+      alert("❌ Failed to send email reminder");
       console.error(err);
+    }
+  };
+
+  const handleViewDetails = (customerId, customerName) => {
+    // Show quick history modal instead of navigating
+    setSelectedCustomerForHistory({ customerId, customerName });
+    setShowHistoryModal(true);
+  };
+
+  const handleViewFullDetails = () => {
+    // Navigate to full history view
+    if (onNavigateToHistory && selectedCustomerForHistory) {
+      onNavigateToHistory({
+        customerId: selectedCustomerForHistory.customerId,
+        customerName: selectedCustomerForHistory.customerName,
+      });
     }
   };
 
@@ -89,25 +123,31 @@ function LiveQueuePanel() {
             className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            All ({queue.length})
+            All ({queue.filter(q => q.status !== 'COMPLETED').length})
           </button>
           <button 
             className={`filter-btn ${filter === 'WAITING' ? 'active' : ''}`}
             onClick={() => setFilter('WAITING')}
           >
-            Waiting
+            Waiting ({queue.filter(q => q.status === 'WAITING').length})
+          </button>
+          <button 
+            className={`filter-btn ${filter === 'IN_PROGRESS' ? 'active' : ''}`}
+            onClick={() => setFilter('IN_PROGRESS')}
+          >
+            In Progress ({queue.filter(q => q.status === 'IN_PROGRESS').length})
           </button>
           <button 
             className={`filter-btn ${filter === 'IN_SERVICE' ? 'active' : ''}`}
             onClick={() => setFilter('IN_SERVICE')}
           >
-            In Service
+            In Service ({queue.filter(q => q.status === 'IN_SERVICE').length})
           </button>
           <button 
             className={`filter-btn ${filter === 'COMPLETED' ? 'active' : ''}`}
             onClick={() => setFilter('COMPLETED')}
           >
-            Completed
+            Completed ({queue.filter(q => q.status === 'COMPLETED').length})
           </button>
         </div>
       </div>
@@ -139,14 +179,25 @@ function LiveQueuePanel() {
               </div>
 
               <div className="queue-item-actions">
-                <button 
-                  className="btn btn-small btn-primary"
-                  onClick={() => handleSendReminder(item.appointmentId, item.customerName)}
-                  title="Send SMS reminder to customer"
-                >
-                  📱 Send Reminder
-                </button>
-                <button className="btn btn-small btn-secondary">View Details</button>
+                {/* Only show Send Reminder and View Details for WAITING and IN_PROGRESS */}
+                {(item.status === 'WAITING' || item.status === 'IN_PROGRESS') && (
+                  <>
+                    <button 
+                      className="btn btn-small btn-primary"
+                      onClick={() => handleSendReminder(item.appointmentId, item.customerName, item.customerEmail)}
+                      title="Send email reminder to customer"
+                    >
+                      📧 Send Email
+                    </button>
+                    <button 
+                      className="btn btn-small btn-secondary"
+                      onClick={() => handleViewDetails(item.customerId, item.customerName)}
+                      title="View patient history"
+                    >
+                      📋 View History
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -160,6 +211,15 @@ function LiveQueuePanel() {
       >
         🔄 Refresh Queue
       </button>
+
+      {showHistoryModal && selectedCustomerForHistory && (
+        <QuickHistoryModal
+          customerId={selectedCustomerForHistory.customerId}
+          customerName={selectedCustomerForHistory.customerName}
+          onClose={() => setShowHistoryModal(false)}
+          onViewDetails={handleViewFullDetails}
+        />
+      )}
     </div>
   );
 }
