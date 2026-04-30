@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-const AnimatedWaveBackground = () => {
+const AnimatedWaveBackground = ({ className = "" }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -8,122 +8,173 @@ const AnimatedWaveBackground = () => {
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    let animationId;
+    if (!ctx) return;
 
-    // Set canvas size
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
-    // Create gradient background
-    const createGradient = () => {
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, "rgba(21, 47, 98, 0.6)");
-      gradient.addColorStop(0.5, "#2B458E");
-      gradient.addColorStop(1, "#304D9E");
-      return gradient;
-    };
-
-    // Particle configuration
-    const particles = [];
-    const particleCount = 200;
+    let animationId = 0;
+    let width = 0;
+    let height = 0;
+    let dpr = window.devicePixelRatio || 1;
     let time = 0;
 
-    // Initialize particles in a grid-like pattern
-    for (let i = 0; i < particleCount; i++) {
-      const row = Math.floor(i / 20);
-      const col = i % 20;
-      particles.push({
-        x: (col / 20) * canvas.width + Math.random() * 30,
-        y: canvas.height + row * 40,
-        baseX: (col / 20) * canvas.width + Math.random() * 30,
-        baseY: canvas.height + row * 40,
-        size: Math.random() * 1.5 + 0.5,
-        opacity: Math.random() * 0.6 + 0.2,
-        speed: Math.random() * 1 + 0.5,
-        waveOffset: Math.random() * Math.PI * 2,
-      });
-    }
-
-    // Animation loop
-    const animate = () => {
-      // Draw gradient background
-      ctx.fillStyle = createGradient();
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      time += 0.02;
-
-      // Draw particles flowing upward in wave pattern
-      particles.forEach((particle, index) => {
-        // Upward movement
-        particle.y -= particle.speed;
-
-        // Horizontal wave movement
-        const waveX = Math.sin(time + particle.waveOffset + index * 0.1) * 60;
-        particle.x = particle.baseX + waveX;
-
-        // Reset position when particle goes off top
-        if (particle.y < -50) {
-          particle.y = canvas.height + 50;
-          particle.baseX = Math.random() * canvas.width;
-          particle.baseY = canvas.height + 50;
-        }
-
-        // Calculate opacity based on vertical position (fade out at top)
-        const fadeDistance = 300;
-        const distanceFromTop = Math.max(0, particle.y - (canvas.height - fadeDistance));
-        const fadeOpacity = Math.min(1, distanceFromTop / fadeDistance);
-        const finalOpacity = particle.opacity * fadeOpacity;
-
-        // Draw particle with glow effect
-        const gradient = ctx.createRadialGradient(
-          particle.x,
-          particle.y,
-          0,
-          particle.x,
-          particle.y,
-          particle.size * 4
-        );
-        gradient.addColorStop(0, `rgba(255, 255, 255, ${finalOpacity * 0.9})`);
-        gradient.addColorStop(0.5, `rgba(255, 255, 255, ${finalOpacity * 0.4})`);
-        gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
-
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size * 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Draw core dot
-        ctx.fillStyle = `rgba(255, 255, 255, ${finalOpacity})`;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      animationId = requestAnimationFrame(animate);
+    const settings = {
+      spacing: 35, // Increased spacing = fewer particles
+      amplitude: 28, // Reduced amplitude to keep waves lower
+      scaleX: 120,
+      scaleZ: 140,
+      focalLength: 450, // Camera focal length for 3D-to-2D projection
+      depth: 720,
     };
 
-    animate();
+    let centerX = 0;
+    let centerY = 0;
+    const points = [];
+
+    const buildGrid = () => {
+      points.length = 0;
+      const cols = Math.ceil(width / settings.spacing) + 4; // Reduced from +6
+      const rows = Math.ceil(settings.depth / settings.spacing);
+      const xStart = -((cols - 1) * settings.spacing) / 2;
+
+      for (let zIndex = 0; zIndex < rows; zIndex += 1) {
+        const z = zIndex * settings.spacing;
+        for (let xIndex = 0; xIndex < cols; xIndex += 1) {
+          points.push({
+            x: xStart + xIndex * settings.spacing,
+            z,
+            phase: Math.random() * Math.PI * 2,
+          });
+        }
+      }
+    };
+
+    const resize = () => {
+      dpr = window.devicePixelRatio || 1;
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      centerX = width / 2;
+      centerY = height * 0.85; // Position horizon lower to keep waves in bottom half
+      settings.depth = height * 0.85 + 180;
+      buildGrid();
+    };
+
+    // 3D-to-2D Camera Projection with proper perspective
+    const projectPoint = (x, y, z) => {
+      // Ensure z is always positive and add minimum distance to prevent division by zero
+      const zDistance = Math.max(z + 50, 1);
+      
+      // True 3D-to-2D projection: x' = (x / z) * focalLength + centerX
+      const projectedX = (x / zDistance) * settings.focalLength + centerX;
+      const projectedY = (y / zDistance) * settings.focalLength + centerY;
+      
+      return {
+        x: projectedX,
+        y: projectedY,
+        z: zDistance,
+      };
+    };
+
+    const render = () => {
+      ctx.clearRect(0, 0, width, height);
+      time += 0.006; // Reduced from 0.012 for slower motion
+
+      const freqX = 1 / settings.scaleX;
+      const freqZ = 1 / settings.scaleZ;
+      const freqMix = 1 / 200;
+      const ampPrimary = settings.amplitude;
+      const ampSecondary = settings.amplitude * 0.6; // Reduced secondary wave
+      const ampTertiary = settings.amplitude * 0.35; // Reduced tertiary wave
+
+      points.forEach((point) => {
+        // Calculate wave height with multiple frequencies
+        const wavePrimary = Math.sin(point.x * freqX + time) * ampPrimary;
+        const waveSecondary = Math.sin(point.z * freqZ + time * 0.9) * ampSecondary;
+        const waveTertiary =
+          Math.sin((point.x + point.z) * freqMix + time * 1.1 + point.phase) *
+          ampTertiary;
+        
+        // Z-Buffer Logic: Increase vertical dispersion for foreground particles
+        const depthFactor = 1 - (point.z / settings.depth);
+        const foregroundBoost = Math.pow(depthFactor, 2) * 1.5; // Reduced from 2.5
+        
+        const y = (wavePrimary + waveSecondary + waveTertiary) * (1 + foregroundBoost);
+
+        // Apply 3D-to-2D projection
+        const projection = projectPoint(point.x, y, point.z);
+        
+        // Skip particles that would appear above the center line
+        if (projection.y < height * 0.5) {
+          return;
+        }
+        
+        // Dynamic Scaling & Opacity based on Z-depth
+        const normalizedZ = point.z / settings.depth;
+        
+        // Foreground particles (low z): 6-8px, opacity 0.85
+        // Background particles (high z): 0.5px, opacity 0.1
+        const size = normalizedZ < 0.2 
+          ? 6 + Math.random() * 2  // Foreground: 6-8px (reduced from 8-10px)
+          : normalizedZ < 0.5
+          ? 3 + (1 - (normalizedZ - 0.2) / 0.3) * 3  // Mid-range: 3-6px
+          : 0.5 + (1 - (normalizedZ - 0.5) / 0.5) * 2.5;  // Background: 0.5-3px
+        
+        const opacity = normalizedZ < 0.2
+          ? 0.8 + Math.random() * 0.05  // Foreground: 0.8-0.85
+          : normalizedZ < 0.5
+          ? 0.45 + (1 - (normalizedZ - 0.2) / 0.3) * 0.35  // Mid-range: 0.45-0.8
+          : 0.1 + (1 - (normalizedZ - 0.5) / 0.5) * 0.35;  // Background: 0.1-0.45
+
+        // Cull particles outside viewport
+        if (
+          projection.x < -20 ||
+          projection.x > width + 20 ||
+          projection.y < -20 ||
+          projection.y > height + 20
+        ) {
+          return;
+        }
+
+        // Render particle with subtle glow effect for foreground
+        if (normalizedZ < 0.3) {
+          // Add subtle glow for foreground particles
+          ctx.shadowBlur = 6; // Reduced from 8
+          ctx.shadowColor = `rgba(235, 242, 255, ${opacity * 0.5})`;
+        } else {
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.fillStyle = `rgba(235, 242, 255, ${opacity})`;
+        ctx.fillRect(projection.x - size / 2, projection.y - size / 2, size, size);
+      });
+
+      animationId = requestAnimationFrame(render);
+    };
+
+    resize();
+    window.addEventListener("resize", resize);
+    render();
 
     return () => {
       cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", resizeCanvas);
+      window.removeEventListener("resize", resize);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
+      className={className}
       style={{
         position: "absolute",
-        top: 0,
-        left: 0,
+        inset: 0,
         width: "100%",
         height: "100%",
-        zIndex: 1,
+        pointerEvents: "none",
       }}
     />
   );
