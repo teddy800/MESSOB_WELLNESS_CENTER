@@ -10,8 +10,7 @@ function LiveQueuePanel() {
 
   useEffect(() => {
     fetchQueue();
-    const interval = setInterval(fetchQueue, 5000); // Refresh every 5 seconds
-    return () => clearInterval(interval);
+    // Removed auto-refresh - queue only refreshes when user clicks refresh button
   }, []);
 
   const fetchQueue = async () => {
@@ -40,7 +39,8 @@ function LiveQueuePanel() {
   const filteredQueue = queue.filter(item => {
     const matchesSearch = 
       item.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.appointmentId?.includes(searchTerm);
+      item.appointmentId?.includes(searchTerm) ||
+      item.customerId?.includes(searchTerm);
     
     if (filter === 'all') return matchesSearch;
     return matchesSearch && item.status === filter;
@@ -57,6 +57,16 @@ function LiveQueuePanel() {
 
   const getAppointmentType = (type) => {
     return type === 'ONLINE' ? '📅 Online' : '🚶 Walk-in';
+  };
+
+  const handleSendReminder = async (appointmentId, customerName) => {
+    try {
+      await api.post(`/api/v1/appointments/${appointmentId}/send-reminder`);
+      alert(`✅ SMS reminder sent to ${customerName}`);
+    } catch (err) {
+      alert("❌ Failed to send SMS reminder");
+      console.error(err);
+    }
   };
 
   return (
@@ -113,6 +123,9 @@ function LiveQueuePanel() {
               <div className="queue-item-header">
                 <span className="queue-number">#{idx + 1}</span>
                 <span className="customer-name">{item.customerName}</span>
+                <span className="customer-id" style={{ fontSize: '0.85rem', color: '#666' }}>
+                  ID: {item.customerId?.substring(0, 8)}...
+                </span>
                 <span className="appointment-type">{getAppointmentType(item.type)}</span>
                 <span className={`status-badge ${getStatusColor(item.status)}`}>
                   {item.status}
@@ -120,13 +133,20 @@ function LiveQueuePanel() {
               </div>
 
               <div className="queue-item-details">
-                <p><strong>ID:</strong> {item.appointmentId}</p>
+                <p><strong>Appointment ID:</strong> {item.appointmentId?.substring(0, 12)}...</p>
                 <p><strong>Check-in:</strong> {new Date(item.checkInTime).toLocaleTimeString()}</p>
                 {item.reason && <p><strong>Reason:</strong> {item.reason}</p>}
               </div>
 
               <div className="queue-item-actions">
-                <button className="btn btn-small btn-primary">View Details</button>
+                <button 
+                  className="btn btn-small btn-primary"
+                  onClick={() => handleSendReminder(item.appointmentId, item.customerName)}
+                  title="Send SMS reminder to customer"
+                >
+                  📱 Send Reminder
+                </button>
+                <button className="btn btn-small btn-secondary">View Details</button>
               </div>
             </div>
           ))}

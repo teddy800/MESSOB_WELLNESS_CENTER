@@ -44,6 +44,8 @@ function AppointmentReminders() {
     try {
       await api.post(`/api/v1/appointments/${appointmentId}/send-reminder`);
       alert('SMS reminder sent successfully!');
+      // Refresh reminders to show updated status
+      fetchReminders();
     } catch (err) {
       alert('Failed to send SMS reminder');
     }
@@ -99,7 +101,15 @@ function AppointmentReminders() {
                 📱 Send SMS Reminder
               </button>
               <span className="sms-status">
-                {reminder.smsStatus === 'sent' ? '✅ SMS Sent' : '⏳ Not sent'}
+                {reminder.reminderSentAt ? (
+                  <>
+                    ✅ Sent {reminder.reminderCount || 1}x
+                    <br />
+                    <small>Last: {new Date(reminder.reminderSentAt).toLocaleString()}</small>
+                  </>
+                ) : (
+                  '⏳ Not sent yet'
+                )}
               </span>
             </div>
           </div>

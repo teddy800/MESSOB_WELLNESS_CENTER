@@ -29,6 +29,22 @@ export const regionalService = {
     return response.data;
   },
 
+  // ─── Center Management ──────────────────────────────────────────────────────
+  async createCenter(centerData) {
+    const response = await api.post('/api/v1/centers', centerData);
+    return response.data;
+  },
+
+  async updateCenter(centerId, centerData) {
+    const response = await api.put(`/api/v1/centers/${centerId}`, centerData);
+    return response.data;
+  },
+
+  async deleteCenter(centerId) {
+    const response = await api.delete(`/api/v1/centers/${centerId}`);
+    return response.data;
+  },
+
   // ─── Combined Dashboard Data ────────────────────────────────────────────────
   async getDashboardData(region) {
     const [analytics, centers, allRegions] = await Promise.all([
