@@ -138,6 +138,11 @@
   border-left: 4px solid #3b82f6;
 }
 
+.queue-item.status-in-progress {
+  border-left: 4px solid #8b5cf6;
+  background: #faf5ff;
+}
+
 .queue-item.status-in-service {
   border-left: 4px solid #f59e0b;
   background: #fffbeb;
@@ -191,6 +196,11 @@
 .status-badge.status-waiting {
   background: #dbeafe;
   color: #0c4a6e;
+}
+
+.status-badge.status-in-progress {
+  background: #ede9fe;
+  color: #5b21b6;
 }
 
 .status-badge.status-in-service {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 
-function LiveQueuePanel() {
+function LiveQueuePanel({ refreshTrigger }) {
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -10,8 +10,15 @@ function LiveQueuePanel() {
 
   useEffect(() => {
     fetchQueue();
-    // Removed auto-refresh - queue only refreshes when user clicks refresh button
   }, []);
+
+  // Refresh queue when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger) {
+      console.log('🔄 Queue refresh triggered');
+      fetchQueue();
+    }
+  }, [refreshTrigger]);
 
   const fetchQueue = async () => {
     try {
@@ -42,13 +49,17 @@ function LiveQueuePanel() {
       item.appointmentId?.includes(searchTerm) ||
       item.customerId?.includes(searchTerm);
     
-    if (filter === 'all') return matchesSearch;
+    if (filter === 'all') {
+      // Show all statuses except COMPLETED by default
+      return matchesSearch && item.status !== 'COMPLETED';
+    }
     return matchesSearch && item.status === filter;
   });
 
   const getStatusColor = (status) => {
     const colors = {
       WAITING: 'status-waiting',
+      IN_PROGRESS: 'status-in-progress',
       IN_SERVICE: 'status-in-service',
       COMPLETED: 'status-completed',
     };
@@ -89,25 +100,31 @@ function LiveQueuePanel() {
             className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            All ({queue.length})
+            All ({queue.filter(q => q.status !== 'COMPLETED').length})
           </button>
           <button 
             className={`filter-btn ${filter === 'WAITING' ? 'active' : ''}`}
             onClick={() => setFilter('WAITING')}
           >
-            Waiting
+            Waiting ({queue.filter(q => q.status === 'WAITING').length})
+          </button>
+          <button 
+            className={`filter-btn ${filter === 'IN_PROGRESS' ? 'active' : ''}`}
+            onClick={() => setFilter('IN_PROGRESS')}
+          >
+            In Progress ({queue.filter(q => q.status === 'IN_PROGRESS').length})
           </button>
           <button 
             className={`filter-btn ${filter === 'IN_SERVICE' ? 'active' : ''}`}
             onClick={() => setFilter('IN_SERVICE')}
           >
-            In Service
+            In Service ({queue.filter(q => q.status === 'IN_SERVICE').length})
           </button>
           <button 
             className={`filter-btn ${filter === 'COMPLETED' ? 'active' : ''}`}
             onClick={() => setFilter('COMPLETED')}
           >
-            Completed
+            Completed ({queue.filter(q => q.status === 'COMPLETED').length})
           </button>
         </div>
       </div>

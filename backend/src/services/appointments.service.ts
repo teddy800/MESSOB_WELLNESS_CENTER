@@ -82,7 +82,7 @@ export async function createAppointment(input: AppointmentInput): Promise<Appoin
       userId: input.patientId,
       scheduledAt: nextSlotTime,
       reason: input.reason,
-      status: AppointmentStatus.PENDING,
+      status: AppointmentStatus.WAITING,
     },
   });
 
@@ -167,11 +167,20 @@ export async function updateAppointmentStatus(
 
   // Set timestamp based on status
   switch (status) {
+    case AppointmentStatus.WAITING:
+      // Initial waiting state - no specific timestamp
+      break;
     case AppointmentStatus.CONFIRMED:
       updateData.confirmedAt = new Date();
       break;
     case AppointmentStatus.IN_PROGRESS:
       updateData.startedAt = new Date();
+      break;
+    case AppointmentStatus.IN_SERVICE:
+      // Patient is being served - vitals being recorded
+      if (!updateData.startedAt) {
+        updateData.startedAt = new Date();
+      }
       break;
     case AppointmentStatus.COMPLETED:
       updateData.completedAt = new Date();
@@ -228,10 +237,13 @@ export async function getQueueAppointments(dateString?: string) {
       },
       status: {
         in: [
-          AppointmentStatus.CONFIRMED,
-          AppointmentStatus.PENDING,
+          AppointmentStatus.WAITING,
           AppointmentStatus.IN_PROGRESS,
+          AppointmentStatus.IN_SERVICE,
           AppointmentStatus.COMPLETED,
+          // Legacy support
+          AppointmentStatus.PENDING,
+          AppointmentStatus.CONFIRMED,
         ],
       },
     },
@@ -256,8 +268,7 @@ export async function getQueueAppointments(dateString?: string) {
     checkInTime: apt.scheduledAt.toISOString(),
     scheduledAt: apt.scheduledAt.toISOString(),
     reason: apt.reason,
-    status: apt.status === AppointmentStatus.IN_PROGRESS ? 'IN_SERVICE' : 
-            apt.status === AppointmentStatus.COMPLETED ? 'COMPLETED' : 'WAITING',
+    status: apt.status === AppointmentStatus.PENDING ? 'WAITING' : apt.status, // Map legacy PENDING to WAITING
     type: 'ONLINE', // Default to ONLINE, can be enhanced later
     notes: apt.notes || undefined,
   }));

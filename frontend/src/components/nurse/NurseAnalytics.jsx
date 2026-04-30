@@ -6,7 +6,7 @@ import '../../styles/nurse-analytics.css';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
-function NurseAnalytics() {
+function NurseAnalytics({ refreshTrigger = 0 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -47,6 +47,19 @@ function NurseAnalytics() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, activityPeriod]);
+
+  // Listen for refreshTrigger changes and refresh analytics
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      console.log('🔄 Analytics refresh triggered');
+      fetchAnalytics().catch(err => {
+        console.error('Error in fetchAnalytics:', err);
+        setError('Failed to load analytics: ' + err.message);
+        setLoading(false);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   const fetchAnalytics = async () => {
     try {
@@ -103,9 +116,7 @@ function NurseAnalytics() {
       // Map queue status to appointment status for filtering
       const mappedAppointments = appointmentsData.map(apt => ({
         ...apt,
-        appointmentStatus: apt.status === 'IN_SERVICE' ? 'IN_PROGRESS' : 
-                          apt.status === 'WAITING' ? 'PENDING' : 
-                          apt.status === 'COMPLETED' ? 'COMPLETED' : apt.status,
+        appointmentStatus: apt.status, // Use status directly - no mapping needed
         customerId: apt.customerId,
         customerName: apt.customerName,
         appointmentId: apt.appointmentId,
@@ -120,8 +131,9 @@ function NurseAnalytics() {
       // Calculate metrics
       const total = mappedAppointments.length;
       const completed = mappedAppointments.filter(a => a.appointmentStatus === 'COMPLETED').length;
-      const pending = mappedAppointments.filter(a => a.appointmentStatus === 'PENDING').length;
+      const waiting = mappedAppointments.filter(a => a.appointmentStatus === 'WAITING').length;
       const inProgress = mappedAppointments.filter(a => a.appointmentStatus === 'IN_PROGRESS').length;
+      const inService = mappedAppointments.filter(a => a.appointmentStatus === 'IN_SERVICE').length;
       const completedAppointments = mappedAppointments.filter(a => a.appointmentStatus === 'COMPLETED');
       
       // Count online appointments (all appointments are online bookings)
@@ -259,8 +271,9 @@ function NurseAnalytics() {
       setAnalytics({
         totalAppointments: onlineCount,
         completedAppointments: completed,
-        pendingAppointments: pending,
+        waitingAppointments: waiting,
         inProgressAppointments: inProgress,
+        inServiceAppointments: inService,
         noShowAppointments: noShow,
         totalPatientsToday: completed + walkin, // Walk-ins + Completed appointments
         capacityUtilization: utilizationPct,
@@ -286,26 +299,25 @@ function NurseAnalytics() {
     // Map queue status to appointment status
     const mappedAppointments = appointmentsData.map(apt => ({
       ...apt,
-      appointmentStatus: apt.status === 'IN_SERVICE' ? 'IN_PROGRESS' : 
-                        apt.status === 'WAITING' ? 'PENDING' : 
-                        apt.status === 'COMPLETED' ? 'COMPLETED' : apt.status
+      appointmentStatus: apt.status // Use status directly - no mapping needed
     }));
 
     // Status Distribution Pie Chart
     const statusCounts = {
-      PENDING: mappedAppointments.filter(a => a.appointmentStatus === 'PENDING').length,
+      WAITING: mappedAppointments.filter(a => a.appointmentStatus === 'WAITING').length,
       IN_PROGRESS: mappedAppointments.filter(a => a.appointmentStatus === 'IN_PROGRESS').length,
+      IN_SERVICE: mappedAppointments.filter(a => a.appointmentStatus === 'IN_SERVICE').length,
       COMPLETED: mappedAppointments.filter(a => a.appointmentStatus === 'COMPLETED').length,
       NO_SHOW: noShowCount,
     };
 
     const statusDistribution = {
-      labels: ['Pending', 'In Progress', 'Completed', 'No Show'],
+      labels: ['Waiting', 'In Progress', 'In Service', 'Completed', 'No Show'],
       datasets: [
         {
-          data: [statusCounts.PENDING, statusCounts.IN_PROGRESS, statusCounts.COMPLETED, statusCounts.NO_SHOW],
-          backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444'],
-          borderColor: ['#1e40af', '#d97706', '#059669', '#dc2626'],
+          data: [statusCounts.WAITING, statusCounts.IN_PROGRESS, statusCounts.IN_SERVICE, statusCounts.COMPLETED, statusCounts.NO_SHOW],
+          backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'],
+          borderColor: ['#1e40af', '#d97706', '#6d28d9', '#059669', '#dc2626'],
           borderWidth: 2,
         },
       ],
@@ -501,8 +513,18 @@ function NurseAnalytics() {
           <h3>Appointment Breakdown</h3>
           
           <div className="breakdown-item">
-            <span>⏳ Pending</span>
-            <span className="breakdown-value">{analytics.pendingAppointments}</span>
+            <span>⏳ Waiting</span>
+            <span className="breakdown-value">{analytics.waitingAppointments}</span>
+          </div>
+          
+          <div className="breakdown-item">
+            <span>🔄 In Progress</span>
+            <span className="breakdown-value">{analytics.inProgressAppointments}</span>
+          </div>
+          
+          <div className="breakdown-item">
+            <span>💉 In Service</span>
+            <span className="breakdown-value">{analytics.inServiceAppointments}</span>
           </div>
 
           <div className="breakdown-item">
