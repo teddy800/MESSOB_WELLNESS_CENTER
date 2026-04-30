@@ -468,8 +468,8 @@ export async function createStaffUser(req: AuthRequest, res: Response) {
 
     // Regional and Federal offices can create up to their level
     if (req.user?.role === UserRole.REGIONAL_OFFICE) {
-      const regionalAllowed = [UserRole.NURSE_OFFICER, UserRole.MANAGER];
-      if (!regionalAllowed.includes(role as UserRole)) {
+      const regionalAllowed: UserRole[] = [UserRole.NURSE_OFFICER, UserRole.MANAGER];
+      if (!regionalAllowed.includes(role)) {
         res.status(403).json({ 
           success: false, 
           message: "Regional Officers can only create Nurse Officer and Manager accounts" 
@@ -479,8 +479,8 @@ export async function createStaffUser(req: AuthRequest, res: Response) {
     }
 
     if (req.user?.role === UserRole.FEDERAL_OFFICE) {
-      const federalAllowed = [UserRole.NURSE_OFFICER, UserRole.MANAGER, UserRole.REGIONAL_OFFICE];
-      if (!federalAllowed.includes(role as UserRole)) {
+      const federalAllowed: UserRole[] = [UserRole.NURSE_OFFICER, UserRole.MANAGER, UserRole.REGIONAL_OFFICE];
+      if (!federalAllowed.includes(role)) {
         res.status(403).json({ 
           success: false, 
           message: "Federal Officers can only create Nurse Officer, Manager, and Regional Officer accounts" 
