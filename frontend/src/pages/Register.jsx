@@ -3,6 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import AnimatedWaveBackground from "../components/AnimatedWaveBackground";
 import "../styles/register.css";
 
+export const AMHARIC_HEADER_LINES = [
+  "በኢትዮጵያ ፌዴራላዊ ዲሞክራሲያዊ ሪፐብሊክ",
+  "የመጠለያ አገልግሎት",
+];
+
 function Register() {
   const navigate = useNavigate();
 
