@@ -482,6 +482,51 @@ export async function getRiskScoreHandler(req: AuthRequest, res: Response): Prom
   }
 }
 
+export async function getAllVitalsHandler(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const startDate = req.query.startDate as string | undefined;
+    const endDate = req.query.endDate as string | undefined;
+
+    const whereClause: any = {};
+
+    if (startDate && endDate) {
+      whereClause.recordedAt = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    }
+
+    const vitals = await prisma.vitalRecord.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        userId: true,
+        recordedAt: true,
+        systolic: true,
+        diastolic: true,
+        heartRate: true,
+        bmi: true,
+        temperature: true,
+        oxygenSaturation: true,
+      },
+      orderBy: {
+        recordedAt: 'desc',
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: vitals,
+    });
+  } catch (error) {
+    console.error("Get all vitals error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve vitals records",
+    });
+  }
+}
+
 function calculateHypertensionRisk(systolic?: number, diastolic?: number): number {
   if (!systolic) return 0;
   if (systolic < 120) return 0;

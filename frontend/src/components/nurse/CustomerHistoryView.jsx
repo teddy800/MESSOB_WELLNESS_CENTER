@@ -15,6 +15,21 @@ function CustomerHistoryView({ customerId }) {
   const [expandedPlanId, setExpandedPlanId] = useState(null);
 
   useEffect(() => {
+    // Check if customer was selected from queue "View History" button
+    const storedCustomer = sessionStorage.getItem('selectedCustomerForHistory');
+    if (storedCustomer) {
+      try {
+        const customer = JSON.parse(storedCustomer);
+        setSelectedCustomerId(customer.id);
+        setSelectedCustomerName(customer.fullName);
+        sessionStorage.removeItem('selectedCustomerForHistory');
+      } catch (err) {
+        console.error('Failed to parse stored customer:', err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (selectedCustomerId) {
       fetchCustomerHistory();
     }

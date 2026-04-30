@@ -31,8 +31,10 @@ function QueueDisplayScreen() {
         queueList = data.queue;
       }
 
-      // Find currently serving
-      const serving = queueList.find(item => item.status === 'IN_SERVICE');
+      // Find currently serving (IN_PROGRESS or IN_SERVICE)
+      const serving = queueList.find(item => 
+        item.status === 'IN_PROGRESS' || item.status === 'IN_SERVICE'
+      );
       setCurrentServing(serving);
 
       // Get waiting queue (next 5)

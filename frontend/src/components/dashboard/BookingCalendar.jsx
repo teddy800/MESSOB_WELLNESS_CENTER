@@ -88,8 +88,12 @@ function BookingCalendar() {
 
     try {
       setBookingLoading(true);
+      
+      // Send just the date string (YYYY-MM-DD) without time to avoid timezone issues
+      const dateString = selectedDate.toISOString().split('T')[0];
+      
       const response = await api.post("/api/v1/appointments", {
-        scheduledAt: selectedDate.toISOString(),
+        scheduledAt: dateString,
         reason: bookingReason,
       });
 

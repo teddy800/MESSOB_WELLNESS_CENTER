@@ -6,7 +6,7 @@ import '../../styles/nurse-analytics.css';
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
-function NurseAnalytics() {
+function NurseAnalytics({ refreshTrigger = 0 }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -40,8 +40,26 @@ function NurseAnalytics() {
   });
 
   useEffect(() => {
-    fetchAnalytics();
+    fetchAnalytics().catch(err => {
+      console.error('Error in fetchAnalytics:', err);
+      setError('Failed to load analytics: ' + err.message);
+      setLoading(false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, activityPeriod]);
+
+  // Listen for refreshTrigger changes and refresh analytics
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      console.log('🔄 Analytics refresh triggered');
+      fetchAnalytics().catch(err => {
+        console.error('Error in fetchAnalytics:', err);
+        setError('Failed to load analytics: ' + err.message);
+        setLoading(false);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   const fetchAnalytics = async () => {
     try {
@@ -98,9 +116,7 @@ function NurseAnalytics() {
       // Map queue status to appointment status for filtering
       const mappedAppointments = appointmentsData.map(apt => ({
         ...apt,
-        appointmentStatus: apt.status === 'IN_SERVICE' ? 'IN_PROGRESS' : 
-                          apt.status === 'WAITING' ? 'PENDING' : 
-                          apt.status === 'COMPLETED' ? 'COMPLETED' : apt.status,
+        appointmentStatus: apt.status, // Use status directly - no mapping needed
         customerId: apt.customerId,
         customerName: apt.customerName,
         appointmentId: apt.appointmentId,
@@ -115,13 +131,64 @@ function NurseAnalytics() {
       // Calculate metrics
       const total = mappedAppointments.length;
       const completed = mappedAppointments.filter(a => a.appointmentStatus === 'COMPLETED').length;
-      const pending = mappedAppointments.filter(a => a.appointmentStatus === 'PENDING').length;
+      const waiting = mappedAppointments.filter(a => a.appointmentStatus === 'WAITING').length;
       const inProgress = mappedAppointments.filter(a => a.appointmentStatus === 'IN_PROGRESS').length;
-      const online = mappedAppointments.filter(a => a.type === 'ONLINE').length;
-      const walkin = mappedAppointments.filter(a => a.type === 'WALKIN').length;
+      const inService = mappedAppointments.filter(a => a.appointmentStatus === 'IN_SERVICE').length;
+      const completedAppointments = mappedAppointments.filter(a => a.appointmentStatus === 'COMPLETED');
+      
+      // Count online appointments (all appointments are online bookings)
+      let onlineCount = total;
+      let walkin = 0;
 
       // NO_SHOW appointments are not in the queue, so count is 0 for now
       const noShow = 0;
+
+      // Count walk-ins separately from appointments
+      // Walk-ins are external patients who had vitals recorded today (no appointment needed)
+      try {
+        console.log('=== COUNTING WALK-INS ===');
+        // Get all vitals records for the selected date
+        const vitalsRes = await api.get('/api/v1/vitals/all', {
+          params: {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString()
+          }
+        });
+        
+        const vitalsData = vitalsRes.data?.data || vitalsRes.data || [];
+        if (Array.isArray(vitalsData)) {
+          const vitalsRecords = vitalsData;
+          console.log(`Found ${vitalsRecords.length} vitals records in period`);
+          
+          // Get unique user IDs from vitals
+          const vitalsUserIds = [...new Set(vitalsRecords.map(v => v.userId).filter(Boolean))];
+          console.log('Users with vitals:', vitalsUserIds);
+          
+          // Check which users are external
+          for (const userId of vitalsUserIds) {
+            try {
+              const userRes = await api.get(`/api/v1/users/${userId}`);
+              const userData = userRes.data?.data || userRes.data;
+              
+              if (userData?.isExternal === true) {
+                // Count vitals records for this external user
+                const userVitalsCount = vitalsRecords.filter(v => v.userId === userId).length;
+                if (userVitalsCount > 0) {
+                  walkin += 1; // Count each external user once
+                  console.log(`✓ Walk-in user ${userData.fullName}: ${userVitalsCount} vitals records`);
+                }
+              }
+            } catch (err) {
+              console.log(`Could not fetch user ${userId}:`, err.message);
+            }
+          }
+        }
+        console.log('Total walk-ins:', walkin);
+        console.log('=== WALK-IN COUNT COMPLETE ===');
+      } catch (err) {
+        console.error('Failed to count walk-ins:', err);
+        walkin = 0; // Default to 0 if walk-in counting fails
+      }
 
       // Calculate average wait time from actual data
       let totalWaitTime = 0;
@@ -137,84 +204,82 @@ function NurseAnalytics() {
       const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
       const utilizationPct = capacityData.utilizationPct || 0;
 
-      // Calculate vitals recorded from appointments with vitals
+      // Calculate vitals recorded for ALL users (appointments + walk-ins) in the period
       let vitalsRecorded = 0;
       try {
-        const appointmentUserIds = [...new Set(mappedAppointments.map(apt => apt.customerId))];
-        console.log('Fetching vitals for users:', appointmentUserIds);
-        
-        for (const userId of appointmentUserIds) {
-          try {
-            const vitalsRes = await api.get(`/api/v1/vitals/history/${userId}`);
-            console.log(`Vitals response for ${userId}:`, vitalsRes.data);
-            
-            // Handle both formats: data.records and data array
-            let vitalsArray = [];
-            if (vitalsRes.data.data?.records) {
-              vitalsArray = vitalsRes.data.data.records;
-            } else if (Array.isArray(vitalsRes.data.data)) {
-              vitalsArray = vitalsRes.data.data;
-            }
-            
-            if (Array.isArray(vitalsArray)) {
-              const periodVitals = vitalsArray.filter(v => {
-                const vDate = new Date(v.recordedAt || v.createdAt);
-                return vDate >= startDate && vDate <= endDate;
-              });
-              console.log(`Found ${periodVitals.length} vitals for user ${userId} in period`);
-              vitalsRecorded += periodVitals.length;
-            }
-          } catch (err) {
-            console.log(`No vitals found for user ${userId}:`, err.message);
+        const vitalsRes = await api.get('/api/v1/vitals/all', {
+          params: {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString()
           }
+        });
+        
+        const vitalsData = vitalsRes.data?.data || vitalsRes.data || [];
+        if (Array.isArray(vitalsData)) {
+          vitalsRecorded = vitalsData.length;
+          console.log(`Total vitals recorded in period: ${vitalsRecorded}`);
         }
       } catch (err) {
         console.error('Failed to fetch vitals:', err);
+        vitalsRecorded = 0; // Default to 0 if vitals fetching fails
       }
 
-      // Calculate wellness plans created from appointments
+      // Calculate wellness plans created for ALL users (appointments + walk-ins) in the period
       let wellnessPlansCreated = 0;
       try {
-        const appointmentUserIds = [...new Set(mappedAppointments.map(apt => apt.customerId))];
-        console.log('Fetching wellness plans for users:', appointmentUserIds);
+        // Get all users who had vitals in the period (both appointments and walk-ins)
+        const vitalsRes = await api.get('/api/v1/vitals/all', {
+          params: {
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString()
+          }
+        });
         
-        for (const userId of appointmentUserIds) {
-          try {
-            const plansRes = await api.get(`/api/v1/plans/${userId}`);
-            console.log(`Wellness plans response for ${userId}:`, plansRes.data);
-            
-            let plansArray = [];
-            if (plansRes.data.data && Array.isArray(plansRes.data.data)) {
-              plansArray = plansRes.data.data;
+        const vitalsData = vitalsRes.data?.data || vitalsRes.data || [];
+        if (Array.isArray(vitalsData)) {
+          const allUserIds = [...new Set(vitalsData.map(v => v.userId).filter(Boolean))];
+          console.log('Fetching wellness plans for all users with vitals:', allUserIds);
+          
+          for (const userId of allUserIds) {
+            try {
+              const plansRes = await api.get(`/api/v1/plans/${userId}`);
+              console.log(`Wellness plans response for ${userId}:`, plansRes.data);
+              
+              let plansArray = [];
+              if (plansRes.data?.data && Array.isArray(plansRes.data.data)) {
+                plansArray = plansRes.data.data;
+              }
+              
+              if (Array.isArray(plansArray)) {
+                const periodPlans = plansArray.filter(p => {
+                  const pDate = new Date(p.createdAt);
+                  return pDate >= startDate && pDate <= endDate;
+                });
+                console.log(`Found ${periodPlans.length} wellness plans for user ${userId} in period`);
+                wellnessPlansCreated += periodPlans.length;
+              }
+            } catch (err) {
+              console.log(`No wellness plans found for user ${userId}:`, err.message);
             }
-            
-            if (Array.isArray(plansArray)) {
-              const periodPlans = plansArray.filter(p => {
-                const pDate = new Date(p.createdAt);
-                return pDate >= startDate && pDate <= endDate;
-              });
-              console.log(`Found ${periodPlans.length} wellness plans for user ${userId} in period`);
-              wellnessPlansCreated += periodPlans.length;
-            }
-          } catch (err) {
-            console.log(`No wellness plans found for user ${userId}:`, err.message);
           }
         }
       } catch (err) {
         console.error('Failed to fetch wellness plans:', err);
+        wellnessPlansCreated = 0; // Default to 0 if wellness plans fetching fails
       }
 
       setAnalytics({
-        totalAppointments: total,
+        totalAppointments: onlineCount,
         completedAppointments: completed,
-        pendingAppointments: pending,
+        waitingAppointments: waiting,
         inProgressAppointments: inProgress,
+        inServiceAppointments: inService,
         noShowAppointments: noShow,
-        totalPatientsToday: completed,
+        totalPatientsToday: completed + walkin, // Walk-ins + Completed appointments
         capacityUtilization: utilizationPct,
         averageWaitTime: averageWaitTime,
         completionRate: completionRate,
-        onlineAppointments: online,
+        onlineAppointments: onlineCount,
         walkinAppointments: walkin,
         vitalsRecorded: vitalsRecorded,
         wellnessPlansCreated: wellnessPlansCreated,
@@ -234,26 +299,25 @@ function NurseAnalytics() {
     // Map queue status to appointment status
     const mappedAppointments = appointmentsData.map(apt => ({
       ...apt,
-      appointmentStatus: apt.status === 'IN_SERVICE' ? 'IN_PROGRESS' : 
-                        apt.status === 'WAITING' ? 'PENDING' : 
-                        apt.status === 'COMPLETED' ? 'COMPLETED' : apt.status
+      appointmentStatus: apt.status // Use status directly - no mapping needed
     }));
 
     // Status Distribution Pie Chart
     const statusCounts = {
-      PENDING: mappedAppointments.filter(a => a.appointmentStatus === 'PENDING').length,
+      WAITING: mappedAppointments.filter(a => a.appointmentStatus === 'WAITING').length,
       IN_PROGRESS: mappedAppointments.filter(a => a.appointmentStatus === 'IN_PROGRESS').length,
+      IN_SERVICE: mappedAppointments.filter(a => a.appointmentStatus === 'IN_SERVICE').length,
       COMPLETED: mappedAppointments.filter(a => a.appointmentStatus === 'COMPLETED').length,
       NO_SHOW: noShowCount,
     };
 
     const statusDistribution = {
-      labels: ['Pending', 'In Progress', 'Completed', 'No Show'],
+      labels: ['Waiting', 'In Progress', 'In Service', 'Completed', 'No Show'],
       datasets: [
         {
-          data: [statusCounts.PENDING, statusCounts.IN_PROGRESS, statusCounts.COMPLETED, statusCounts.NO_SHOW],
-          backgroundColor: ['#3b82f6', '#f59e0b', '#10b981', '#ef4444'],
-          borderColor: ['#1e40af', '#d97706', '#059669', '#dc2626'],
+          data: [statusCounts.WAITING, statusCounts.IN_PROGRESS, statusCounts.IN_SERVICE, statusCounts.COMPLETED, statusCounts.NO_SHOW],
+          backgroundColor: ['#3b82f6', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444'],
+          borderColor: ['#1e40af', '#d97706', '#6d28d9', '#059669', '#dc2626'],
           borderWidth: 2,
         },
       ],
@@ -393,22 +457,6 @@ function NurseAnalytics() {
         </div>
 
         <div className="analytics-card">
-          <div className="card-icon">✅</div>
-          <div className="card-content">
-            <p className="card-label">Completed</p>
-            <p className="card-value">{analytics.completedAppointments}</p>
-          </div>
-        </div>
-
-        <div className="analytics-card">
-          <div className="card-icon">⏳</div>
-          <div className="card-content">
-            <p className="card-label">Pending</p>
-            <p className="card-value">{analytics.pendingAppointments}</p>
-          </div>
-        </div>
-
-        <div className="analytics-card">
           <div className="card-icon">👥</div>
           <div className="card-content">
             <p className="card-label">Patients Today</p>
@@ -417,10 +465,10 @@ function NurseAnalytics() {
         </div>
 
         <div className="analytics-card">
-          <div className="card-icon">❌</div>
+          <div className="card-icon">🚶</div>
           <div className="card-content">
-            <p className="card-label">No-Show</p>
-            <p className="card-value">{analytics.noShowAppointments}</p>
+            <p className="card-label">Walk-in Completed</p>
+            <p className="card-value">{analytics.walkinAppointments}</p>
           </div>
         </div>
       </div>
@@ -458,6 +506,35 @@ function NurseAnalytics() {
 
           <div className="metric-item">
             <p><strong>Average Wait Time:</strong> {analytics.averageWaitTime} min</p>
+          </div>
+        </div>
+
+        <div className="card metrics-card">
+          <h3>Appointment Breakdown</h3>
+          
+          <div className="breakdown-item">
+            <span>⏳ Waiting</span>
+            <span className="breakdown-value">{analytics.waitingAppointments}</span>
+          </div>
+          
+          <div className="breakdown-item">
+            <span>🔄 In Progress</span>
+            <span className="breakdown-value">{analytics.inProgressAppointments}</span>
+          </div>
+          
+          <div className="breakdown-item">
+            <span>💉 In Service</span>
+            <span className="breakdown-value">{analytics.inServiceAppointments}</span>
+          </div>
+
+          <div className="breakdown-item">
+            <span>✅ Completed</span>
+            <span className="breakdown-value">{analytics.completedAppointments}</span>
+          </div>
+
+          <div className="breakdown-item">
+            <span>❌ No-Show</span>
+            <span className="breakdown-value" title="Patient didn't show up for scheduled appointment">{analytics.noShowAppointments}</span>
           </div>
         </div>
       </div>

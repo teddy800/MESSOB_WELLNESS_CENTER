@@ -9,24 +9,24 @@ import VitalsEntry from "../components/nurse/VitalsEntry";
 import CallNextControl from "../components/nurse/CallNextControl";
 import WellnessPlanCreation from "../components/nurse/WellnessPlanCreation";
 import CustomerHistoryView from "../components/nurse/CustomerHistoryView";
-import QueueDisplayScreen from "../components/nurse/QueueDisplayScreen";
 
 function NurseDashboard() {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "display"];
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history"];
     return tab && allowedTabs.includes(tab) ? tab : "analytics";
   });
   const [capacity, setCapacity] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [queueRefreshTrigger, setQueueRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "display"];
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history"];
     if (tab && allowedTabs.includes(tab)) {
       setActiveTab(tab);
     }
@@ -34,6 +34,11 @@ function NurseDashboard() {
 
   const handleCapacityUpdate = (newCapacity) => {
     setCapacity(newCapacity);
+  };
+
+  const handleStatusChanged = () => {
+    // Trigger queue refresh when status changes
+    setQueueRefreshTrigger(prev => prev + 1);
   };
 
   const handleWalkInSuccess = (data) => {
@@ -60,6 +65,7 @@ function NurseDashboard() {
   };
 
   const handleNavigateToWellness = (customerInfo) => {
+    console.log('🎯 handleNavigateToWellness called with:', customerInfo);
     setSelectedCustomer(customerInfo.customerId);
     setSelectedAppointmentId(customerInfo.appointmentId);
     setActiveTab('wellness');
@@ -79,24 +85,23 @@ function NurseDashboard() {
   };
 
   const handleBackToQueue = async () => {
-    try {
-      // Mark appointment as completed
-      if (selectedAppointmentId) {
-        await api.patch(`/api/v1/appointments/${selectedAppointmentId}`, {
-          status: 'COMPLETED',
-        });
-      }
-      // Reset selected customer and appointment
-      setSelectedCustomer(null);
-      setSelectedAppointmentId(null);
-      // Navigate to queue
-      setActiveTab('queue');
-    } catch (err) {
-      console.error('Failed to mark as completed:', err);
-      setSelectedCustomer(null);
-      setSelectedAppointmentId(null);
-      setActiveTab('queue');
-    }
+    // Reset selected customer and appointment
+    setSelectedCustomer(null);
+    setSelectedAppointmentId(null);
+    // Refresh the queue to show updated status
+    setRefreshKey((prev) => prev + 1);
+    // Navigate to queue
+    setActiveTab('queue');
+  };
+
+  const handleNavigateToHistory = (customerInfo) => {
+    // Store customer info in sessionStorage for CustomerHistoryView to read
+    sessionStorage.setItem('selectedCustomerForHistory', JSON.stringify({
+      id: customerInfo.customerId,
+      fullName: customerInfo.customerName,
+    }));
+    // Navigate to history tab
+    setActiveTab('history');
   };
 
   const handleWellnessSuccess = () => {
@@ -159,14 +164,6 @@ function NurseDashboard() {
             <span className="nav-icon">📚</span>
             <span className="nav-label">History</span>
           </button>
-          
-          <button
-            className={`sidebar-nav-item ${activeTab === 'display' ? 'active' : ''}`}
-            onClick={() => setActiveTab('display')}
-          >
-            <span className="nav-icon">📺</span>
-            <span className="nav-label">Display</span>
-          </button>
         </nav>
       </aside>
 
@@ -179,25 +176,24 @@ function NurseDashboard() {
             {activeTab === 'walkin' && '🚶 Register Walk-in'}
             {activeTab === 'wellness' && '🎯 Create Wellness Plan'}
             {activeTab === 'history' && '📚 Customer History'}
-            {activeTab === 'display' && '📺 Queue Display'}
           </h1>
         </div>
 
         <div className="nurse-content-body">
         {activeTab === "analytics" && (
           <div className="analytics-section">
-            <NurseAnalytics />
+            <NurseAnalytics refreshTrigger={queueRefreshTrigger} />
           </div>
         )}
 
         {activeTab === "queue" && (
           <div className="queue-section">
             <div className="queue-main">
-              <LiveQueuePanel key={refreshKey} />
+              <LiveQueuePanel key={refreshKey} refreshTrigger={queueRefreshTrigger} onNavigateToHistory={handleNavigateToHistory} />
             </div>
             <div className="queue-sidebar">
               <CapacityTracker onCapacityUpdate={handleCapacityUpdate} />
-              <CallNextControl onNavigateToVitals={handleNavigateToVitals} />
+              <CallNextControl onNavigateToVitals={handleNavigateToVitals} onStatusChanged={handleStatusChanged} />
             </div>
           </div>
         )}
@@ -206,6 +202,7 @@ function NurseDashboard() {
           <div className="vitals-section">
             <VitalsEntry
               customerId={selectedCustomer}
+              appointmentId={selectedAppointmentId}
               onSuccess={handleVitalsSuccess}
               onNavigateToWellness={handleNavigateToWellness}
             />
@@ -228,6 +225,7 @@ function NurseDashboard() {
               appointmentId={selectedAppointmentId}
               onSuccess={handleWellnessSuccess}
               onBackToQueue={handleBackToQueue}
+              onStatusChanged={handleStatusChanged}
             />
           </div>
         )}
@@ -235,12 +233,6 @@ function NurseDashboard() {
         {activeTab === "history" && (
           <div className="history-section">
             <CustomerHistoryView customerId={selectedCustomer} />
-          </div>
-        )}
-
-        {activeTab === "display" && (
-          <div className="display-section">
-            <QueueDisplayScreen />
           </div>
         )}
         </div>
