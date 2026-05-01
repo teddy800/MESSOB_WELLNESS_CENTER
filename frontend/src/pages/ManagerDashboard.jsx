@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { analyticsService } from '../services/analyticsService';
 import Button from '../components/forms/Button';
@@ -12,12 +12,24 @@ import {
 // MANAGER role only — REGIONAL_OFFICE uses /regional, SYSTEM_ADMIN uses /admin
 const MANAGER_ROLES = ['MANAGER'];
 
+// ─── Live Clock ───────────────────────────────────────────────────────────────
+const useLiveClock = () => {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return time;
+};
+
 // ─── Root Component ───────────────────────────────────────────────────────────
 const ManagerDashboard = () => {
   const { user } = useAuth();
+  const now = useLiveClock();
   const [activeTab, setActiveTab]       = useState('overview');
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
+  const [lastUpdated, setLastUpdated]   = useState(null);
   const [capacityInfo, setCapacityInfo] = useState(null);
   const [bookingStats, setBookingStats] = useState(null);
   const [queueData, setQueueData]       = useState(null);
@@ -31,6 +43,7 @@ const ManagerDashboard = () => {
     walkInEnabled: true,
     autoConfirmBookings: false,
   });
+  const autoRefreshRef = useRef(null);
 
   const hasAccess = MANAGER_ROLES.includes(user?.role);
 
@@ -58,6 +71,7 @@ const ManagerDashboard = () => {
       if (staffUsers.status === 'fulfilled') setUsers(staffUsers.value.data);
       if (logs.status === 'fulfilled')       setAuditLogs(logs.value.data);
       if (trends.status === 'fulfilled')     setTrendsData(trends.value.data);
+      setLastUpdated(new Date());
     } catch (err) {
       setError('Failed to load dashboard data. Please refresh.');
       console.error('Dashboard load error:', err);
@@ -66,8 +80,13 @@ const ManagerDashboard = () => {
     }
   }, []);
 
+  // Initial load + auto-refresh every 60s
   useEffect(() => {
-    if (hasAccess) loadDashboardData();
+    if (hasAccess) {
+      loadDashboardData();
+      autoRefreshRef.current = setInterval(loadDashboardData, 60000);
+    }
+    return () => clearInterval(autoRefreshRef.current);
   }, [hasAccess, loadDashboardData]);
 
   if (!hasAccess) {
@@ -85,28 +104,69 @@ const ManagerDashboard = () => {
     { id: 'overview',  label: '📊 Overview'  },
     { id: 'capacity',  label: '🎛️ Capacity'  },
     { id: 'analytics', label: '📈 Analytics' },
-    { id: 'users',     label: '👥 Users'     },
+    { id: 'users',     label: `👥 Staff (${users.length})`     },
     { id: 'audit',     label: '🔍 Audit'     },
     { id: 'settings',  label: '⚙️ Settings'  },
   ];
 
+  // Capacity urgency color
+  const usedPct = capacityInfo
+    ? Math.round((capacityInfo.slotsUsed / (capacityInfo.dailyLimit || 1)) * 100)
+    : 0;
+  const capacityColor = usedPct > 85 ? '#ef4444' : usedPct > 60 ? '#f59e0b' : '#22c55e';
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <div>
-          <h1>Manager Dashboard</h1>
-          <p className="dashboard-subtitle">
-            System Control Center — Welcome, {user?.fullName}
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <h1 style={{ margin: 0 }}>Manager Dashboard</h1>
+            <span style={{
+              background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
+              borderRadius: '20px', padding: '0.2rem 0.75rem',
+              fontSize: '0.75rem', fontWeight: 700, color: '#ffffff', letterSpacing: '0.05em',
+            }}>CENTER MANAGER</span>
+            {/* Capacity urgency pill */}
+            <span style={{
+              background: capacityColor + '30', border: `1px solid ${capacityColor}80`,
+              borderRadius: '20px', padding: '0.2rem 0.75rem',
+              fontSize: '0.75rem', fontWeight: 700, color: capacityColor,
+            }}>
+              {usedPct > 85 ? '🔴' : usedPct > 60 ? '🟡' : '🟢'} Capacity {usedPct}%
+            </span>
+          </div>
+          <p className="dashboard-subtitle" style={{ marginTop: '0.35rem' }}>
+            Welcome, <strong>{user?.fullName}</strong>
+            {user?.center?.name && ` · ${user.center.name}`}
           </p>
         </div>
-        <button
-          className="tab-btn"
-          onClick={loadDashboardData}
-          disabled={loading}
-          style={{ marginLeft: 'auto' }}
-        >
-          {loading ? '⏳ Loading…' : '🔄 Refresh'}
-        </button>
+        {/* Right side: clock + last updated + refresh */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+          <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>
+            {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>
+            {now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+          </div>
+          {lastUpdated && (
+            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)' }}>
+              ↻ Updated {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} · auto-refresh 60s
+            </div>
+          )}
+          <button
+            className="tab-btn"
+            onClick={loadDashboardData}
+            disabled={loading}
+            style={{
+              background: 'rgba(255,255,255,0.15)', color: '#ffffff',
+              border: '2px solid rgba(255,255,255,0.4)', borderRadius: '10px',
+              padding: '0.4rem 1rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+              marginTop: '0.25rem',
+            }}
+          >
+            {loading ? '⏳ Loading…' : '🔄 Refresh Now'}
+          </button>
+        </div>
       </div>
 
       {error && (

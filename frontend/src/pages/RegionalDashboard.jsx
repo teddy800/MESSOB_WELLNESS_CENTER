@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { regionalService } from '../services/regionalService';
 import { analyticsService } from '../services/analyticsService';
@@ -12,16 +12,30 @@ import {
 // ─── Role guard ───────────────────────────────────────────────────────────────
 const REGIONAL_ROLES = ['REGIONAL_OFFICE', 'FEDERAL_OFFICE', 'SYSTEM_ADMIN'];
 
+// ─── Live Clock ───────────────────────────────────────────────────────────────
+const useLiveClock = () => {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return time;
+};
+
 // ─── Root Component ───────────────────────────────────────────────────────────
 const RegionalDashboard = () => {
   const { user } = useAuth();
+  const now = useLiveClock();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCenter, setSelectedCenter] = useState('all');
   const [analytics, setAnalytics] = useState(null);
+  const [centerAnalytics, setCenterAnalytics] = useState(null); // per-center analytics
   const [centers, setCenters] = useState([]);
   const [trendsData, setTrendsData] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const autoRefreshRef = useRef(null);
 
   const hasAccess = REGIONAL_ROLES.includes(user?.role);
 
@@ -36,14 +50,13 @@ const RegionalDashboard = () => {
 
       if (dashboardData.status === 'fulfilled') {
         const { analytics, centers } = dashboardData.value;
-        // analytics may be null if the user's role can't access it — that's fine
         setAnalytics(analytics);
-        // centers is already the unwrapped array from getDashboardData
         setCenters(Array.isArray(centers) ? centers : []);
       }
       if (trends.status === 'fulfilled') {
         setTrendsData(trends.value.data);
       }
+      setLastUpdated(new Date());
     } catch (err) {
       setError('Failed to load dashboard data. Please refresh.');
       console.error('Center dashboard load error:', err);
@@ -52,8 +65,24 @@ const RegionalDashboard = () => {
     }
   }, []);
 
+  // Load per-center analytics when a specific center is selected
   useEffect(() => {
-    if (hasAccess) loadDashboardData();
+    if (selectedCenter !== 'all') {
+      regionalService.getCenterAnalytics(selectedCenter)
+        .then(res => setCenterAnalytics(res?.data ?? res ?? null))
+        .catch(() => setCenterAnalytics(null));
+    } else {
+      setCenterAnalytics(null);
+    }
+  }, [selectedCenter]);
+
+  // Initial load + auto-refresh every 60s
+  useEffect(() => {
+    if (hasAccess) {
+      loadDashboardData();
+      autoRefreshRef.current = setInterval(loadDashboardData, 60000);
+    }
+    return () => clearInterval(autoRefreshRef.current);
   }, [hasAccess, loadDashboardData]);
 
   if (!hasAccess) {
@@ -69,15 +98,20 @@ const RegionalDashboard = () => {
 
   const tabs = [
     { id: 'overview', label: '📊 Overview' },
-    { id: 'centers', label: '🏥 Centers' },
+    { id: 'centers', label: `🏥 Centers (${centers.length})` },
     { id: 'managers', label: '👔 Managers' },
     { id: 'performance', label: '📈 Performance' },
   ];
 
   // Filter centers based on selection
-  const filteredCenters = selectedCenter === 'all' 
-    ? centers 
+  const filteredCenters = selectedCenter === 'all'
+    ? centers
     : centers.filter(c => c.id === selectedCenter);
+
+  // Effective analytics: use per-center analytics if a center is selected
+  const effectiveAnalytics = selectedCenter !== 'all' && centerAnalytics
+    ? { summary: centerAnalytics }
+    : analytics;
 
   // Get center statistics
   const centerStats = {
@@ -87,147 +121,152 @@ const RegionalDashboard = () => {
     totalCapacity: centers.reduce((sum, c) => sum + (c.capacity || 0), 0),
   };
 
+  const roleLabel = user?.role === 'FEDERAL_OFFICE' ? 'Federal Office'
+    : user?.role === 'SYSTEM_ADMIN' ? 'System Admin'
+    : 'Regional Office';
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <div>
-          <h1>Center Management Dashboard</h1>
-          <p className="dashboard-subtitle">
-            {user?.role === 'FEDERAL_OFFICE' ? 'Federal Office' : 'Regional Office'} — Create & Manage Health Centers — Welcome, {user?.fullName}
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <h1 style={{ margin: 0 }}>Center Management Dashboard</h1>
+            <span style={{
+              background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
+              borderRadius: '20px', padding: '0.2rem 0.75rem',
+              fontSize: '0.75rem', fontWeight: 700, color: '#ffffff', letterSpacing: '0.05em',
+            }}>{roleLabel.toUpperCase()}</span>
+            <span style={{
+              background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.5)',
+              borderRadius: '20px', padding: '0.2rem 0.75rem',
+              fontSize: '0.75rem', fontWeight: 700, color: '#4ade80',
+            }}>
+              ● {centerStats.active}/{centerStats.total} Active
+            </span>
+          </div>
+          <p className="dashboard-subtitle" style={{ marginTop: '0.35rem' }}>
+            Welcome, <strong>{user?.fullName}</strong> · {centerStats.total} centers · {centerStats.totalStaff} staff
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <select
-            value={selectedCenter}
-            onChange={(e) => setSelectedCenter(e.target.value)}
-            style={{
-              minWidth: '220px',
-              padding: '0.6rem 1rem',
-              borderRadius: '10px',
-              border: '2px solid rgba(255,255,255,0.5)',
-              background: 'rgba(255,255,255,0.15)',
-              color: '#ffffff',
-              fontSize: '0.95rem',
-              fontWeight: 600,
-              cursor: 'pointer',
-              outline: 'none',
-              backdropFilter: 'blur(8px)',
-              WebkitAppearance: 'none',
-              appearance: 'none',
-              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
-              backgroundRepeat: 'no-repeat',
-              backgroundPosition: 'right 0.75rem center',
-              paddingRight: '2.25rem',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.25)';
-              e.target.style.borderColor = 'rgba(255,255,255,0.8)';
-              e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.15)';
-              e.target.style.borderColor = 'rgba(255,255,255,0.5)';
-              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-            }}
-            onFocus={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.25)';
-              e.target.style.borderColor = '#ffffff';
-              e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.3)';
-            }}
-            onBlur={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.15)';
-              e.target.style.borderColor = 'rgba(255,255,255,0.5)';
-              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-            }}
-          >
-            <option value="all" style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 600 }}>
-              🏥 All Centers ({centers.length})
-            </option>
-            {centers.map((c) => (
-              <option key={c.id} value={c.id} style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 500 }}>
-                🏥 {c.name} - {c.city}
+        {/* Right: clock + selector + refresh */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+          <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>
+            {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>
+            {now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+          </div>
+          {lastUpdated && (
+            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)' }}>
+              ↻ {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} · auto 60s
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
+            <select
+              value={selectedCenter}
+              onChange={(e) => setSelectedCenter(e.target.value)}
+              style={{
+                minWidth: '200px',
+                padding: '0.5rem 2rem 0.5rem 0.85rem',
+                borderRadius: '10px',
+                border: '2px solid rgba(255,255,255,0.5)',
+                background: 'rgba(255,255,255,0.15)',
+                color: '#ffffff',
+                fontSize: '0.88rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none',
+                backdropFilter: 'blur(8px)',
+                WebkitAppearance: 'none',
+                appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 0.65rem center',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              }}
+              onMouseEnter={(e) => { e.target.style.background = 'rgba(255,255,255,0.25)'; e.target.style.borderColor = 'rgba(255,255,255,0.8)'; }}
+              onMouseLeave={(e) => { e.target.style.background = 'rgba(255,255,255,0.15)'; e.target.style.borderColor = 'rgba(255,255,255,0.5)'; }}
+              onFocus={(e) => { e.target.style.borderColor = '#ffffff'; e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.3)'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.5)'; e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'; }}
+            >
+              <option value="all" style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 600 }}>
+                🏥 All Centers ({centers.length})
               </option>
-            ))}
-          </select>
-          <button
-            className="tab-btn"
-            onClick={loadDashboardData}
-            disabled={loading}
-            style={{
-              background: 'rgba(255,255,255,0.15)',
-              color: '#ffffff',
-              border: '2px solid rgba(255,255,255,0.5)',
-              borderRadius: '10px',
-              padding: '0.6rem 1.1rem',
-              fontWeight: 600,
-              cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s ease',
-              backdropFilter: 'blur(8px)',
-            }}
-            onMouseEnter={(e) => {
-              if (!loading) {
-                e.target.style.background = 'rgba(255,255,255,0.25)';
-                e.target.style.borderColor = 'rgba(255,255,255,0.8)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = 'rgba(255,255,255,0.15)';
-              e.target.style.borderColor = 'rgba(255,255,255,0.5)';
-            }}
-          >
-            {loading ? '⏳ Loading…' : '🔄 Refresh'}
-          </button>
+              {centers.map((c) => (
+                <option key={c.id} value={c.id} style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 500 }}>
+                  {c.status === 'ACTIVE' ? '✅' : '⚠️'} {c.name} — {c.city}
+                </option>
+              ))}
+            </select>
+            <button
+              className="tab-btn"
+              onClick={loadDashboardData}
+              disabled={loading}
+              style={{
+                background: 'rgba(255,255,255,0.15)', color: '#ffffff',
+                border: '2px solid rgba(255,255,255,0.4)', borderRadius: '10px',
+                padding: '0.5rem 0.9rem', fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {loading ? '⏳' : '🔄'}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Center Statistics Bar */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)', 
-        padding: '1rem 1.5rem', 
-        borderRadius: '12px', 
+      <div style={{
+        background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)',
+        padding: '1rem 1.5rem',
+        borderRadius: '12px',
         marginBottom: '1.5rem',
         display: 'flex',
-        gap: '2rem',
+        gap: '1.5rem',
         alignItems: 'center',
         color: 'white',
-        boxShadow: '0 4px 12px rgba(76, 111, 190, 0.3)'
+        boxShadow: '0 4px 12px rgba(76, 111, 190, 0.3)',
+        flexWrap: 'wrap',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.5rem' }}>🏥</span>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{centerStats.total}</div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Total Centers</div>
-          </div>
-        </div>
-        <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.5rem' }}>✅</span>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{centerStats.active}</div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Active Centers</div>
-          </div>
-        </div>
-        <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.5rem' }}>👥</span>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{centerStats.totalStaff}</div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Total Staff</div>
-          </div>
-        </div>
-        <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.5rem' }}>📊</span>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{centerStats.totalCapacity}</div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Total Capacity</div>
-          </div>
-        </div>
-        <div style={{ marginLeft: 'auto', fontSize: '0.85rem', opacity: 0.9 }}>
-          {selectedCenter !== 'all' && `📍 ${filteredCenters.find(c => c.id === selectedCenter)?.name}`}
-          {selectedCenter === 'all' && '🏥 All Centers'}
+        {[
+          { icon: '🏥', value: centerStats.total, label: 'Total Centers' },
+          { icon: '✅', value: centerStats.active, label: 'Active Centers' },
+          { icon: '👥', value: centerStats.totalStaff, label: 'Total Staff' },
+          { icon: '📊', value: centerStats.totalCapacity, label: 'Total Capacity' },
+        ].map((s, i) => (
+          <React.Fragment key={s.label}>
+            {i > 0 && <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.4rem' }}>{s.icon}</span>
+              <div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>{s.label}</div>
+              </div>
+            </div>
+          </React.Fragment>
+        ))}
+        {selectedCenter !== 'all' && (
+          <>
+            <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.2rem' }}>📍</span>
+              <div>
+                <div style={{ fontSize: '1rem', fontWeight: 700 }}>{filteredCenters[0]?.name}</div>
+                <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>{filteredCenters[0]?.city}, {filteredCenters[0]?.region}</div>
+              </div>
+              <span style={{
+                padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
+                background: filteredCenters[0]?.status === 'ACTIVE' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)',
+                border: filteredCenters[0]?.status === 'ACTIVE' ? '1px solid #4ade80' : '1px solid #f87171',
+                color: filteredCenters[0]?.status === 'ACTIVE' ? '#4ade80' : '#f87171',
+              }}>{filteredCenters[0]?.status}</span>
+            </div>
+          </>
+        )}
+        <div style={{ marginLeft: selectedCenter === 'all' ? 'auto' : '0', fontSize: '0.8rem', opacity: 0.75 }}>
+          {selectedCenter === 'all' ? '🏥 All Centers' : '🔍 Filtered View'}
         </div>
       </div>
 
@@ -250,10 +289,10 @@ const RegionalDashboard = () => {
       </div>
 
       <div className="dashboard-content">
-        {activeTab === 'overview' && <OverviewTab loading={loading} analytics={analytics} centers={filteredCenters} selectedCenter={selectedCenter} centerStats={centerStats} />}
+        {activeTab === 'overview' && <OverviewTab loading={loading} analytics={effectiveAnalytics} centers={filteredCenters} selectedCenter={selectedCenter} centerStats={centerStats} />}
         {activeTab === 'centers' && <CentersTab loading={loading} centers={filteredCenters} selectedCenter={selectedCenter} onRefresh={loadDashboardData} />}
         {activeTab === 'managers' && <ManagersTab loading={loading} centers={centers} onRefresh={loadDashboardData} />}
-        {activeTab === 'performance' && <PerformanceTab loading={loading} analytics={analytics} trendsData={trendsData} centers={filteredCenters} />}
+        {activeTab === 'performance' && <PerformanceTab loading={loading} analytics={effectiveAnalytics} trendsData={trendsData} centers={filteredCenters} />}
       </div>
     </div>
   );
