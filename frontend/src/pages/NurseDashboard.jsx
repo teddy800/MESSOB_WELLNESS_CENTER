@@ -65,7 +65,6 @@ function NurseDashboard() {
   };
 
   const handleNavigateToWellness = (customerInfo) => {
-    console.log('🎯 handleNavigateToWellness called with:', customerInfo);
     setSelectedCustomer(customerInfo.customerId);
     setSelectedAppointmentId(customerInfo.appointmentId);
     setActiveTab('wellness');

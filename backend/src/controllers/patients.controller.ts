@@ -12,16 +12,11 @@ interface CreateExternalPatientBody {
 
 export async function createExternalPatientHandler(req: AuthRequest, res: Response): Promise<void> {
   try {
-    console.log('📝 Create external patient request received');
-    console.log('Request body:', req.body);
-    console.log('User:', req.user);
-
     const { fullName, email, phone, dateOfBirth, gender } = req.body as CreateExternalPatientBody;
     const nurseId = req.user?.userId;
 
     // Validate required fields
     if (!fullName || !phone || !dateOfBirth || !gender) {
-      console.log('❌ Missing required fields:', { fullName, phone, dateOfBirth, gender });
       res.status(400).json({
         status: "error",
         message: "fullName, phone, dateOfBirth, and gender are required",
@@ -30,7 +25,6 @@ export async function createExternalPatientHandler(req: AuthRequest, res: Respon
     }
 
     if (!nurseId) {
-      console.log('❌ No nurse ID in request');
       res.status(401).json({
         status: "error",
         message: "Authentication required",
@@ -41,7 +35,6 @@ export async function createExternalPatientHandler(req: AuthRequest, res: Respon
     // Parse and validate date of birth
     const parsedDate = new Date(dateOfBirth);
     if (isNaN(parsedDate.getTime())) {
-      console.log('❌ Invalid date format:', dateOfBirth);
       res.status(400).json({
         status: "error",
         message: "Invalid date of birth format",
@@ -49,7 +42,6 @@ export async function createExternalPatientHandler(req: AuthRequest, res: Respon
       return;
     }
 
-    console.log('✓ Validation passed, creating patient...');
     const patient = await createExternalPatient({
       fullName,
       email: email || null,
@@ -59,7 +51,6 @@ export async function createExternalPatientHandler(req: AuthRequest, res: Respon
       registeredByNurseId: nurseId,
     });
 
-    console.log('✓ Patient created successfully:', patient.id);
     res.status(201).json({
       status: "success",
       data: {

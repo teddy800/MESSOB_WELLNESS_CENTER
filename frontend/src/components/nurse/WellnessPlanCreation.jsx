@@ -171,11 +171,9 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
       
       // For walk-in users (no appointmentId), automatically mark as completed
       if (!appointmentId) {
-        console.log('🟢 Walk-in user - automatically marking as completed');
         try {
           // Trigger queue refresh to update analytics
           if (onStatusChanged) {
-            console.log('🔄 Triggering analytics refresh for walk-in completion');
             onStatusChanged();
           }
           
@@ -183,7 +181,6 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
           setTimeout(() => {
             setSuccess('');
             if (onBackToQueue) {
-              console.log('🔄 Navigating back to queue...');
               onBackToQueue();
             }
           }, 2000);
@@ -272,7 +269,6 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
       
       // Trigger queue refresh immediately
       if (onStatusChanged) {
-        console.log('🔄 Triggering queue refresh after completion');
         onStatusChanged();
       }
       

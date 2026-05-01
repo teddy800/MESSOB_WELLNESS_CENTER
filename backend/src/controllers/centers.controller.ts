@@ -13,10 +13,12 @@ export const createCenter = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    if (req.user.role !== UserRole.SYSTEM_ADMIN) {
+    // Allow REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN to create centers
+    const allowedRoles: UserRole[] = [UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_OFFICE, UserRole.SYSTEM_ADMIN];
+    if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
-        message: "Only SYSTEM_ADMIN can create centers",
+        message: "Only REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN can create centers",
       });
       return;
     }
@@ -146,10 +148,12 @@ export const updateCenter = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    if (req.user.role !== UserRole.SYSTEM_ADMIN) {
+    // Allow REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN to update centers
+    const allowedRoles: UserRole[] = [UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_OFFICE, UserRole.SYSTEM_ADMIN];
+    if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
-        message: "Only SYSTEM_ADMIN can update centers",
+        message: "Only REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN can update centers",
       });
       return;
     }
@@ -332,10 +336,12 @@ export const getAllAnalytics = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    if (req.user.role !== UserRole.SYSTEM_ADMIN) {
+    // Allow REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN to view all analytics
+    const allowedRoles: UserRole[] = [UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_OFFICE, UserRole.SYSTEM_ADMIN];
+    if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
-        message: "Only SYSTEM_ADMIN can view all analytics",
+        message: "Only REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN can view all analytics",
       });
       return;
     }

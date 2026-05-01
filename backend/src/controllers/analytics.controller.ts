@@ -378,6 +378,7 @@ export async function getStaffUsers(req: AuthRequest, res: Response) {
             UserRole.NURSE_OFFICER,
             UserRole.MANAGER,
             UserRole.REGIONAL_OFFICE,
+            UserRole.FEDERAL_OFFICE,
             UserRole.SYSTEM_ADMIN,
           ],
         },
@@ -447,12 +448,45 @@ export async function createStaffUser(req: AuthRequest, res: Response) {
       UserRole.NURSE_OFFICER,
       UserRole.MANAGER,
       UserRole.REGIONAL_OFFICE,
+      UserRole.FEDERAL_OFFICE,
       UserRole.SYSTEM_ADMIN,
     ];
 
     if (!allowedRoles.includes(role)) {
       res.status(400).json({ success: false, message: "Invalid role" });
       return;
+    }
+
+    // CRITICAL: Center Managers can ONLY create NURSE_OFFICER accounts
+    if (req.user?.role === UserRole.MANAGER && role !== UserRole.NURSE_OFFICER) {
+      res.status(403).json({ 
+        success: false, 
+        message: "Center Managers can only create Nurse Officer accounts" 
+      });
+      return;
+    }
+
+    // Regional and Federal offices can create up to their level
+    if (req.user?.role === UserRole.REGIONAL_OFFICE) {
+      const regionalAllowed: UserRole[] = [UserRole.NURSE_OFFICER, UserRole.MANAGER];
+      if (!regionalAllowed.includes(role)) {
+        res.status(403).json({ 
+          success: false, 
+          message: "Regional Officers can only create Nurse Officer and Manager accounts" 
+        });
+        return;
+      }
+    }
+
+    if (req.user?.role === UserRole.FEDERAL_OFFICE) {
+      const federalAllowed: UserRole[] = [UserRole.NURSE_OFFICER, UserRole.MANAGER, UserRole.REGIONAL_OFFICE];
+      if (!federalAllowed.includes(role)) {
+        res.status(403).json({ 
+          success: false, 
+          message: "Federal Officers can only create Nurse Officer, Manager, and Regional Officer accounts" 
+        });
+        return;
+      }
     }
 
     const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
@@ -514,6 +548,7 @@ export async function updateStaffUser(req: AuthRequest, res: Response) {
       UserRole.NURSE_OFFICER,
       UserRole.MANAGER,
       UserRole.REGIONAL_OFFICE,
+      UserRole.FEDERAL_OFFICE,
       UserRole.SYSTEM_ADMIN,
     ];
 
