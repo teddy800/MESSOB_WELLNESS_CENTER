@@ -571,7 +571,7 @@ function Register() {
               {/* Health Center */}
               <div className="mesob-form-group">
                 <label className="mesob-form-label">
-                  Health Center<span className="mesob-required">*</span>
+                   Center<span className="mesob-required">*</span>
                 </label>
                 <select
                   name="centerId"
