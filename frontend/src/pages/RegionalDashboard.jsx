@@ -100,12 +100,53 @@ const RegionalDashboard = () => {
           <select
             value={selectedCenter}
             onChange={(e) => setSelectedCenter(e.target.value)}
-            className="form-input"
-            style={{ minWidth: '220px' }}
+            style={{
+              minWidth: '220px',
+              padding: '0.6rem 1rem',
+              borderRadius: '10px',
+              border: '2px solid rgba(255,255,255,0.5)',
+              background: 'rgba(255,255,255,0.15)',
+              color: '#ffffff',
+              fontSize: '0.95rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              outline: 'none',
+              backdropFilter: 'blur(8px)',
+              WebkitAppearance: 'none',
+              appearance: 'none',
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 0.75rem center',
+              paddingRight: '2.25rem',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.25)';
+              e.target.style.borderColor = 'rgba(255,255,255,0.8)';
+              e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.15)';
+              e.target.style.borderColor = 'rgba(255,255,255,0.5)';
+              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+            }}
+            onFocus={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.25)';
+              e.target.style.borderColor = '#ffffff';
+              e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.3)';
+            }}
+            onBlur={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.15)';
+              e.target.style.borderColor = 'rgba(255,255,255,0.5)';
+              e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+            }}
           >
-            <option value="all">🏥 All Centers ({centers.length})</option>
+            <option value="all" style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 600 }}>
+              🏥 All Centers ({centers.length})
+            </option>
             {centers.map((c) => (
-              <option key={c.id} value={c.id}>
+              <option key={c.id} value={c.id} style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 500 }}>
                 🏥 {c.name} - {c.city}
               </option>
             ))}
@@ -114,6 +155,27 @@ const RegionalDashboard = () => {
             className="tab-btn"
             onClick={loadDashboardData}
             disabled={loading}
+            style={{
+              background: 'rgba(255,255,255,0.15)',
+              color: '#ffffff',
+              border: '2px solid rgba(255,255,255,0.5)',
+              borderRadius: '10px',
+              padding: '0.6rem 1.1rem',
+              fontWeight: 600,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease',
+              backdropFilter: 'blur(8px)',
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                e.target.style.background = 'rgba(255,255,255,0.25)';
+                e.target.style.borderColor = 'rgba(255,255,255,0.8)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.15)';
+              e.target.style.borderColor = 'rgba(255,255,255,0.5)';
+            }}
           >
             {loading ? '⏳ Loading…' : '🔄 Refresh'}
           </button>
