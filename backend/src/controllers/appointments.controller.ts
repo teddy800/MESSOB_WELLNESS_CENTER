@@ -65,6 +65,8 @@ export async function postAppointment(req: AuthRequest, res: Response): Promise<
     return;
   }
 
+  console.log(`[postAppointment] Received request - scheduledAt: ${scheduledAt}, reason: ${reason}`);
+
   if (!isNonEmptyString(scheduledAt) || Number.isNaN(Date.parse(scheduledAt))) {
     res.status(400).json({
       status: "error",
@@ -88,6 +90,8 @@ export async function postAppointment(req: AuthRequest, res: Response): Promise<
       reason: reason.trim(),
     });
 
+    console.log(`[postAppointment] Appointment created successfully: ${appointment.id}`);
+
     res.status(201).json({
       status: "success",
       data: appointment,
@@ -96,7 +100,7 @@ export async function postAppointment(req: AuthRequest, res: Response): Promise<
     console.error("Appointment creation error:", error);
     res.status(500).json({
       status: "error",
-      message: "Failed to create appointment",
+      message: error instanceof Error ? error.message : "Failed to create appointment",
     });
   }
 }

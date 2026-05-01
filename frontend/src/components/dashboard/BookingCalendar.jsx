@@ -89,8 +89,14 @@ function BookingCalendar() {
     try {
       setBookingLoading(true);
       
-      // Send just the date string (YYYY-MM-DD) without time to avoid timezone issues
-      const dateString = selectedDate.toISOString().split('T')[0];
+      // Send date in local YYYY-MM-DD format to preserve the selected date
+      // Don't use toISOString() as it converts to UTC which can shift the date
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      
+      console.log(`Booking appointment for date: ${dateString}`);
       
       const response = await api.post("/api/v1/appointments", {
         scheduledAt: dateString,

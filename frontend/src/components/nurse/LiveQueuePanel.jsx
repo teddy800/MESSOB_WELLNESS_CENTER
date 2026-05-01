@@ -26,7 +26,10 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
   const fetchQueue = async () => {
     try {
       setLoading(true);
+      console.log('📋 Fetching queue...');
       const response = await api.get('/api/v1/appointments/queue');
+      console.log('📋 Queue response:', response.data);
+      
       const data = response.data.data;
       
       let queueList = [];
@@ -34,13 +37,17 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
         queueList = data;
       } else if (data && data.queue && Array.isArray(data.queue)) {
         queueList = data.queue;
+      } else if (data && typeof data === 'object') {
+        console.warn('⚠️ Unexpected data format:', data);
+        queueList = [];
       }
       
+      console.log(`✅ Queue loaded: ${queueList.length} appointments`);
       setQueue(queueList);
       setError('');
     } catch (err) {
+      console.error('❌ Queue fetch error:', err);
       setError('Failed to load queue');
-      console.error(err);
     } finally {
       setLoading(false);
     }
