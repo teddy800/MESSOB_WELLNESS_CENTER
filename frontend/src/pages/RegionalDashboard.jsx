@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { regionalService } from '../services/regionalService';
 import { analyticsService } from '../services/analyticsService';
@@ -12,16 +12,30 @@ import {
 // ─── Role guard ───────────────────────────────────────────────────────────────
 const REGIONAL_ROLES = ['REGIONAL_OFFICE', 'FEDERAL_OFFICE', 'SYSTEM_ADMIN'];
 
+// ─── Live Clock ───────────────────────────────────────────────────────────────
+const useLiveClock = () => {
+  const [time, setTime] = useState(new Date());
+  useEffect(() => {
+    const t = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return time;
+};
+
 // ─── Root Component ───────────────────────────────────────────────────────────
 const RegionalDashboard = () => {
   const { user } = useAuth();
+  const now = useLiveClock();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCenter, setSelectedCenter] = useState('all');
   const [analytics, setAnalytics] = useState(null);
+  const [centerAnalytics, setCenterAnalytics] = useState(null); // per-center analytics
   const [centers, setCenters] = useState([]);
   const [trendsData, setTrendsData] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const autoRefreshRef = useRef(null);
 
   const hasAccess = REGIONAL_ROLES.includes(user?.role);
 
@@ -36,14 +50,13 @@ const RegionalDashboard = () => {
 
       if (dashboardData.status === 'fulfilled') {
         const { analytics, centers } = dashboardData.value;
-        // analytics may be null if the user's role can't access it — that's fine
         setAnalytics(analytics);
-        // centers is already the unwrapped array from getDashboardData
         setCenters(Array.isArray(centers) ? centers : []);
       }
       if (trends.status === 'fulfilled') {
         setTrendsData(trends.value.data);
       }
+      setLastUpdated(new Date());
     } catch (err) {
       setError('Failed to load dashboard data. Please refresh.');
       console.error('Center dashboard load error:', err);
@@ -52,8 +65,24 @@ const RegionalDashboard = () => {
     }
   }, []);
 
+  // Load per-center analytics when a specific center is selected
   useEffect(() => {
-    if (hasAccess) loadDashboardData();
+    if (selectedCenter !== 'all') {
+      regionalService.getCenterAnalytics(selectedCenter)
+        .then(res => setCenterAnalytics(res?.data ?? res ?? null))
+        .catch(() => setCenterAnalytics(null));
+    } else {
+      setCenterAnalytics(null);
+    }
+  }, [selectedCenter]);
+
+  // Initial load + auto-refresh every 60s
+  useEffect(() => {
+    if (hasAccess) {
+      loadDashboardData();
+      autoRefreshRef.current = setInterval(loadDashboardData, 60000);
+    }
+    return () => clearInterval(autoRefreshRef.current);
   }, [hasAccess, loadDashboardData]);
 
   if (!hasAccess) {
@@ -69,15 +98,20 @@ const RegionalDashboard = () => {
 
   const tabs = [
     { id: 'overview', label: '📊 Overview' },
-    { id: 'centers', label: '🏥 Centers' },
+    { id: 'centers', label: `🏥 Centers (${centers.length})` },
     { id: 'managers', label: '👔 Managers' },
     { id: 'performance', label: '📈 Performance' },
   ];
 
   // Filter centers based on selection
-  const filteredCenters = selectedCenter === 'all' 
-    ? centers 
+  const filteredCenters = selectedCenter === 'all'
+    ? centers
     : centers.filter(c => c.id === selectedCenter);
+
+  // Effective analytics: use per-center analytics if a center is selected
+  const effectiveAnalytics = selectedCenter !== 'all' && centerAnalytics
+    ? { summary: centerAnalytics }
+    : analytics;
 
   // Get center statistics
   const centerStats = {
@@ -87,85 +121,152 @@ const RegionalDashboard = () => {
     totalCapacity: centers.reduce((sum, c) => sum + (c.capacity || 0), 0),
   };
 
+  const roleLabel = user?.role === 'FEDERAL_OFFICE' ? 'Federal Office'
+    : user?.role === 'SYSTEM_ADMIN' ? 'System Admin'
+    : 'Regional Office';
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <div>
-          <h1>Center Management Dashboard</h1>
-          <p className="dashboard-subtitle">
-            {user?.role === 'FEDERAL_OFFICE' ? 'Federal Office' : 'Regional Office'} — Create & Manage Health Centers — Welcome, {user?.fullName}
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <h1 style={{ margin: 0 }}>Center Management Dashboard</h1>
+            <span style={{
+              background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
+              borderRadius: '20px', padding: '0.2rem 0.75rem',
+              fontSize: '0.75rem', fontWeight: 700, color: '#ffffff', letterSpacing: '0.05em',
+            }}>{roleLabel.toUpperCase()}</span>
+            <span style={{
+              background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.5)',
+              borderRadius: '20px', padding: '0.2rem 0.75rem',
+              fontSize: '0.75rem', fontWeight: 700, color: '#4ade80',
+            }}>
+              ● {centerStats.active}/{centerStats.total} Active
+            </span>
+          </div>
+          <p className="dashboard-subtitle" style={{ marginTop: '0.35rem' }}>
+            Welcome, <strong>{user?.fullName}</strong> · {centerStats.total} centers · {centerStats.totalStaff} staff
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <select
-            value={selectedCenter}
-            onChange={(e) => setSelectedCenter(e.target.value)}
-            className="form-input"
-            style={{ minWidth: '220px' }}
-          >
-            <option value="all">🏥 All Centers ({centers.length})</option>
-            {centers.map((c) => (
-              <option key={c.id} value={c.id}>
-                🏥 {c.name} - {c.city}
+        {/* Right: clock + selector + refresh */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+          <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>
+            {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>
+            {now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+          </div>
+          {lastUpdated && (
+            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)' }}>
+              ↻ {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} · auto 60s
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
+            <select
+              value={selectedCenter}
+              onChange={(e) => setSelectedCenter(e.target.value)}
+              style={{
+                minWidth: '200px',
+                padding: '0.5rem 2rem 0.5rem 0.85rem',
+                borderRadius: '10px',
+                border: '2px solid rgba(255,255,255,0.5)',
+                background: 'rgba(255,255,255,0.15)',
+                color: '#ffffff',
+                fontSize: '0.88rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none',
+                backdropFilter: 'blur(8px)',
+                WebkitAppearance: 'none',
+                appearance: 'none',
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 0.65rem center',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+              }}
+              onMouseEnter={(e) => { e.target.style.background = 'rgba(255,255,255,0.25)'; e.target.style.borderColor = 'rgba(255,255,255,0.8)'; }}
+              onMouseLeave={(e) => { e.target.style.background = 'rgba(255,255,255,0.15)'; e.target.style.borderColor = 'rgba(255,255,255,0.5)'; }}
+              onFocus={(e) => { e.target.style.borderColor = '#ffffff'; e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.3)'; }}
+              onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.5)'; e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'; }}
+            >
+              <option value="all" style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 600 }}>
+                🏥 All Centers ({centers.length})
               </option>
-            ))}
-          </select>
-          <button
-            className="tab-btn"
-            onClick={loadDashboardData}
-            disabled={loading}
-          >
-            {loading ? '⏳ Loading…' : '🔄 Refresh'}
-          </button>
+              {centers.map((c) => (
+                <option key={c.id} value={c.id} style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 500 }}>
+                  {c.status === 'ACTIVE' ? '✅' : '⚠️'} {c.name} — {c.city}
+                </option>
+              ))}
+            </select>
+            <button
+              className="tab-btn"
+              onClick={loadDashboardData}
+              disabled={loading}
+              style={{
+                background: 'rgba(255,255,255,0.15)', color: '#ffffff',
+                border: '2px solid rgba(255,255,255,0.4)', borderRadius: '10px',
+                padding: '0.5rem 0.9rem', fontWeight: 600,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {loading ? '⏳' : '🔄'}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Center Statistics Bar */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)', 
-        padding: '1rem 1.5rem', 
-        borderRadius: '12px', 
+      <div style={{
+        background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)',
+        padding: '1rem 1.5rem',
+        borderRadius: '12px',
         marginBottom: '1.5rem',
         display: 'flex',
-        gap: '2rem',
+        gap: '1.5rem',
         alignItems: 'center',
         color: 'white',
-        boxShadow: '0 4px 12px rgba(76, 111, 190, 0.3)'
+        boxShadow: '0 4px 12px rgba(76, 111, 190, 0.3)',
+        flexWrap: 'wrap',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.5rem' }}>🏥</span>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{centerStats.total}</div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Total Centers</div>
-          </div>
-        </div>
-        <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.5rem' }}>✅</span>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{centerStats.active}</div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Active Centers</div>
-          </div>
-        </div>
-        <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.5rem' }}>👥</span>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{centerStats.totalStaff}</div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Total Staff</div>
-          </div>
-        </div>
-        <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '1.5rem' }}>📊</span>
-          <div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{centerStats.totalCapacity}</div>
-            <div style={{ fontSize: '0.85rem', opacity: 0.9 }}>Total Capacity</div>
-          </div>
-        </div>
-        <div style={{ marginLeft: 'auto', fontSize: '0.85rem', opacity: 0.9 }}>
-          {selectedCenter !== 'all' && `📍 ${filteredCenters.find(c => c.id === selectedCenter)?.name}`}
-          {selectedCenter === 'all' && '🏥 All Centers'}
+        {[
+          { icon: '🏥', value: centerStats.total, label: 'Total Centers' },
+          { icon: '✅', value: centerStats.active, label: 'Active Centers' },
+          { icon: '👥', value: centerStats.totalStaff, label: 'Total Staff' },
+          { icon: '📊', value: centerStats.totalCapacity, label: 'Total Capacity' },
+        ].map((s, i) => (
+          <React.Fragment key={s.label}>
+            {i > 0 && <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.4rem' }}>{s.icon}</span>
+              <div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>{s.label}</div>
+              </div>
+            </div>
+          </React.Fragment>
+        ))}
+        {selectedCenter !== 'all' && (
+          <>
+            <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.2rem' }}>📍</span>
+              <div>
+                <div style={{ fontSize: '1rem', fontWeight: 700 }}>{filteredCenters[0]?.name}</div>
+                <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>{filteredCenters[0]?.city}, {filteredCenters[0]?.region}</div>
+              </div>
+              <span style={{
+                padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
+                background: filteredCenters[0]?.status === 'ACTIVE' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)',
+                border: filteredCenters[0]?.status === 'ACTIVE' ? '1px solid #4ade80' : '1px solid #f87171',
+                color: filteredCenters[0]?.status === 'ACTIVE' ? '#4ade80' : '#f87171',
+              }}>{filteredCenters[0]?.status}</span>
+            </div>
+          </>
+        )}
+        <div style={{ marginLeft: selectedCenter === 'all' ? 'auto' : '0', fontSize: '0.8rem', opacity: 0.75 }}>
+          {selectedCenter === 'all' ? '🏥 All Centers' : '🔍 Filtered View'}
         </div>
       </div>
 
@@ -188,10 +289,10 @@ const RegionalDashboard = () => {
       </div>
 
       <div className="dashboard-content">
-        {activeTab === 'overview' && <OverviewTab loading={loading} analytics={analytics} centers={filteredCenters} selectedCenter={selectedCenter} centerStats={centerStats} />}
+        {activeTab === 'overview' && <OverviewTab loading={loading} analytics={effectiveAnalytics} centers={filteredCenters} selectedCenter={selectedCenter} centerStats={centerStats} />}
         {activeTab === 'centers' && <CentersTab loading={loading} centers={filteredCenters} selectedCenter={selectedCenter} onRefresh={loadDashboardData} />}
         {activeTab === 'managers' && <ManagersTab loading={loading} centers={centers} onRefresh={loadDashboardData} />}
-        {activeTab === 'performance' && <PerformanceTab loading={loading} analytics={analytics} trendsData={trendsData} centers={filteredCenters} />}
+        {activeTab === 'performance' && <PerformanceTab loading={loading} analytics={effectiveAnalytics} trendsData={trendsData} centers={filteredCenters} />}
       </div>
     </div>
   );
@@ -327,49 +428,181 @@ const OverviewTab = ({ loading, analytics, centers, selectedCenter, centerStats 
 
       {/* Center Performance Breakdown (Multi-center view only) */}
       {isAllCenters && centerBreakdownData.length > 0 && (
-        <div className="mgr-chart-card" style={{ marginTop: '1.5rem' }}>
-          <div className="mgr-chart-header">
-            <span className="mgr-live-badge">● LIVE</span>
-            <h3>Center Performance Overview</h3>
-            <p>Staff and capacity distribution across centers</p>
+        <div style={{
+          marginTop: '1.5rem',
+          background: 'linear-gradient(135deg, #0f1f5c 0%, #1a3a8f 40%, #1e4db7 70%, #2563eb 100%)',
+          borderRadius: '20px',
+          padding: '1.75rem',
+          boxShadow: '0 20px 60px rgba(15, 31, 92, 0.5), 0 0 40px rgba(37, 99, 235, 0.2)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          {/* Decorative glow orbs */}
+          <div style={{
+            position: 'absolute', top: '-60px', right: '-60px',
+            width: '200px', height: '200px', borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(96,165,250,0.25) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute', bottom: '-40px', left: '-40px',
+            width: '160px', height: '160px', borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+              background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.5)',
+              borderRadius: '20px', padding: '0.25rem 0.75rem',
+              fontSize: '0.75rem', fontWeight: 700, color: '#4ade80',
+              letterSpacing: '0.05em',
+            }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 6px #4ade80', display: 'inline-block' }} />
+              LIVE
+            </span>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
+              Center Performance Overview
+            </h3>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={centerBreakdownData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+          <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', fontWeight: 400 }}>
+            Staff and capacity distribution across all {centerBreakdownData.length} centers
+          </p>
+
+          {/* Summary pills */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Total Centers', value: centerBreakdownData.length, color: '#60a5fa', bg: 'rgba(96,165,250,0.15)' },
+              { label: 'Total Staff', value: centerBreakdownData.reduce((s, c) => s + c.staff, 0), color: '#a78bfa', bg: 'rgba(167,139,250,0.15)' },
+              { label: 'Total Capacity', value: centerBreakdownData.reduce((s, c) => s + c.capacity, 0), color: '#4ade80', bg: 'rgba(74,222,128,0.15)' },
+            ].map(p => (
+              <div key={p.label} style={{
+                background: p.bg, border: `1px solid ${p.color}40`,
+                borderRadius: '10px', padding: '0.5rem 1rem',
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+              }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: p.color }}>{p.value}</span>
+                <span style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.7)', fontWeight: 500 }}>{p.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Chart */}
+          <ResponsiveContainer width="100%" height={Math.max(280, centerBreakdownData.length * 42)}>
+            <BarChart
+              data={centerBreakdownData}
+              layout="vertical"
+              margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+              barCategoryGap="20%"
+            >
               <defs>
-                <linearGradient id="gradStaff" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#2563eb" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity={0.7} />
+                <linearGradient id="gradStaffBlue" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#a78bfa" stopOpacity={1} />
                 </linearGradient>
-                <linearGradient id="gradCapacity" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#22c55e" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#22c55e" stopOpacity={0.7} />
+                <linearGradient id="gradCapacityGreen" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor="#34d399" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#4ade80" stopOpacity={1} />
                 </linearGradient>
+                <filter id="barGlow">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fontSize: 10, fill: '#6b7280' }} 
-                axisLine={false} 
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" horizontal={false} />
+              <XAxis
+                type="number"
+                tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.6)', fontWeight: 500 }}
+                axisLine={{ stroke: 'rgba(255,255,255,0.15)' }}
                 tickLine={false}
-                angle={-45}
-                textAnchor="end"
-                height={80}
               />
-              <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={160}
+                tick={{ fontSize: 12, fill: '#ffffff', fontWeight: 600 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(name) => name.length > 20 ? name.slice(0, 18) + '…' : name}
+              />
               <Tooltip
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                labelStyle={{ fontWeight: 600, color: '#1e293b' }}
-                formatter={(value, name, props) => {
-                  if (name === 'Staff') return [value, `👥 ${name}`];
-                  if (name === 'Capacity') return [value, `📊 ${name}`];
+                cursor={{ fill: 'rgba(255,255,255,0.06)' }}
+                contentStyle={{
+                  background: 'linear-gradient(135deg, #0f1f5c 0%, #1a3a8f 100%)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                  color: '#ffffff',
+                  padding: '0.75rem 1rem',
+                }}
+                labelStyle={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}
+                itemStyle={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem' }}
+                formatter={(value, name) => {
+                  if (name === '👥 Staff') return [`${value} members`, name];
+                  if (name === '📊 Capacity') return [`${value} slots/day`, name];
                   return [value, name];
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: '12px' }} />
-              <Bar dataKey="staff" name="Staff" fill="url(#gradStaff)" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="capacity" name="Capacity" fill="url(#gradCapacity)" radius={[6, 6, 0, 0]} />
+              <Legend
+                wrapperStyle={{ paddingTop: '1rem' }}
+                formatter={(value) => (
+                  <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontWeight: 600 }}>{value}</span>
+                )}
+              />
+              <Bar dataKey="staff" name="👥 Staff" fill="url(#gradStaffBlue)" radius={[0, 8, 8, 0]} maxBarSize={18} filter="url(#barGlow)" />
+              <Bar dataKey="capacity" name="📊 Capacity" fill="url(#gradCapacityGreen)" radius={[0, 8, 8, 0]} maxBarSize={18} filter="url(#barGlow)" />
             </BarChart>
           </ResponsiveContainer>
+
+          {/* Center name list below chart — ensures all are visible */}
+          <div style={{
+            marginTop: '1.25rem',
+            paddingTop: '1.25rem',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: '0.6rem',
+          }}>
+            {centerBreakdownData.map((c, i) => (
+              <div key={c.name} style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                background: 'rgba(255,255,255,0.07)',
+                borderRadius: '8px', padding: '0.4rem 0.75rem',
+                border: '1px solid rgba(255,255,255,0.1)',
+              }}>
+                <span style={{
+                  width: '22px', height: '22px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #60a5fa, #a78bfa)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.7rem', fontWeight: 800, color: '#fff', flexShrink: 0,
+                }}>{i + 1}</span>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {c.name}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)' }}>
+                    👥 {c.staff} · 📊 {c.capacity}
+                  </div>
+                </div>
+                <span style={{
+                  marginLeft: 'auto', flexShrink: 0,
+                  fontSize: '0.65rem', fontWeight: 700,
+                  padding: '0.15rem 0.4rem', borderRadius: '4px',
+                  background: c.status === 'ACTIVE' ? 'rgba(74,222,128,0.2)' : 'rgba(239,68,68,0.2)',
+                  color: c.status === 'ACTIVE' ? '#4ade80' : '#f87171',
+                  border: `1px solid ${c.status === 'ACTIVE' ? 'rgba(74,222,128,0.4)' : 'rgba(239,68,68,0.4)'}`,
+                }}>
+                  {c.status === 'ACTIVE' ? '● ON' : '○ OFF'}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -1005,43 +1238,196 @@ const PerformanceTab = ({ loading, analytics, trendsData, centers }) => {
 
       {/* Center Performance Ranking */}
       {centerPerformance.length > 0 && (
-        <div className="mgr-chart-card">
-          <div className="mgr-chart-header">
-            <h3>Center Performance Ranking</h3>
-            <p>Top performing centers by staff utilization</p>
+        <div style={{
+          background: 'linear-gradient(135deg, #0f1f5c 0%, #1a3a8f 40%, #1e4db7 70%, #2563eb 100%)',
+          borderRadius: '20px',
+          padding: '1.75rem',
+          boxShadow: '0 20px 60px rgba(15, 31, 92, 0.5), 0 0 40px rgba(37, 99, 235, 0.2)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          {/* Decorative glow orbs */}
+          <div style={{
+            position: 'absolute', top: '-50px', right: '-50px',
+            width: '180px', height: '180px', borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(167,139,250,0.25) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute', bottom: '-40px', left: '30%',
+            width: '160px', height: '160px', borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(34,211,238,0.15) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
+
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                background: 'rgba(167,139,250,0.2)', border: '1px solid rgba(167,139,250,0.5)',
+                borderRadius: '20px', padding: '0.25rem 0.75rem',
+                fontSize: '0.75rem', fontWeight: 700, color: '#c4b5fd',
+                letterSpacing: '0.05em',
+              }}>
+                🏆 RANKING
+              </span>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.01em' }}>
+                Center Performance Ranking
+              </h3>
+            </div>
+            <span style={{
+              fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', fontWeight: 500,
+              background: 'rgba(255,255,255,0.08)', borderRadius: '8px',
+              padding: '0.3rem 0.75rem', border: '1px solid rgba(255,255,255,0.1)',
+            }}>
+              Top {centerPerformance.length} centers · sorted by utilization
+            </span>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={centerPerformance} layout="horizontal" margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
-              <defs>
-                <linearGradient id="gradUtil" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#22c55e" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={1} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis type="number" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-              <YAxis 
-                type="category" 
-                dataKey="name" 
-                tick={{ fontSize: 10, fill: '#6b7280' }} 
-                axisLine={false} 
-                tickLine={false}
-                width={150}
-              />
-              <Tooltip
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                labelStyle={{ fontWeight: 600, color: '#1e293b' }}
-                formatter={(value, name, props) => {
-                  if (name === 'Staff') return [value, `👥 ${name}`];
-                  if (name === 'Capacity') return [value, `📊 ${name}`];
-                  return [value, name];
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: '12px' }} />
-              <Bar dataKey="staff" name="Staff" fill="#2563eb" radius={[0, 6, 6, 0]} />
-              <Bar dataKey="capacity" name="Capacity" fill="url(#gradUtil)" radius={[0, 6, 6, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.875rem', color: 'rgba(255,255,255,0.6)', fontWeight: 400 }}>
+            Staff utilization rate = staff ÷ capacity × 100%
+          </p>
+
+          {/* Rank cards — always visible list */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginBottom: '1.5rem' }}>
+            {centerPerformance.map((c, i) => {
+              const pct = c.utilization;
+              const barColor = pct >= 80 ? '#4ade80' : pct >= 50 ? '#60a5fa' : '#f59e0b';
+              const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+              return (
+                <div key={c.name} style={{
+                  display: 'flex', alignItems: 'center', gap: '0.75rem',
+                  background: i < 3 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)',
+                  borderRadius: '12px', padding: '0.75rem 1rem',
+                  border: i === 0 ? '1px solid rgba(250,204,21,0.4)' : i === 1 ? '1px solid rgba(148,163,184,0.3)' : i === 2 ? '1px solid rgba(180,120,60,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                  transition: 'all 0.2s ease',
+                }}>
+                  {/* Medal / rank */}
+                  <span style={{ fontSize: i < 3 ? '1.4rem' : '0.85rem', fontWeight: 800, color: 'rgba(255,255,255,0.7)', minWidth: '28px', textAlign: 'center' }}>
+                    {medal}
+                  </span>
+                  {/* Name + region */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {c.name}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.1rem' }}>
+                      📍 {c.region}
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div style={{ flex: 2, minWidth: '80px' }}>
+                    <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${Math.min(pct, 100)}%`,
+                        borderRadius: '4px',
+                        background: `linear-gradient(90deg, ${barColor}99, ${barColor})`,
+                        boxShadow: `0 0 8px ${barColor}80`,
+                        transition: 'width 0.6s ease',
+                      }} />
+                    </div>
+                  </div>
+                  {/* Stats */}
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexShrink: 0 }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#60a5fa' }}>{c.staff}</div>
+                      <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>👥 Staff</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#4ade80' }}>{c.capacity}</div>
+                      <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)' }}>📊 Cap</div>
+                    </div>
+                    <div style={{
+                      minWidth: '52px', textAlign: 'center',
+                      background: pct >= 80 ? 'rgba(74,222,128,0.2)' : pct >= 50 ? 'rgba(96,165,250,0.2)' : 'rgba(245,158,11,0.2)',
+                      border: `1px solid ${barColor}60`,
+                      borderRadius: '8px', padding: '0.25rem 0.4rem',
+                    }}>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 800, color: barColor }}>{pct}%</div>
+                      <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)' }}>util.</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Chart */}
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.25rem' }}>
+            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>
+              STAFF vs CAPACITY — BAR CHART
+            </div>
+            <ResponsiveContainer width="100%" height={Math.max(220, centerPerformance.length * 38)}>
+              <BarChart
+                data={centerPerformance}
+                layout="vertical"
+                margin={{ top: 5, right: 60, left: 10, bottom: 5 }}
+                barCategoryGap="25%"
+              >
+                <defs>
+                  <linearGradient id="gradRankStaff" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#60a5fa" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#a78bfa" stopOpacity={1} />
+                  </linearGradient>
+                  <linearGradient id="gradRankCap" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#34d399" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#4ade80" stopOpacity={1} />
+                  </linearGradient>
+                  <filter id="rankGlow">
+                    <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                    <feMerge>
+                      <feMergeNode in="coloredBlur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" horizontal={false} />
+                <XAxis
+                  type="number"
+                  tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.55)', fontWeight: 500 }}
+                  axisLine={{ stroke: 'rgba(255,255,255,0.15)' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  width={155}
+                  tick={{ fontSize: 12, fill: '#ffffff', fontWeight: 600 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(name) => name.length > 20 ? name.slice(0, 18) + '…' : name}
+                />
+                <Tooltip
+                  cursor={{ fill: 'rgba(255,255,255,0.06)' }}
+                  contentStyle={{
+                    background: 'linear-gradient(135deg, #0f1f5c 0%, #1a3a8f 100%)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    color: '#ffffff',
+                    padding: '0.75rem 1rem',
+                  }}
+                  labelStyle={{ color: '#ffffff', fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}
+                  itemStyle={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem' }}
+                  formatter={(value, name) => {
+                    if (name === '👥 Staff') return [`${value} members`, name];
+                    if (name === '📊 Capacity') return [`${value} slots/day`, name];
+                    return [value, name];
+                  }}
+                />
+                <Legend
+                  wrapperStyle={{ paddingTop: '0.75rem' }}
+                  formatter={(value) => (
+                    <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.85rem', fontWeight: 600 }}>{value}</span>
+                  )}
+                />
+                <Bar dataKey="staff" name="👥 Staff" fill="url(#gradRankStaff)" radius={[0, 8, 8, 0]} maxBarSize={16} filter="url(#rankGlow)" />
+                <Bar dataKey="capacity" name="📊 Capacity" fill="url(#gradRankCap)" radius={[0, 8, 8, 0]} maxBarSize={16} filter="url(#rankGlow)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       )}
     </div>
