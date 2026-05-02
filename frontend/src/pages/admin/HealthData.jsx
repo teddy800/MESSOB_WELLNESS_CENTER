@@ -1,26 +1,36 @@
-import React from "react";
-import FilterBar from "../../components/admin/FilterBar";
+import React, { useState } from "react";
+import VitalRecordsList from "../../components/admin/VitalRecordsList";
+import WellnessPlansList from "../../components/admin/WellnessPlansList";
+import "../../styles/admin-health.css";
 
 function HealthData() {
-  const handleFilterChange = (newFilters) => {
-    // TODO: Fetch health data with filters
-  };
+  const [activeTab, setActiveTab] = useState("vitals");
 
   return (
-    <div className="management-section">
-      <div className="section-header">
-        <h2>💊 Health Data</h2>
+    <div className="health-data-page">
+      <div className="page-header">
+        <h1>Health Data Management</h1>
+        <p>Manage vital records and wellness plans</p>
       </div>
 
-      <FilterBar 
-        onFilterChange={handleFilterChange}
-        showRegionFilter={true}
-        showCenterFilter={true}
-        showDateFilter={true}
-      />
+      <div className="tabs">
+        <button
+          className={`tab-button ${activeTab === "vitals" ? "active" : ""}`}
+          onClick={() => setActiveTab("vitals")}
+        >
+          📊 Vital Records
+        </button>
+        <button
+          className={`tab-button ${activeTab === "wellness" ? "active" : ""}`}
+          onClick={() => setActiveTab("wellness")}
+        >
+          💪 Wellness Plans
+        </button>
+      </div>
 
-      <div className="management-content">
-        <p>Health data (vitals & wellness plans) will be implemented in Phase 4</p>
+      <div className="tab-content">
+        {activeTab === "vitals" && <VitalRecordsList />}
+        {activeTab === "wellness" && <WellnessPlansList />}
       </div>
     </div>
   );

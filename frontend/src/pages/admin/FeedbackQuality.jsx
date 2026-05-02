@@ -1,26 +1,36 @@
-import React from "react";
-import FilterBar from "../../components/admin/FilterBar";
+import React, { useState } from "react";
+import FeedbackList from "../../components/admin/FeedbackList";
+import FeedbackAnalytics from "../../components/admin/FeedbackAnalytics";
+import "../../styles/admin-feedback.css";
 
 function FeedbackQuality() {
-  const handleFilterChange = (newFilters) => {
-    // TODO: Fetch feedback with filters
-  };
+  const [activeTab, setActiveTab] = useState("list");
 
   return (
-    <div className="management-section">
-      <div className="section-header">
-        <h2>⭐ Feedback & Quality</h2>
+    <div className="feedback-quality-page">
+      <div className="page-header">
+        <h1>Feedback & Quality Management</h1>
+        <p>Monitor customer satisfaction and service quality</p>
       </div>
 
-      <FilterBar 
-        onFilterChange={handleFilterChange}
-        showRegionFilter={true}
-        showCenterFilter={true}
-        showDateFilter={true}
-      />
+      <div className="tabs">
+        <button
+          className={`tab-button ${activeTab === "list" ? "active" : ""}`}
+          onClick={() => setActiveTab("list")}
+        >
+          📋 Feedback List
+        </button>
+        <button
+          className={`tab-button ${activeTab === "analytics" ? "active" : ""}`}
+          onClick={() => setActiveTab("analytics")}
+        >
+          📊 Analytics
+        </button>
+      </div>
 
-      <div className="management-content">
-        <p>Feedback analytics will be implemented in Phase 4</p>
+      <div className="tab-content">
+        {activeTab === "list" && <FeedbackList />}
+        {activeTab === "analytics" && <FeedbackAnalytics />}
       </div>
     </div>
   );
