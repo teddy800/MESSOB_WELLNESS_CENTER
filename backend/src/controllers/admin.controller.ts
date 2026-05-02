@@ -11,6 +11,130 @@ import {
 } from "../types/admin.types";
 
 /**
+ * POST /api/v1/admin/centers
+ * Create a new center
+ */
+export const createCenter = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const { name, code, region, city, address, phone, email, capacity } = req.body;
+
+    if (!name || !code || !region || !city || !address) {
+      res.status(400).json({
+        status: "error",
+        message: "name, code, region, city, and address are required",
+      });
+      return;
+    }
+
+    const center = await AdminService.createCenter({
+      name,
+      code,
+      region,
+      city,
+      address,
+      phone,
+      email,
+      capacity,
+      status: "ACTIVE",
+    });
+
+    res.status(201).json({
+      status: "success",
+      data: center,
+    });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      res.status(400).json({
+        status: "error",
+        message: "Center code already exists",
+      });
+      return;
+    }
+    console.error("Create center error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to create center",
+    });
+  }
+};
+
+/**
+ * GET /api/v1/admin/regions
+ * Get all unique regions
+ */
+export const getRegions = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const regions = await AdminService.getAllRegions();
+
+    res.status(200).json({
+      status: "success",
+      data: regions,
+    });
+  } catch (error) {
+    console.error("Get regions error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve regions",
+    });
+  }
+};
+
+/**
+ * GET /api/v1/admin/regions/:region/centers
+ * Get centers by region
+ */
+export const getCentersByRegion = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const { region } = req.params;
+    const centers = await AdminService.getCentersByRegion(region as string);
+
+    res.status(200).json({
+      status: "success",
+      data: centers,
+    });
+  } catch (error) {
+    console.error("Get centers by region error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve centers",
+    });
+  }
+};
+
+/**
  * GET /api/v1/admin/dashboard/metrics
  * Get system-wide dashboard metrics
  */

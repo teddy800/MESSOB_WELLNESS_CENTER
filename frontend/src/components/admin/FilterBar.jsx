@@ -44,8 +44,8 @@ function FilterBar({ onFilterChange, showRegionFilter = true, showCenterFilter =
   const loadCenters = async (region) => {
     try {
       setLoadingCenters(true);
-      const data = await adminService.getCenters({ region, limit: 100 });
-      setCenters(data?.data || []);
+      const data = await adminService.getCentersByRegion(region);
+      setCenters(data || []);
     } catch (err) {
       console.error("Error loading centers:", err);
     } finally {

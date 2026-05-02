@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import AdminLayout from "../../layouts/AdminLayout";
 import DashboardMetrics from "../../components/admin/DashboardMetrics";
 import DashboardCharts from "../../components/admin/DashboardCharts";
+import RegionManagement from "./RegionManagement";
 import UserManagement from "./UserManagement";
 import CenterManagement from "./CenterManagement";
 import AppointmentManagement from "./AppointmentManagement";
@@ -19,6 +20,8 @@ import "../../styles/admin-feedback.css";
 import "../../styles/admin-analytics.css";
 import "../../styles/admin-audit.css";
 import "../../styles/admin-settings.css";
+import "../../styles/admin-modals.css";
+import "../../styles/admin-regions.css";
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -33,6 +36,8 @@ function AdminDashboard() {
             <DashboardCharts />
           </div>
         );
+      case "regions":
+        return <RegionManagement />;
       case "users":
         return <UserManagement />;
       case "centers":

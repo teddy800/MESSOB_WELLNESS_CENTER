@@ -124,13 +124,99 @@ export const adminService = {
   // Regions (for filter dropdowns)
   getRegions: async () => {
     try {
-      const response = await api.get("/regions");
+      const response = await api.get("/admin/regions");
       return response.data.data || [];
     } catch (err) {
       console.error("Error fetching regions:", err);
       return [];
     }
   },
-};
 
-export default adminService;
+  // Centers by region
+  getCentersByRegion: async (region) => {
+    try {
+      const response = await api.get(`/admin/regions/${region}/centers`);
+      return response.data.data || [];
+    } catch (err) {
+      console.error("Error fetching centers by region:", err);
+      return [];
+    }
+  },
+
+  // Create center
+  createCenter: async (centerData) => {
+    try {
+      const response = await api.post("/admin/centers", centerData);
+      return response.data.data;
+    } catch (err) {
+      console.error("Error creating center:", err);
+      throw err;
+    }
+  },
+
+  // Delete user
+  deleteUser: async (userId) => {
+    try {
+      const response = await api.delete(`/users/${userId}`);
+      return response.data;
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      throw err;
+    }
+  },
+
+  // Delete center
+  deleteCenter: async (centerId) => {
+    try {
+      const response = await api.delete(`/centers/${centerId}`);
+      return response.data;
+    } catch (err) {
+      console.error("Error deleting center:", err);
+      throw err;
+    }
+  },
+
+  // Delete appointment
+  deleteAppointment: async (appointmentId) => {
+    try {
+      const response = await api.delete(`/appointments/${appointmentId}`);
+      return response.data;
+    } catch (err) {
+      console.error("Error deleting appointment:", err);
+      throw err;
+    }
+  },
+
+  // Update user
+  updateUser: async (userId, userData) => {
+    try {
+      const response = await api.put(`/users/${userId}`, userData);
+      return response.data.data;
+    } catch (err) {
+      console.error("Error updating user:", err);
+      throw err;
+    }
+  },
+
+  // Update center
+  updateCenter: async (centerId, centerData) => {
+    try {
+      const response = await api.put(`/centers/${centerId}`, centerData);
+      return response.data.data;
+    } catch (err) {
+      console.error("Error updating center:", err);
+      throw err;
+    }
+  },
+
+  // Update appointment
+  updateAppointment: async (appointmentId, appointmentData) => {
+    try {
+      const response = await api.put(`/appointments/${appointmentId}`, appointmentData);
+      return response.data.data;
+    } catch (err) {
+      console.error("Error updating appointment:", err);
+      throw err;
+    }
+  },
+};

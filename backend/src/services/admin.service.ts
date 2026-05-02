@@ -12,25 +12,165 @@ import {
 
 const AdminService = {
   /**
+   * Create a new center
+   */
+  async createCenter(centerData: any): Promise<any> {
+    try {
+      return await prisma.center.create({
+        data: centerData,
+      });
+    } catch (error) {
+      console.error("Error creating center:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get all unique regions from centers
+   */
+  async getAllRegions(): Promise<string[]> {
+    try {
+      const centers = await prisma.center.findMany({
+        select: { region: true },
+        distinct: ["region"],
+      });
+      return centers.map(c => c.region).sort();
+    } catch (error) {
+      console.error("Error getting regions:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Get centers by region
+   */
+  async getCentersByRegion(region: string): Promise<any[]> {
+    try {
+      return await prisma.center.findMany({
+        where: { region },
+        select: {
+          id: true,
+          name: true,
+          region: true,
+          city: true,
+          status: true,
+        },
+      });
+    } catch (error) {
+      console.error("Error getting centers by region:", error);
+      throw error;
+    }
+  },
+
+  /**
    * Get system-wide dashboard metrics
    */
   async getDashboardMetrics(): Promise<DashboardMetrics> {
     try {
-      const [totalUsers, totalCenters, totalAppointments, totalVitals, totalFeedback] = await Promise.all([
-        prisma.user.count(),
-        prisma.center.count(),
-        prisma.appointment.count(),
-        prisma.vitalRecord.count(),
-        prisma.feedback.count(),
-      ]);
+      // Get user stats
+      const users = await prisma.user.groupBy({
+        by: ["role"],
+        _count: true,
+      });
+
+      const userStats = {
+        total: await prisma.user.count(),
+        active: await prisma.user.count({ where: { isActive: true } }),
+        inactive: await prisma.user.count({ where: { isActive: false } }),
+        verified: await prisma.user.count({ where: { isVerified: true } }),
+        unverified: await prisma.user.count({ where: { isVerified: false } }),
+        byRole: users.reduce((acc: any, u: any) => {
+          acc[u.role] = u._count;
+          return acc;
+        }, {}),
+        byRegion: {},
+      };
+
+      // Get center stats
+      const centerStats = {
+        total: await prisma.center.count(),
+        active: await prisma.center.count({ where: { status: "ACTIVE" } }),
+        inactive: await prisma.center.count({ where: { status: "INACTIVE" } }),
+        maintenance: await prisma.center.count({ where: { status: "MAINTENANCE" } }),
+        byRegion: {},
+      };
+
+      // Get appointment stats
+      const appointments = await prisma.appointment.groupBy({
+        by: ["status"],
+        _count: true,
+      });
+
+      const appointmentStats = {
+        total: await prisma.appointment.count(),
+        waiting: await prisma.appointment.count({ where: { status: "WAITING" } }),
+        inProgress: await prisma.appointment.count({ where: { status: "IN_PROGRESS" } }),
+        inService: await prisma.appointment.count({ where: { status: "IN_SERVICE" } }),
+        completed: await prisma.appointment.count({ where: { status: "COMPLETED" } }),
+        cancelled: await prisma.appointment.count({ where: { status: "CANCELLED" } }),
+        noShow: await prisma.appointment.count({ where: { status: "NO_SHOW" } }),
+        byRegion: {},
+        byStatus: appointments.reduce((acc: any, a: any) => {
+          acc[a.status] = a._count;
+          return acc;
+        }, {}),
+      };
+
+      // Get vital stats
+      const vitals = await prisma.vitalRecord.findMany({
+        select: {
+          bmi: true,
+          systolic: true,
+          diastolic: true,
+          heartRate: true,
+          temperature: true,
+          oxygenSaturation: true,
+          bmiCategory: true,
+          bpCategory: true,
+        },
+      });
+
+      const vitalStats = {
+        total: vitals.length,
+        averageBMI: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.bmi || 0), 0) / vitals.length : 0,
+        averageSystolic: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.systolic || 0), 0) / vitals.length : 0,
+        averageDiastolic: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.diastolic || 0), 0) / vitals.length : 0,
+        averageHeartRate: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.heartRate || 0), 0) / vitals.length : 0,
+        averageTemperature: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.temperature || 0), 0) / vitals.length : 0,
+        averageOxygenSaturation: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.oxygenSaturation || 0), 0) / vitals.length : 0,
+        byBmiCategory: {},
+        byBpCategory: {},
+      };
+
+      // Get feedback stats
+      const feedback = await prisma.feedback.findMany({
+        select: {
+          npsScore: true,
+          serviceQuality: true,
+          staffBehavior: true,
+          cleanliness: true,
+          waitTime: true,
+        },
+      });
+
+      const feedbackStats = {
+        total: feedback.length,
+        averageNPS: feedback.length > 0 ? feedback.reduce((sum, f) => sum + (f.npsScore || 0), 0) / feedback.length : 0,
+        averageServiceQuality: feedback.length > 0 ? feedback.reduce((sum, f) => sum + (f.serviceQuality || 0), 0) / feedback.length : 0,
+        averageStaffBehavior: feedback.length > 0 ? feedback.reduce((sum, f) => sum + (f.staffBehavior || 0), 0) / feedback.length : 0,
+        averageCleanliness: feedback.length > 0 ? feedback.reduce((sum, f) => sum + (f.cleanliness || 0), 0) / feedback.length : 0,
+        averageWaitTime: feedback.length > 0 ? feedback.reduce((sum, f) => sum + (f.waitTime || 0), 0) / feedback.length : 0,
+        npsDistribution: {},
+        byRegion: {},
+      };
 
       return {
-        totalUsers,
-        totalCenters,
-        totalAppointments,
-        totalVitals,
-        totalFeedback,
-        timestamp: new Date(),
+        users: userStats,
+        centers: centerStats,
+        appointments: appointmentStats,
+        vitals: vitalStats,
+        feedback: feedbackStats,
+        lastUpdated: new Date(),
       };
     } catch (error) {
       console.error("Error getting dashboard metrics:", error);

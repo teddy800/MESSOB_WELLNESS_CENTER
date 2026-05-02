@@ -13,6 +13,12 @@ router.use(authenticate);
 router.get("/dashboard/metrics", AdminController.getDashboardMetrics);
 
 /**
+ * Regions Management
+ */
+router.get("/regions", AdminController.getRegions);
+router.get("/regions/:region/centers", AdminController.getCentersByRegion);
+
+/**
  * Users Management
  */
 router.get("/users", AdminController.getUsers);
@@ -20,6 +26,7 @@ router.get("/users", AdminController.getUsers);
 /**
  * Centers Management
  */
+router.post("/centers", AdminController.createCenter);
 router.get("/centers", AdminController.getCenters);
 
 /**
