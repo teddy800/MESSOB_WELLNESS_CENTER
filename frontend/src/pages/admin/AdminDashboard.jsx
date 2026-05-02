@@ -14,6 +14,11 @@ import "../../styles/admin-layout.css";
 import "../../styles/admin-dashboard.css";
 import "../../styles/admin-filters.css";
 import "../../styles/admin-tables.css";
+import "../../styles/admin-health.css";
+import "../../styles/admin-feedback.css";
+import "../../styles/admin-analytics.css";
+import "../../styles/admin-audit.css";
+import "../../styles/admin-settings.css";
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
