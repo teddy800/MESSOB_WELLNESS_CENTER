@@ -36,7 +36,7 @@ function DashboardMetrics() {
     return <div className="metrics-empty">No metrics available</div>;
   }
 
-  const { users, centers, appointments, vitals, feedback } = metrics;
+  const { totalUsers, totalCenters, totalAppointments, totalVitals, totalFeedback } = metrics;
 
   return (
     <div className="dashboard-metrics">
@@ -49,18 +49,8 @@ function DashboardMetrics() {
           </div>
           <div className="metric-body">
             <div className="metric-main">
-              <span className="metric-value">{users.total}</span>
+              <span className="metric-value">{totalUsers}</span>
               <span className="metric-label">Total Users</span>
-            </div>
-            <div className="metric-details">
-              <div className="detail-item">
-                <span className="detail-label">Active:</span>
-                <span className="detail-value">{users.active}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Verified:</span>
-                <span className="detail-value">{users.verified}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -73,18 +63,8 @@ function DashboardMetrics() {
           </div>
           <div className="metric-body">
             <div className="metric-main">
-              <span className="metric-value">{centers.total}</span>
+              <span className="metric-value">{totalCenters}</span>
               <span className="metric-label">Total Centers</span>
-            </div>
-            <div className="metric-details">
-              <div className="detail-item">
-                <span className="detail-label">Active:</span>
-                <span className="detail-value">{centers.active}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Regions:</span>
-                <span className="detail-value">{Object.keys(centers.byRegion).length}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -97,18 +77,8 @@ function DashboardMetrics() {
           </div>
           <div className="metric-body">
             <div className="metric-main">
-              <span className="metric-value">{appointments.total}</span>
+              <span className="metric-value">{totalAppointments}</span>
               <span className="metric-label">Total Appointments</span>
-            </div>
-            <div className="metric-details">
-              <div className="detail-item">
-                <span className="detail-label">Completed:</span>
-                <span className="detail-value">{appointments.completed}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Waiting:</span>
-                <span className="detail-value">{appointments.waiting}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -121,18 +91,8 @@ function DashboardMetrics() {
           </div>
           <div className="metric-body">
             <div className="metric-main">
-              <span className="metric-value">{vitals.total}</span>
+              <span className="metric-value">{totalVitals}</span>
               <span className="metric-label">Records</span>
-            </div>
-            <div className="metric-details">
-              <div className="detail-item">
-                <span className="detail-label">Avg BMI:</span>
-                <span className="detail-value">{vitals.averageBMI.toFixed(1)}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Avg HR:</span>
-                <span className="detail-value">{vitals.averageHeartRate.toFixed(0)}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -145,18 +105,8 @@ function DashboardMetrics() {
           </div>
           <div className="metric-body">
             <div className="metric-main">
-              <span className="metric-value">{feedback.total}</span>
+              <span className="metric-value">{totalFeedback}</span>
               <span className="metric-label">Responses</span>
-            </div>
-            <div className="metric-details">
-              <div className="detail-item">
-                <span className="detail-label">Avg NPS:</span>
-                <span className="detail-value">{feedback.averageNPS.toFixed(1)}</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Quality:</span>
-                <span className="detail-value">{feedback.averageServiceQuality.toFixed(1)}/5</span>
-              </div>
             </div>
           </div>
         </div>

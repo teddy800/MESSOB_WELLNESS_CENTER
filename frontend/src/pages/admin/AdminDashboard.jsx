@@ -13,6 +13,7 @@ import SystemSettings from "./SystemSettings";
 import "../../styles/admin-layout.css";
 import "../../styles/admin-dashboard.css";
 import "../../styles/admin-filters.css";
+import "../../styles/admin-tables.css";
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");

@@ -1,12 +1,25 @@
 import React, { useState } from "react";
 import FilterBar from "../../components/admin/FilterBar";
+import UsersList from "../../components/admin/UsersList";
 
 function UserManagement() {
   const [filters, setFilters] = useState({});
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    // TODO: Fetch users with filters
+  };
+
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    // TODO: Open edit modal
+  };
+
+  const handleDelete = (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      // TODO: Call delete API
+      console.log("Delete user:", userId);
+    }
   };
 
   return (
@@ -22,9 +35,11 @@ function UserManagement() {
         showCenterFilter={true}
       />
 
-      <div className="management-content">
-        <p>User management table will be implemented in Phase 3</p>
-      </div>
+      <UsersList 
+        filters={filters}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

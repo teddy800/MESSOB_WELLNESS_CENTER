@@ -1,12 +1,25 @@
 import React, { useState } from "react";
 import FilterBar from "../../components/admin/FilterBar";
+import AppointmentsList from "../../components/admin/AppointmentsList";
 
 function AppointmentManagement() {
   const [filters, setFilters] = useState({});
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    // TODO: Fetch appointments with filters
+  };
+
+  const handleEdit = (appointment) => {
+    setSelectedAppointment(appointment);
+    // TODO: Open edit modal
+  };
+
+  const handleDelete = (appointmentId) => {
+    if (window.confirm("Are you sure you want to delete this appointment?")) {
+      // TODO: Call delete API
+      console.log("Delete appointment:", appointmentId);
+    }
   };
 
   return (
@@ -22,9 +35,11 @@ function AppointmentManagement() {
         showDateFilter={true}
       />
 
-      <div className="management-content">
-        <p>Appointment management table will be implemented in Phase 3</p>
-      </div>
+      <AppointmentsList 
+        filters={filters}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

@@ -1,12 +1,25 @@
 import React, { useState } from "react";
 import FilterBar from "../../components/admin/FilterBar";
+import CentersList from "../../components/admin/CentersList";
 
 function CenterManagement() {
   const [filters, setFilters] = useState({});
+  const [selectedCenter, setSelectedCenter] = useState(null);
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    // TODO: Fetch centers with filters
+  };
+
+  const handleEdit = (center) => {
+    setSelectedCenter(center);
+    // TODO: Open edit modal
+  };
+
+  const handleDelete = (centerId) => {
+    if (window.confirm("Are you sure you want to delete this center?")) {
+      // TODO: Call delete API
+      console.log("Delete center:", centerId);
+    }
   };
 
   return (
@@ -22,9 +35,11 @@ function CenterManagement() {
         showCenterFilter={false}
       />
 
-      <div className="management-content">
-        <p>Center management table will be implemented in Phase 3</p>
-      </div>
+      <CentersList 
+        filters={filters}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

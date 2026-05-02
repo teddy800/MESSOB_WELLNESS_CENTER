@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
-import * as AdminService from "../services/admin.service";
+import AdminService from "../services/admin.service";
 import {
   UserFilters,
   CenterFilters,
