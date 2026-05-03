@@ -12,12 +12,13 @@ function Analytics() {
 
   useEffect(() => {
     fetchAnalytics();
-  }, [filters]);
+  }, []);
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
       const response = await adminService.getDashboardMetrics();
+      console.log("Dashboard metrics response:", response);
       setMetrics(response);
     } catch (err) {
       console.error("Error fetching analytics:", err);
@@ -32,6 +33,28 @@ function Analytics() {
   };
 
   if (loading) return <div className="loading">Loading analytics...</div>;
+  if (!metrics) return <div className="loading">No data available</div>;
+
+  // Calculate appointment status percentages
+  const appointmentTotal = metrics.appointments?.total || 0;
+  const appointmentStats = metrics.appointments?.byStatus || {};
+  const appointmentPercentages = Object.entries(appointmentStats).map(([status, count]) => ({
+    status: status.replace(/_/g, " "),
+    count,
+    percentage: appointmentTotal > 0 ? ((count / appointmentTotal) * 100).toFixed(1) : 0,
+  }));
+
+  // Get users by role
+  const usersByRole = Object.entries(metrics.users?.byRole || {}).map(([role, count]) => ({
+    role,
+    count,
+  }));
+
+  // Get centers by region
+  const centersByRegion = Object.entries(metrics.centers?.byRegion || {}).map(([region, count]) => ({
+    region,
+    count,
+  }));
 
   return (
     <div className="analytics-page">
@@ -63,26 +86,17 @@ function Analytics() {
         <div className="chart-card">
           <h3>Appointments by Status</h3>
           <div className="chart-placeholder">
-            <div className="status-item">
-              <span className="status-label">Waiting</span>
-              <div className="status-bar" style={{ width: "35%" }}></div>
-              <span className="status-count">35%</span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">In Progress</span>
-              <div className="status-bar" style={{ width: "25%" }}></div>
-              <span className="status-count">25%</span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">Completed</span>
-              <div className="status-bar" style={{ width: "30%" }}></div>
-              <span className="status-count">30%</span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">Cancelled</span>
-              <div className="status-bar" style={{ width: "10%" }}></div>
-              <span className="status-count">10%</span>
-            </div>
+            {appointmentPercentages.length > 0 ? (
+              appointmentPercentages.map((item, idx) => (
+                <div key={idx} className="status-item">
+                  <span className="status-label">{item.status}</span>
+                  <div className="status-bar" style={{ width: `${item.percentage}%` }}></div>
+                  <span className="status-count">{item.percentage}%</span>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: "#999" }}>No appointment data</p>
+            )}
           </div>
         </div>
 
@@ -90,22 +104,16 @@ function Analytics() {
         <div className="chart-card">
           <h3>Users by Role</h3>
           <div className="chart-placeholder">
-            <div className="role-item">
-              <span className="role-label">Nurse Officer</span>
-              <span className="role-count">45</span>
-            </div>
-            <div className="role-item">
-              <span className="role-label">Manager</span>
-              <span className="role-count">12</span>
-            </div>
-            <div className="role-item">
-              <span className="role-label">Regional Office</span>
-              <span className="role-count">8</span>
-            </div>
-            <div className="role-item">
-              <span className="role-label">Staff</span>
-              <span className="role-count">156</span>
-            </div>
+            {usersByRole.length > 0 ? (
+              usersByRole.map((item, idx) => (
+                <div key={idx} className="role-item">
+                  <span className="role-label">{item.role}</span>
+                  <span className="role-count">{item.count}</span>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: "#999" }}>No user data</p>
+            )}
           </div>
         </div>
 
@@ -113,22 +121,16 @@ function Analytics() {
         <div className="chart-card">
           <h3>Centers by Region</h3>
           <div className="chart-placeholder">
-            <div className="region-item">
-              <span className="region-label">Addis Ababa</span>
-              <span className="region-count">8</span>
-            </div>
-            <div className="region-item">
-              <span className="region-label">Oromia</span>
-              <span className="region-count">12</span>
-            </div>
-            <div className="region-item">
-              <span className="region-label">SNNPR</span>
-              <span className="region-count">10</span>
-            </div>
-            <div className="region-item">
-              <span className="region-label">Amhara</span>
-              <span className="region-count">9</span>
-            </div>
+            {centersByRegion.length > 0 ? (
+              centersByRegion.map((item, idx) => (
+                <div key={idx} className="region-item">
+                  <span className="region-label">{item.region || "Unknown"}</span>
+                  <span className="region-count">{item.count}</span>
+                </div>
+              ))
+            ) : (
+              <p style={{ color: "#999" }}>No center data</p>
+            )}
           </div>
         </div>
 
@@ -160,22 +162,22 @@ function Analytics() {
         <div className="summary-grid">
           <div className="summary-card">
             <h4>Total Appointments</h4>
-            <p className="summary-value">{metrics?.totalAppointments || 0}</p>
+            <p className="summary-value">{metrics.appointments?.total || 0}</p>
             <p className="summary-change">↑ 12% from last month</p>
           </div>
           <div className="summary-card">
             <h4>Active Users</h4>
-            <p className="summary-value">{metrics?.totalUsers || 0}</p>
+            <p className="summary-value">{metrics.users?.total || 0}</p>
             <p className="summary-change">↑ 5% from last month</p>
           </div>
           <div className="summary-card">
             <h4>System Centers</h4>
-            <p className="summary-value">{metrics?.totalCenters || 0}</p>
+            <p className="summary-value">{metrics.centers?.total || 0}</p>
             <p className="summary-change">→ No change</p>
           </div>
           <div className="summary-card">
             <h4>Health Records</h4>
-            <p className="summary-value">{metrics?.totalVitals || 0}</p>
+            <p className="summary-value">{metrics.vitals?.total || 0}</p>
             <p className="summary-change">↑ 8% from last month</p>
           </div>
         </div>

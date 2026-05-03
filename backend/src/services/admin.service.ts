@@ -87,12 +87,20 @@ const AdminService = {
       };
 
       // Get center stats
+      const centers = await prisma.center.groupBy({
+        by: ["region"],
+        _count: true,
+      });
+
       const centerStats = {
         total: await prisma.center.count(),
         active: await prisma.center.count({ where: { status: "ACTIVE" } }),
         inactive: await prisma.center.count({ where: { status: "INACTIVE" } }),
         maintenance: await prisma.center.count({ where: { status: "MAINTENANCE" } }),
-        byRegion: {},
+        byRegion: centers.reduce((acc: any, c: any) => {
+          acc[c.region] = c._count;
+          return acc;
+        }, {}),
       };
 
       // Get appointment stats
