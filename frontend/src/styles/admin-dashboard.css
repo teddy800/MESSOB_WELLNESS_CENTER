@@ -30,7 +30,7 @@
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #284394;
 }
 
 .metric-card:hover {
@@ -39,23 +39,23 @@
 }
 
 .metric-card.users-card {
-  border-left-color: #667eea;
+  border-left-color: #284394;
 }
 
 .metric-card.centers-card {
-  border-left-color: #48bb78;
+  border-left-color: #f59e0b;
 }
 
 .metric-card.appointments-card {
-  border-left-color: #ed8936;
+  border-left-color: #1e3a8a;
 }
 
 .metric-card.vitals-card {
-  border-left-color: #9f7aea;
+  border-left-color: #284394;
 }
 
 .metric-card.feedback-card {
-  border-left-color: #f6ad55;
+  border-left-color: #f59e0b;
 }
 
 .metric-header {
@@ -92,7 +92,7 @@
 .metric-value {
   font-size: 2rem;
   font-weight: 700;
-  color: #667eea;
+  color: #284394;
 }
 
 .metric-label {
@@ -203,7 +203,7 @@
 
 .btn-primary {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #284394 0%, #1e3a8a 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -215,7 +215,7 @@
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(40, 67, 148, 0.4);
 }
 
 .management-content {

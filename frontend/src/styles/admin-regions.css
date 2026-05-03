@@ -53,8 +53,8 @@
 
 .add-region-form input:focus {
   outline: none;
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: #284394;
+  box-shadow: 0 0 0 3px rgba(40, 67, 148, 0.1);
 }
 
 .add-region-form input:disabled {
@@ -65,7 +65,7 @@
 
 .add-region-form .btn-primary {
   padding: 10px 16px;
-  background-color: #8b5cf6;
+  background-color: #284394;
   color: white;
   border: none;
   border-radius: 6px;
@@ -76,9 +76,9 @@
 }
 
 .add-region-form .btn-primary:hover:not(:disabled) {
-  background-color: #7c3aed;
+  background-color: #1e3a8a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(40, 67, 148, 0.3);
 }
 
 .add-region-form .btn-primary:disabled {
@@ -120,7 +120,7 @@
 .region-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: #8b5cf6;
+  border-color: #284394;
 }
 
 .region-header {
@@ -138,7 +138,7 @@
 }
 
 .region-badge {
-  background-color: #8b5cf6;
+  background-color: #284394;
   color: white;
   padding: 4px 12px;
   border-radius: 20px;

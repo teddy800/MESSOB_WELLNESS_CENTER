@@ -32,7 +32,7 @@ function AdminHeader({ user, onToggleSidebar }) {
             placeholder="Search..." 
             className="search-input"
           />
-          <span className="search-icon">🔍</span>
+         
         </div>
 
         <div className="header-actions">

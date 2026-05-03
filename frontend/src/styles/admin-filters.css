@@ -44,8 +44,8 @@
 .filter-input:focus,
 .filter-select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #284394;
+  box-shadow: 0 0 0 3px rgba(40, 67, 148, 0.1);
 }
 
 .filter-input::placeholder {
@@ -55,7 +55,7 @@
 .filter-select {
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23284394' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   padding-right: 2.5rem;
@@ -76,8 +76,8 @@
 .btn-reset {
   padding: 0.75rem 1.5rem;
   background: white;
-  color: #667eea;
-  border: 1px solid #667eea;
+  color: #284394;
+  border: 1px solid #284394;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -87,13 +87,13 @@
 
 .btn-reset:hover {
   background: #f7fafc;
-  border-color: #764ba2;
-  color: #764ba2;
+  border-color: #1e3a8a;
+  color: #1e3a8a;
 }
 
 .btn-apply {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #284394 0%, #1e3a8a 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -105,7 +105,7 @@
 
 .btn-apply:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(40, 67, 148, 0.4);
 }
 
 /* Responsive */

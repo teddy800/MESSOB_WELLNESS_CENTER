@@ -111,8 +111,8 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: #284394;
+  box-shadow: 0 0 0 3px rgba(40, 67, 148, 0.1);
 }
 
 .form-group input:disabled,
@@ -171,14 +171,14 @@
 }
 
 .btn-primary {
-  background-color: #8b5cf6;
+  background-color: #284394;
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #7c3aed;
+  background-color: #1e3a8a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(40, 67, 148, 0.3);
 }
 
 .btn-primary:disabled {

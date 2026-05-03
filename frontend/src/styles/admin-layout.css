@@ -22,7 +22,7 @@
 /* Sidebar */
 .admin-sidebar {
   width: 280px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #284394 0%, #1e3a8a 100%);
   color: white;
   display: flex;
   flex-direction: column;
@@ -114,8 +114,8 @@
 
 .nav-item.active {
   background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  border-left: 3px solid white;
+  color: #f59e0b;
+  border-left: 3px solid #f59e0b;
   padding-left: calc(1.5rem - 3px);
 }
 
@@ -163,9 +163,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: white;
-  border-bottom: 1px solid #e0e6ed;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #284394 0%, #1e3a8a 100%);
+  border-bottom: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .header-left {
@@ -180,7 +180,7 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #667eea;
+  color: #284394;
   padding: 0.5rem;
   display: none;
 }
@@ -188,7 +188,7 @@
 .page-title {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #2d3748;
+  color: #ffffff;
   margin: 0;
 }
 
@@ -206,17 +206,23 @@
 
 .search-input {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  padding: 0.75rem 1rem 0.75rem 3rem;
   border: 1px solid #e0e6ed;
   border-radius: 8px;
   font-size: 0.875rem;
   transition: all 0.2s ease;
+  background: white;
+  color: #2d3748;
+}
+
+.search-input::placeholder {
+  color: #a0aec0;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #284394;
+  box-shadow: 0 0 0 3px rgba(40, 67, 148, 0.1);
 }
 
 .search-icon {
@@ -225,6 +231,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: #a0aec0;
+  margin-right: 0.5rem;
 }
 
 .header-actions {
@@ -239,12 +246,12 @@
   border: none;
   font-size: 1.25rem;
   cursor: pointer;
-  color: #718096;
+  color: rgba(255, 255, 255, 0.8);
   transition: color 0.2s ease;
 }
 
 .notification-btn:hover {
-  color: #667eea;
+  color: #f59e0b;
 }
 
 .notification-badge {
@@ -272,19 +279,19 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: none;
-  border: 1px solid #e0e6ed;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.875rem;
-  color: #2d3748;
+  color: white;
   transition: all 0.2s ease;
 }
 
 .user-btn:hover {
-  border-color: #667eea;
-  background-color: #f7fafc;
+  border-color: #f59e0b;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .user-avatar {
@@ -329,7 +336,7 @@
 
 .dropdown-item:hover {
   background-color: #f7fafc;
-  color: #667eea;
+  color: #284394;
 }
 
 .dropdown-item.logout {

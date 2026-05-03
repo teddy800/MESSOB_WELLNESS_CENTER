@@ -36,7 +36,11 @@ function DashboardMetrics() {
     return <div className="metrics-empty">No metrics available</div>;
   }
 
-  const { totalUsers, totalCenters, totalAppointments, totalVitals, totalFeedback } = metrics;
+  const totalUsers = metrics.users?.total || 0;
+  const totalCenters = metrics.centers?.total || 0;
+  const totalAppointments = metrics.appointments?.total || 0;
+  const totalVitals = metrics.vitals?.total || 0;
+  const totalFeedback = metrics.feedback?.total || 0;
 
   return (
     <div className="dashboard-metrics">

@@ -198,12 +198,12 @@
 }
 
 .btn-icon.edit {
-  color: #3182ce;
+  color: #284394;
 }
 
 .btn-icon.edit:hover {
-  background-color: #bee3f8;
-  color: #2c5282;
+  background-color: #dbeafe;
+  color: #1e3a8a;
 }
 
 .btn-icon.delete {
@@ -257,8 +257,8 @@
 .btn-pagination {
   padding: 0.5rem 1rem;
   background: white;
-  color: #667eea;
-  border: 1px solid #667eea;
+  color: #284394;
+  border: 1px solid #284394;
   border-radius: 6px;
   font-size: 0.875rem;
   font-weight: 600;
@@ -267,7 +267,7 @@
 }
 
 .btn-pagination:hover:not(:disabled) {
-  background: #667eea;
+  background: #284394;
   color: white;
 }
 

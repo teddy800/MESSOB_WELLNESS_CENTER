@@ -41,8 +41,8 @@
 }
 
 .tab-button.active {
-  color: #7c3aed;
-  border-bottom-color: #7c3aed;
+  color: #284394;
+  border-bottom-color: #284394;
 }
 
 .tab-content {
@@ -72,7 +72,7 @@
 
 .btn-export {
   padding: 8px 16px;
-  background: #7c3aed;
+  background: #284394;
   color: white;
   border: none;
   border-radius: 6px;
@@ -83,7 +83,7 @@
 }
 
 .btn-export:hover {
-  background: #6d28d9;
+  background: #1e3a8a;
 }
 
 .filters {

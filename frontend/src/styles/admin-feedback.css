@@ -41,8 +41,8 @@
 }
 
 .tab-button.active {
-  color: #7c3aed;
-  border-bottom-color: #7c3aed;
+  color: #284394;
+  border-bottom-color: #284394;
 }
 
 .tab-content {
@@ -72,7 +72,7 @@
 
 .btn-export {
   padding: 8px 16px;
-  background: #7c3aed;
+  background: #284394;
   color: white;
   border: none;
   border-radius: 6px;
@@ -83,7 +83,7 @@
 }
 
 .btn-export:hover {
-  background: #6d28d9;
+  background: #1e3a8a;
 }
 
 .filters {
@@ -303,38 +303,67 @@
 }
 
 .analytics-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #254091;
   color: white;
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+.analytics-card:nth-child(2) {
+  background: #254091;
+}
+
+.analytics-card:nth-child(3) {
+  background: #254091;
+}
+
+.analytics-card:nth-child(4) {
+  background: #254091;
+}
+
+.analytics-card:nth-child(1) .metric-value {
+  color: white;
+}
+
+.analytics-card:nth-child(2) .metric-value {
+  color: white;
+}
+
+.analytics-card:nth-child(4) .metric-value {
+  color: white;
+}
+
 .analytics-card h3 {
   font-size: 14px;
   font-weight: 500;
   margin: 0 0 10px 0;
-  opacity: 0.9;
+  color: white;
+}
+
+.analytics-card p {
+  color: white;
 }
 
 .metric-value {
   font-size: 32px;
   font-weight: 700;
   margin-bottom: 5px;
+  color: white;
 }
 
 .metric-value.positive {
-  color: #86efac;
+  color: white;
 }
 
 .metric-value.negative {
-  color: #fca5a5;
+  color: white;
 }
 
 .metric-label {
   font-size: 12px;
   margin: 0;
-  opacity: 0.8;
+  color: white;
 }
 
 .analytics-charts {
