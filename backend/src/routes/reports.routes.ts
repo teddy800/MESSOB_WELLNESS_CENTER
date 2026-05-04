@@ -8,7 +8,7 @@ const router = Router();
 /**
  * POST /api/v1/reports/combined/:patientId
  * Generate combined health report PDF
- * Requires nurse authentication
+ * All staff roles can download reports
  */
 router.post(
   '/combined/:patientId',
@@ -18,7 +18,8 @@ router.post(
     UserRole.MANAGER,
     UserRole.REGIONAL_OFFICE,
     UserRole.FEDERAL_OFFICE,
-    UserRole.SYSTEM_ADMIN
+    UserRole.SYSTEM_ADMIN,
+    UserRole.STAFF
   ),
   generateCombinedReport
 );

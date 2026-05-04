@@ -8,7 +8,6 @@ import WellnessPlan from "../components/dashboard/WellnessPlan";
 import ProfileSection from "../components/dashboard/ProfileSection";
 import RiskScoring from "../components/dashboard/RiskScoring";
 import HealthAlerts from "../components/dashboard/HealthAlerts";
-import AppointmentReminders from "../components/dashboard/AppointmentReminders";
 import FeedbackForm from "../components/dashboard/FeedbackForm";
 import LongitudinalRecords from "../components/dashboard/LongitudinalRecords";
 
@@ -41,7 +40,6 @@ function Dashboard() {
           <>
             <BookingCalendar />
             <MyAppointments />
-            <AppointmentReminders />
           </>
         )}
 

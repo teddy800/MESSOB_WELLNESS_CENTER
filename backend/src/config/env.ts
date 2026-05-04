@@ -50,6 +50,20 @@ function getNodeEnv(): NodeEnv {
   return rawValue as NodeEnv;
 }
 
+function getOptionalEnv(name: string): string {
+  return process.env[name]?.trim() || '';
+}
+
+function getOptionalPort(name: string): number {
+  const value = process.env[name]?.trim();
+  if (!value) return 587; // Default SMTP port
+  const port = Number.parseInt(value, 10);
+  if (Number.isNaN(port) || port <= 0 || port > 65535) {
+    return 587;
+  }
+  return port;
+}
+
 export const env = Object.freeze({
   NODE_ENV: getNodeEnv(),
   PORT: getRequiredPort("PORT"),
@@ -61,6 +75,11 @@ export const env = Object.freeze({
   DATABASE_URL: getRequiredEnv("DATABASE_URL"),
   JWT_SECRET: getRequiredEnv("JWT_SECRET"),
   JWT_EXPIRES_IN: getRequiredEnv("JWT_EXPIRES_IN"),
+  SMTP_HOST: getOptionalEnv("SMTP_HOST"),
+  SMTP_PORT: getOptionalPort("SMTP_PORT"),
+  SMTP_USER: getOptionalEnv("SMTP_USER"),
+  SMTP_PASS: getOptionalEnv("SMTP_PASS"),
+  SMTP_FROM: getOptionalEnv("SMTP_FROM") || "noreply@mesob.com",
 });
 
 if (!env.DATABASE_URL.startsWith("postgresql://")) {
