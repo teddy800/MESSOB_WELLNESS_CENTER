@@ -6,17 +6,21 @@
 
 .page-header {
   margin-bottom: 30px;
+  display: block;
+  width: 100%;
 }
 
 .page-header h1 {
   font-size: 28px;
   color: #1a1a1a;
   margin-bottom: 5px;
+  display: block;
 }
 
 .page-header p {
   color: #666;
   font-size: 14px;
+  display: block;
 }
 
 .success-message {
@@ -30,10 +34,12 @@
 }
 
 .settings-container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  display: block;
+  width: 100%;
 }
 
 .settings-section {
@@ -256,4 +262,251 @@
   .btn-reset-settings {
     width: 100%;
   }
+}
+
+
+/* Profile Picture Styles */
+.profile-picture-card {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 30px;
+  margin-bottom: 20px;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.profile-picture-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+}
+
+.profile-avatar-large {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: #254091;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 60px;
+  font-weight: 700;
+  color: white;
+  border: 3px solid #254091;
+  overflow: hidden;
+}
+
+.profile-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-initials {
+  font-size: 60px;
+  font-weight: 700;
+}
+
+.btn-camera-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #f59e0b;
+  border: 3px solid white;
+  font-size: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-camera-overlay:hover {
+  background: #f97316;
+  transform: scale(1.1);
+}
+
+.profile-info-text {
+  flex: 1;
+}
+
+.profile-info-text h2 {
+  font-size: 24px;
+  margin: 0 0 8px 0;
+  color: #1a1a1a;
+}
+
+.role-badge {
+  display: inline-block;
+  background: #254091;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.email-text {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
+.settings-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.card-header h2 {
+  font-size: 18px;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.btn-edit {
+  background: #254091;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+}
+
+.btn-edit:hover {
+  background: #1e3a8a;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #1f2937;
+}
+
+.form-input:disabled {
+  background: #f9fafb;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #254091;
+  box-shadow: 0 0 0 3px rgba(37, 64, 145, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-save {
+  background: #254091;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.btn-save:hover {
+  background: #1e3a8a;
+}
+
+.security-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+}
+
+.security-info h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 5px 0;
+}
+
+.security-info p {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+.btn-action {
+  background: #254091;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-action:hover {
+  background: #1e3a8a;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 15px 0;
+}
+
+.settings-page {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  background: white;
+  display: block;
 }

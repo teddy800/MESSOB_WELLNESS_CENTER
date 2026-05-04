@@ -144,7 +144,7 @@ export const updateCurrentUser = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    const { name, dateOfBirth, gender, phone, emergencyContactName, emergencyContactPhone } = req.body;
+    const { name, dateOfBirth, gender, phone, emergencyContactName, emergencyContactPhone, profilePicture } = req.body;
 
     // Prepare update data
     const updateData: any = {};
@@ -155,6 +155,7 @@ export const updateCurrentUser = async (req: AuthRequest, res: Response): Promis
     if (phone) updateData.phone = phone;
     if (emergencyContactName) updateData.emergencyContactName = emergencyContactName;
     if (emergencyContactPhone) updateData.emergencyContactPhone = emergencyContactPhone;
+    if (profilePicture) updateData.profilePicture = profilePicture;
 
     const updatedUser = await UsersService.updateUserProfile(req.user.userId, updateData);
 
@@ -163,6 +164,9 @@ export const updateCurrentUser = async (req: AuthRequest, res: Response): Promis
       data: {
         id: updatedUser.id,
         name: updatedUser.fullName,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        profilePicture: updatedUser.profilePicture,
       },
     });
   } catch (error) {

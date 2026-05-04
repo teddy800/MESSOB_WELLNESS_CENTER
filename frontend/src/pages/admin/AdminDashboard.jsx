@@ -11,6 +11,7 @@ import FeedbackQuality from "./FeedbackQuality";
 import Analytics from "./Analytics";
 import AuditLogs from "./AuditLogs";
 import SystemSettings from "./SystemSettings";
+import AdminProfile from "./AdminProfile";
 import "../../styles/admin-layout.css";
 import "../../styles/admin-dashboard.css";
 import "../../styles/admin-filters.css";
@@ -54,6 +55,8 @@ function AdminDashboard() {
         return <AuditLogs />;
       case "settings":
         return <SystemSettings />;
+      case "profile":
+        return <AdminProfile />;
       default:
         return <div>Page not found</div>;
     }

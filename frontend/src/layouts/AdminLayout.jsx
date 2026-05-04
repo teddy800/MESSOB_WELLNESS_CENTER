@@ -20,6 +20,7 @@ function AdminLayout({ children, activeTab, onTabChange }) {
         <AdminHeader 
           user={user}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onTabChange={onTabChange}
         />
         
         <main className="admin-content">

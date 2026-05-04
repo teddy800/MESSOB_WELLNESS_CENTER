@@ -18,6 +18,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Export api instance separately for direct use
+export { api };
+
 export const adminService = {
   // Dashboard
   getDashboardMetrics: async () => {
@@ -216,6 +219,17 @@ export const adminService = {
       return response.data.data;
     } catch (err) {
       console.error("Error updating appointment:", err);
+      throw err;
+    }
+  },
+
+  // Update user profile (for current user)
+  updateProfile: async (profileData) => {
+    try {
+      const response = await api.put("/users/me", profileData);
+      return response.data.data;
+    } catch (err) {
+      console.error("Error updating profile:", err);
       throw err;
     }
   },

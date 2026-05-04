@@ -2,10 +2,20 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-function AdminHeader({ user, onToggleSidebar }) {
+function AdminHeader({ user, onToggleSidebar, onTabChange }) {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const handleProfileClick = () => {
+    setShowUserMenu(false);
+    onTabChange("profile");
+  };
+
+  const handleSettingsClick = () => {
+    setShowUserMenu(false);
+    onTabChange("settings");
+  };
 
   const handleLogout = () => {
     logout();
@@ -46,19 +56,31 @@ function AdminHeader({ user, onToggleSidebar }) {
               className="user-btn"
               onClick={() => setShowUserMenu(!showUserMenu)}
             >
-              <span className="user-avatar">👤</span>
+              <span className="user-avatar">
+                {user?.profilePicture ? (
+                  <img src={user.profilePicture} alt={user?.fullName} className="avatar-img" />
+                ) : (
+                  "👤"
+                )}
+              </span>
               <span className="user-name">{user?.fullName}</span>
               <span className="dropdown-arrow">▼</span>
             </button>
 
             {showUserMenu && (
               <div className="user-dropdown">
-                <a href="#profile" className="dropdown-item">
+                <button 
+                  className="dropdown-item"
+                  onClick={handleProfileClick}
+                >
                   👤 Profile
-                </a>
-                <a href="#settings" className="dropdown-item">
+                </button>
+                <button 
+                  className="dropdown-item"
+                  onClick={handleSettingsClick}
+                >
                   ⚙️ Settings
-                </a>
+                </button>
                 <hr className="dropdown-divider" />
                 <button 
                   className="dropdown-item logout"
