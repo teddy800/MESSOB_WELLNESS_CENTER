@@ -43,7 +43,7 @@ const ManagerDashboard = () => {
     walkInEnabled: true,
     autoConfirmBookings: false,
   });
-  const autoRefreshRef = useRef(null);
+
 
   const hasAccess = MANAGER_ROLES.includes(user?.role);
 
@@ -80,13 +80,11 @@ const ManagerDashboard = () => {
     }
   }, []);
 
-  // Initial load + auto-refresh every 60s
+  // Initial load
   useEffect(() => {
     if (hasAccess) {
       loadDashboardData();
-      autoRefreshRef.current = setInterval(loadDashboardData, 60000);
     }
-    return () => clearInterval(autoRefreshRef.current);
   }, [hasAccess, loadDashboardData]);
 
   if (!hasAccess) {
@@ -150,7 +148,7 @@ const ManagerDashboard = () => {
           </div>
           {lastUpdated && (
             <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)' }}>
-              ↻ Updated {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} · auto-refresh 60s
+              ↻ Updated {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
             </div>
           )}
           <button

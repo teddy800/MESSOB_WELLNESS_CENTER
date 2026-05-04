@@ -35,7 +35,7 @@ const RegionalDashboard = () => {
   const [centers, setCenters] = useState([]);
   const [trendsData, setTrendsData] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const autoRefreshRef = useRef(null);
+
 
   const hasAccess = REGIONAL_ROLES.includes(user?.role);
 
@@ -76,13 +76,11 @@ const RegionalDashboard = () => {
     }
   }, [selectedCenter]);
 
-  // Initial load + auto-refresh every 60s
+  // Initial load
   useEffect(() => {
     if (hasAccess) {
       loadDashboardData();
-      autoRefreshRef.current = setInterval(loadDashboardData, 60000);
     }
-    return () => clearInterval(autoRefreshRef.current);
   }, [hasAccess, loadDashboardData]);
 
   if (!hasAccess) {
@@ -158,7 +156,7 @@ const RegionalDashboard = () => {
           </div>
           {lastUpdated && (
             <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)' }}>
-              ↻ {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} · auto 60s
+              ↻ {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
             </div>
           )}
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
