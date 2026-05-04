@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { adminService } from "../../services/adminService";
+import SystemHealthChart from "./SystemHealthChart";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 function DashboardCharts() {
@@ -150,6 +151,9 @@ function DashboardCharts() {
             </div>
           </div>
         </div>
+
+        {/* System Health Chart */}
+        <SystemHealthChart />
       </div>
     </div>
   );

@@ -12,7 +12,6 @@ function AdminSidebar({ activeTab, onTabChange, isOpen }) {
     { id: "appointments", label: "Appointments", icon: "📅" },
     { id: "vitals", label: "Health Data", icon: "💊" },
     { id: "feedback", label: "Feedback", icon: "⭐" },
-    { id: "analytics", label: "Analytics", icon: "📈" },
     { id: "audit", label: "Audit Logs", icon: "📋" },
     { id: "settings", label: "Settings", icon: "⚙️" },
   ];
