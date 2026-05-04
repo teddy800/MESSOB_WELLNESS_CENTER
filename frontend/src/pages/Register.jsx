@@ -60,10 +60,16 @@ function Register() {
   const fetchRegions = async () => {
     setRegionsLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/regions`);
+      const url = `${import.meta.env.VITE_API_URL}/api/v1/regions`;
+      console.log('Fetching regions from:', url);
+      const response = await fetch(url);
       const data = await response.json();
-      if (data.success) {
+      console.log('Regions response:', data);
+      if (data.status === "success" && Array.isArray(data.data)) {
         setRegions(data.data);
+        console.log('Regions loaded:', data.data);
+      } else {
+        console.error('Invalid regions response format:', data);
       }
     } catch (error) {
       console.error("Error fetching regions:", error);
@@ -75,17 +81,17 @@ function Register() {
   const fetchCenters = async (region) => {
     setCentersLoading(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/v1/centers?region=${encodeURIComponent(region)}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
-          },
-        }
-      );
+      const url = `${import.meta.env.VITE_API_URL}/api/v1/centers?region=${encodeURIComponent(region)}`;
+      console.log('Fetching centers from:', url);
+      const response = await fetch(url);
       const data = await response.json();
-      if (data.success) {
+      console.log('Centers response:', data);
+      if (data.status === "success" && Array.isArray(data.data)) {
         setCenters(data.data);
+        console.log('Centers loaded:', data.data);
+      } else {
+        console.error('Invalid centers response format:', data);
+        setCenters([]);
       }
     } catch (error) {
       console.error("Error fetching centers:", error);
@@ -571,7 +577,7 @@ function Register() {
               {/* Health Center */}
               <div className="mesob-form-group">
                 <label className="mesob-form-label">
-                   Center<span className="mesob-required">*</span>
+                   Center <span className="mesob-required">*</span>
                 </label>
                 <select
                   name="centerId"
@@ -587,7 +593,7 @@ function Register() {
                       ? "Loading centers..."
                       : centers.length === 0
                       ? "No centers available"
-                      : "Select Health Center"}
+                      : "Select Center"}
                   </option>
                   {centers.map((center) => (
                     <option key={center.id} value={center.id}>
