@@ -344,6 +344,7 @@ function HealthJourney() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [dateRange, setDateRange] = useState("30");
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   const exportHistoryCsv = () => {
     if (!vitals.length) return;
@@ -383,8 +384,33 @@ function HealthJourney() {
     URL.revokeObjectURL(url);
   };
 
-  const exportAsPdf = () => {
-    window.print();
+  const exportAsPdf = async () => {
+    try {
+      setGeneratingPDF(true);
+      setError('');
+      const response = await api.post(
+        `/api/v1/reports/combined/${user.id}?includeVitals=true`,
+        {},
+        { responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `health-journey-${user.id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to download PDF:', err);
+      const errorMsg = err.response?.status === 403 
+        ? 'You do not have permission to download this report'
+        : err.response?.data?.message || 'Failed to generate PDF';
+      setError(errorMsg);
+    } finally {
+      setGeneratingPDF(false);
+    }
   };
 
   useEffect(() => {
@@ -519,8 +545,9 @@ function HealthJourney() {
             type="button"
             className="btn btn-secondary"
             onClick={exportAsPdf}
+            disabled={generatingPDF || !vitals.length}
           >
-            Print/PDF
+            {generatingPDF ? '📄 Generating PDF...' : '📄 Download PDF'}
           </button>
         </div>
       </div>
