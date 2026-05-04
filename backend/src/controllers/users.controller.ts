@@ -117,8 +117,11 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
       data: {
         id: user.id,
         name: user.fullName,
+        fullName: user.fullName,
         email: user.email,
+        phone: user.phone,
         roleId: user.role,
+        profilePicture: user.profilePicture,
       },
     });
   } catch (error) {
