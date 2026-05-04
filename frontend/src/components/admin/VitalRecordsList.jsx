@@ -59,6 +59,54 @@ function VitalRecordsList() {
     setPage(1);
   };
 
+  const handleExport = () => {
+    if (vitals.length === 0) {
+      alert("No data to export");
+      return;
+    }
+
+    const headers = [
+      "Patient Name",
+      "Weight (kg)",
+      "Height (cm)",
+      "BMI",
+      "BP (Sys/Dia)",
+      "Heart Rate",
+      "Temperature (°C)",
+      "O2 Saturation (%)",
+      "Recorded Date",
+    ];
+
+    const rows = vitals.map((vital) => [
+      vital.user?.fullName || "N/A",
+      vital.weightKg?.toFixed(1) || "-",
+      vital.heightCm?.toFixed(1) || "-",
+      vital.bmi?.toFixed(1) || "-",
+      vital.systolic && vital.diastolic ? `${vital.systolic}/${vital.diastolic}` : "-",
+      vital.heartRate || "-",
+      vital.temperature?.toFixed(1) || "-",
+      vital.oxygenSaturation || "-",
+      new Date(vital.recordedAt).toLocaleDateString(),
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row.map((cell) => `"${cell}"`).join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `vital-records-${new Date().toISOString().split("T")[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (loading) return <div className="loading">Loading vitals...</div>;
   if (error) return <div className="error">Error: {error}</div>;
 
@@ -68,7 +116,7 @@ function VitalRecordsList() {
       
       <div className="list-header">
         <h2>Vital Records</h2>
-        <button className="btn-export">Export</button>
+        <button className="btn-export" onClick={handleExport}>Export</button>
       </div>
 
       <div className="filters">

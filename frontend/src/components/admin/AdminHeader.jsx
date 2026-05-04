@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-function AdminHeader({ user, onToggleSidebar, onTabChange }) {
+function AdminHeader({ onToggleSidebar, onTabChange }) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleProfileClick = () => {
@@ -20,6 +20,11 @@ function AdminHeader({ user, onToggleSidebar, onTabChange }) {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const getInitials = (name) => {
+    if (!name) return "SA";
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase();
   };
 
   return (
@@ -60,7 +65,7 @@ function AdminHeader({ user, onToggleSidebar, onTabChange }) {
                 {user?.profilePicture ? (
                   <img src={user.profilePicture} alt={user?.fullName} className="avatar-img" />
                 ) : (
-                  "👤"
+                  <div className="avatar-initials">{getInitials(user?.fullName)}</div>
                 )}
               </span>
               <span className="user-name">{user?.fullName}</span>

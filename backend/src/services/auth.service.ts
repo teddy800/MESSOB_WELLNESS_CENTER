@@ -351,6 +351,7 @@ export class AuthService {
         dateOfBirth: true,
         gender: true,
         phone: true,
+        profilePicture: true,
       },
     });
   }

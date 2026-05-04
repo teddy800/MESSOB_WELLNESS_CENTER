@@ -18,7 +18,6 @@ function AdminLayout({ children, activeTab, onTabChange }) {
       
       <div className="admin-main">
         <AdminHeader 
-          user={user}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onTabChange={onTabChange}
         />

@@ -31,6 +31,8 @@
   margin-bottom: 20px;
   font-size: 14px;
   font-weight: 500;
+  border-left: 4px solid #22c55e;
+  animation: slideDown 0.3s ease-out;
 }
 
 .error-message {
@@ -42,6 +44,18 @@
   font-size: 14px;
   font-weight: 500;
   border-left: 4px solid #dc2626;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .settings-container {

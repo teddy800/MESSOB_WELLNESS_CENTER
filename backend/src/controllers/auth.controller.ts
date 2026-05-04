@@ -313,7 +313,16 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
 
     res.status(200).json({
       status: "success",
-      data: { user },
+      data: { 
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          profilePicture: user.profilePicture,
+        }
+      },
     });
   } catch (error) {
     console.error("Get current user error:", error);

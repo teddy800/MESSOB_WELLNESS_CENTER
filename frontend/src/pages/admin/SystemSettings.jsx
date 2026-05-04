@@ -58,9 +58,11 @@ function SystemSettings() {
       localStorage.setItem("systemSettings", JSON.stringify(settings));
       
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      alert("✓ Settings saved successfully!");
+      setTimeout(() => setSaved(false), 5000);
     } catch (err) {
       setError("Failed to save settings");
+      alert("✗ Failed to save settings");
       console.error("Error saving settings:", err);
     } finally {
       setLoading(false);
