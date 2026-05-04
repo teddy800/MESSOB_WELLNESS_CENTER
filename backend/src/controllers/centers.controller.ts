@@ -95,6 +95,32 @@ export const getAllCenters = async (req: AuthRequest, res: Response): Promise<vo
   }
 };
 
+/**
+ * Public endpoint for getting centers (used by registration page)
+ * No authentication required
+ */
+export const getPublicCenters = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { region } = req.query;
+
+    const filters: any = { status: "ACTIVE" };
+    if (region) filters.region = region as string;
+
+    const centers = await CentersService.getAllCenters(filters);
+
+    res.status(200).json({
+      status: "success",
+      data: centers,
+    });
+  } catch (error) {
+    console.error("Get public centers error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve centers",
+    });
+  }
+};
+
 export const getCenterById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../../styles/admin-settings.css";
 
 function SystemSettings() {
@@ -14,6 +14,30 @@ function SystemSettings() {
   });
 
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [systemInfo, setSystemInfo] = useState({
+    version: "1.0.0",
+    lastUpdated: "May 3, 2026",
+    databaseSize: "2.4 GB",
+    uptime: "99.9%",
+  });
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      // Load settings from localStorage (simulating backend)
+      const savedSettings = localStorage.getItem("systemSettings");
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
+      }
+    } catch (err) {
+      console.error("Error loading settings:", err);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -22,11 +46,25 @@ function SystemSettings() {
       [name]: type === "checkbox" ? checked : value,
     }));
     setSaved(false);
+    setError("");
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      // Save settings to localStorage (simulating backend)
+      localStorage.setItem("systemSettings", JSON.stringify(settings));
+      
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError("Failed to save settings");
+      console.error("Error saving settings:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -40,6 +78,56 @@ function SystemSettings() {
       sessionTimeout: 30,
       maintenanceMode: false,
     });
+    setSaved(false);
+    setError("");
+  };
+
+  const handleManualBackup = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      // Simulate backup process
+      alert("Backup started. This may take a few minutes...");
+      
+      // Simulate backup completion
+      setTimeout(() => {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }, 2000);
+    } catch (err) {
+      setError("Failed to create backup");
+      console.error("Error creating backup:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    try {
+      const confirmed = window.confirm(
+        "Are you sure you want to restore from backup? This will overwrite current data."
+      );
+      
+      if (!confirmed) return;
+      
+      setLoading(true);
+      setError("");
+      
+      // Simulate restore process
+      alert("Restore started. This may take a few minutes...");
+      
+      // Simulate restore completion
+      setTimeout(() => {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }, 2000);
+    } catch (err) {
+      setError("Failed to restore backup");
+      console.error("Error restoring backup:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,6 +138,7 @@ function SystemSettings() {
       </div>
 
       {saved && <div className="success-message">✓ Settings saved successfully</div>}
+      {error && <div className="error-message">✗ {error}</div>}
 
       <div className="settings-container">
         {/* Notification Settings */}
@@ -67,6 +156,7 @@ function SystemSettings() {
               checked={settings.appointmentReminder}
               onChange={handleChange}
               className="toggle-switch"
+              disabled={loading}
             />
           </div>
 
@@ -82,6 +172,7 @@ function SystemSettings() {
               checked={settings.smsNotifications}
               onChange={handleChange}
               className="toggle-switch"
+              disabled={loading}
             />
           </div>
 
@@ -97,6 +188,7 @@ function SystemSettings() {
               checked={settings.emailNotifications}
               onChange={handleChange}
               className="toggle-switch"
+              disabled={loading}
             />
           </div>
         </div>
@@ -116,6 +208,7 @@ function SystemSettings() {
               checked={settings.autoBackup}
               onChange={handleChange}
               className="toggle-switch"
+              disabled={loading}
             />
           </div>
 
@@ -130,7 +223,7 @@ function SystemSettings() {
               value={settings.backupFrequency}
               onChange={handleChange}
               className="setting-select"
-              disabled={!settings.autoBackup}
+              disabled={!settings.autoBackup || loading}
             >
               <option value="hourly">Hourly</option>
               <option value="daily">Daily</option>
@@ -140,8 +233,20 @@ function SystemSettings() {
           </div>
 
           <div className="backup-actions">
-            <button className="btn-backup">💾 Manual Backup Now</button>
-            <button className="btn-restore">↩️ Restore from Backup</button>
+            <button 
+              className="btn-backup"
+              onClick={handleManualBackup}
+              disabled={loading}
+            >
+              {loading ? "⏳ Backing up..." : "💾 Manual Backup Now"}
+            </button>
+            <button 
+              className="btn-restore"
+              onClick={handleRestore}
+              disabled={loading}
+            >
+              {loading ? "⏳ Restoring..." : "↩️ Restore from Backup"}
+            </button>
           </div>
         </div>
 
@@ -162,6 +267,7 @@ function SystemSettings() {
               className="setting-input"
               min="1"
               max="10"
+              disabled={loading}
             />
           </div>
 
@@ -179,6 +285,7 @@ function SystemSettings() {
               className="setting-input"
               min="5"
               max="480"
+              disabled={loading}
             />
           </div>
         </div>
@@ -198,31 +305,44 @@ function SystemSettings() {
               checked={settings.maintenanceMode}
               onChange={handleChange}
               className="toggle-switch"
+              disabled={loading}
             />
           </div>
 
           <div className="system-info">
             <div className="info-item">
               <span className="info-label">System Version:</span>
-              <span className="info-value">1.0.0</span>
+              <span className="info-value">{systemInfo.version}</span>
             </div>
             <div className="info-item">
               <span className="info-label">Last Updated:</span>
-              <span className="info-value">May 3, 2026</span>
+              <span className="info-value">{systemInfo.lastUpdated}</span>
             </div>
             <div className="info-item">
               <span className="info-label">Database Size:</span>
-              <span className="info-value">2.4 GB</span>
+              <span className="info-value">{systemInfo.databaseSize}</span>
+            </div>
+            <div className="info-item">
+              <span className="info-label">Uptime:</span>
+              <span className="info-value">{systemInfo.uptime}</span>
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="settings-actions">
-          <button onClick={handleSave} className="btn-save">
-            💾 Save Settings
+          <button 
+            onClick={handleSave} 
+            className="btn-save"
+            disabled={loading}
+          >
+            {loading ? "⏳ Saving..." : "💾 Save Settings"}
           </button>
-          <button onClick={handleReset} className="btn-reset-settings">
+          <button 
+            onClick={handleReset} 
+            className="btn-reset-settings"
+            disabled={loading}
+          >
             ↻ Reset to Default
           </button>
         </div>
