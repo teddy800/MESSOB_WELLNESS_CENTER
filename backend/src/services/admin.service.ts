@@ -199,7 +199,11 @@ const AdminService = {
       if (filters.role) where.role = filters.role;
       if (filters.status) where.isActive = filters.status === 'active';
       if (filters.verification) where.isVerified = filters.verification === 'verified';
-      if (filters.region) where.center = { region: filters.region };
+      if (filters.region) {
+        where.center = {
+          region: filters.region,
+        };
+      }
       if (filters.center) where.centerId = filters.center;
       if (filters.search) {
         where.OR = [
@@ -213,15 +217,15 @@ const AdminService = {
           where,
           skip,
           take,
-          select: {
-            id: true,
-            email: true,
-            fullName: true,
-            role: true,
-            isActive: true,
-            isVerified: true,
-            centerId: true,
-            createdAt: true,
+          include: {
+            center: {
+              select: {
+                id: true,
+                name: true,
+                region: true,
+                city: true,
+              },
+            },
           },
         }),
         prisma.user.count({ where }),

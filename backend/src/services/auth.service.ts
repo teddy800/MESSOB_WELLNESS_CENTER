@@ -119,6 +119,11 @@ export class AuthService {
       throw new Error("Full name must be at least 2 characters long");
     }
 
+    // Require centerId for STAFF role registration
+    if (input.role === UserRole.STAFF && !input.centerId) {
+      throw new Error("Center ID is required for staff registration");
+    }
+
     // Step B: Check for Duplicates
     const existingUser = await prisma.user.findUnique({
       where: { email: input.email.toLowerCase() },

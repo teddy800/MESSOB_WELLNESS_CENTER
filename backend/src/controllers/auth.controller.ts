@@ -16,6 +16,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       dateOfBirth,
       gender,
       phone,
+      centerId,
       emergencyContactName,
       emergencyContactPhone,
     } = req.body;
@@ -44,6 +45,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       password,
       fullName,
       role: UserRole.STAFF,
+      centerId,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       gender,
       phone,
