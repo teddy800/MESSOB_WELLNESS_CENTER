@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { adminService } from "../../services/adminService";
 import "../../../src/styles/admin-modals.css";
 
-function AddCenterModal({ isOpen, onClose, onSuccess, regions = [] }) {
+function AddCenterModal({ isOpen, onClose, onSuccess, regions = [], region = null }) {
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    region: "",
+    region: region || "",
     city: "",
     address: "",
     phone: "",
@@ -17,6 +17,15 @@ function AddCenterModal({ isOpen, onClose, onSuccess, regions = [] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [localRegions, setLocalRegions] = useState(regions);
+
+  useEffect(() => {
+    if (region) {
+      setFormData((prev) => ({
+        ...prev,
+        region: region,
+      }));
+    }
+  }, [region]);
 
   useEffect(() => {
     if (isOpen && localRegions.length === 0) {

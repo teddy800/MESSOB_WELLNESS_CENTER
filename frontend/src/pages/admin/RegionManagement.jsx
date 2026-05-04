@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { adminService } from "../../services/adminService";
+import AddCenterModal from "../../components/admin/AddCenterModal";
 import "../../styles/admin-regions.css";
 
 function RegionManagement() {
@@ -9,6 +10,8 @@ function RegionManagement() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [regionStats, setRegionStats] = useState({});
+  const [showAddCenterModal, setShowAddCenterModal] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState(null);
 
   useEffect(() => {
     loadRegions();
@@ -73,6 +76,17 @@ function RegionManagement() {
     }
   };
 
+  const handleAddCenterClick = (region) => {
+    setSelectedRegion(region);
+    setShowAddCenterModal(true);
+  };
+
+  const handleCenterAdded = async () => {
+    setShowAddCenterModal(false);
+    setSelectedRegion(null);
+    await loadRegions();
+  };
+
   return (
     <div className="management-section">
       <div className="section-header">
@@ -123,12 +137,27 @@ function RegionManagement() {
             <div className="regions-grid">
               {regions.map((region) => (
                 <div key={region} className="region-card">
-                  <div className="region-header">
-                    <h4>{region}</h4>
-                    <span className="region-badge">{regionStats[region] || 0} centers</span>
+                  <div className="region-card-header">
+                    <div className="region-title">
+                      <h4>{region}</h4>
+                      <span className="region-badge">{regionStats[region] || 0} centers</span>
+                    </div>
                   </div>
-                  <div className="region-info">
-                    <p>Active centers in this region</p>
+                  <div className="region-card-body">
+                    <div className="region-stats">
+                      <div className="stat-item">
+                        <span className="stat-label">Centers</span>
+                        <span className="stat-value">{regionStats[region] || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="region-card-footer">
+                    <button 
+                      className="btn-secondary"
+                      onClick={() => handleAddCenterClick(region)}
+                    >
+                      + Add Center
+                    </button>
                   </div>
                 </div>
               ))}
@@ -136,6 +165,18 @@ function RegionManagement() {
           )}
         </div>
       </div>
+
+      {selectedRegion && (
+        <AddCenterModal
+          isOpen={showAddCenterModal}
+          onClose={() => {
+            setShowAddCenterModal(false);
+            setSelectedRegion(null);
+          }}
+          region={selectedRegion}
+          onSuccess={handleCenterAdded}
+        />
+      )}
     </div>
   );
 }
