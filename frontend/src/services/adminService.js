@@ -195,7 +195,7 @@ export const adminService = {
   // Update user
   updateUser: async (userId, userData) => {
     try {
-      const response = await api.put(`/users/${userId}`, userData);
+      const response = await api.put(`/admin/users/${userId}`, userData);
       return response.data.data;
     } catch (err) {
       console.error("Error updating user:", err);
@@ -232,6 +232,28 @@ export const adminService = {
       return response.data.data;
     } catch (err) {
       console.error("Error updating profile:", err);
+      throw err;
+    }
+  },
+
+  // Create user
+  createUser: async (userData) => {
+    try {
+      const response = await api.post("/admin/users", userData);
+      return response.data.data;
+    } catch (err) {
+      console.error("Error creating user:", err);
+      throw err;
+    }
+  },
+
+  // Delete user (admin)
+  deleteUser: async (userId) => {
+    try {
+      const response = await api.delete(`/admin/users/${userId}`);
+      return response.data;
+    } catch (err) {
+      console.error("Error deleting user:", err);
       throw err;
     }
   },

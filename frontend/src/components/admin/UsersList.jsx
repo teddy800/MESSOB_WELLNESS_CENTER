@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { adminService } from "../../services/adminService";
 
-function UsersList({ filters, onEdit, onDelete }) {
+function UsersList({ filters, onEdit, onDelete, onCreateClick }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -30,6 +30,17 @@ function UsersList({ filters, onEdit, onDelete }) {
     setPagination({ ...pagination, page: newPage });
   };
 
+  const handleDelete = async (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        await adminService.deleteUser(userId);
+        setUsers(users.filter(u => u.id !== userId));
+      } catch (err) {
+        alert("Failed to delete user: " + (err.response?.data?.message || err.message));
+      }
+    }
+  };
+
   if (loading) {
     return <div className="table-loading">Loading users...</div>;
   }
@@ -40,13 +51,18 @@ function UsersList({ filters, onEdit, onDelete }) {
 
   return (
     <div className="table-container">
+      <div className="table-header">
+        <h2>Users Management</h2>
+        <button className="btn-primary" onClick={onCreateClick}>
+          + Create User
+        </button>
+      </div>
       <table className="data-table">
         <thead>
           <tr>
             <th>Name</th>
             <th>Email</th>
             <th>Role</th>
-            <th>Center</th>
             <th>Status</th>
             <th>Verified</th>
             <th>Actions</th>
@@ -55,7 +71,7 @@ function UsersList({ filters, onEdit, onDelete }) {
         <tbody>
           {users.length === 0 ? (
             <tr>
-              <td colSpan="7" className="table-empty">No users found</td>
+              <td colSpan="6" className="table-empty">No users found</td>
             </tr>
           ) : (
             users.map((user) => (
@@ -67,7 +83,6 @@ function UsersList({ filters, onEdit, onDelete }) {
                     {user.role}
                   </span>
                 </td>
-                <td className="cell-center">{user.center?.name || "N/A"}</td>
                 <td className="cell-status">
                   <span className={`status ${user.isActive ? "active" : "inactive"}`}>
                     {user.isActive ? "Active" : "Inactive"}
@@ -82,14 +97,14 @@ function UsersList({ filters, onEdit, onDelete }) {
                   <button 
                     className="btn-icon edit"
                     onClick={() => onEdit(user)}
-                    title="Edit"
+                    title="Edit user"
                   >
                     ✎
                   </button>
                   <button 
                     className="btn-icon delete"
-                    onClick={() => onDelete(user.id)}
-                    title="Delete"
+                    onClick={() => handleDelete(user.id)}
+                    title="Delete user"
                   >
                     🗑
                   </button>

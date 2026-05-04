@@ -21,7 +21,10 @@ router.get("/regions/:region/centers", AdminController.getCentersByRegion);
 /**
  * Users Management
  */
+router.post("/users", AdminController.createUser);
 router.get("/users", AdminController.getUsers);
+router.put("/users/:id", AdminController.updateUser);
+router.delete("/users/:id", AdminController.deleteUser);
 
 /**
  * Centers Management

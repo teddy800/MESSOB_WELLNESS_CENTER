@@ -2,12 +2,14 @@ import React, { useState } from "react";
 import FilterBar from "../../components/admin/FilterBar";
 import UsersList from "../../components/admin/UsersList";
 import EditUserModal from "../../components/admin/EditUserModal";
+import CreateUserModal from "../../components/admin/CreateUserModal";
 import { adminService } from "../../services/adminService";
 
 function UserManagement() {
   const [filters, setFilters] = useState({});
   const [selectedUser, setSelectedUser] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleFilterChange = (newFilters) => {
@@ -35,6 +37,10 @@ function UserManagement() {
     setRefreshKey((prev) => prev + 1);
   };
 
+  const handleCreateSuccess = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <div className="management-section">
       <div className="section-header">
@@ -52,6 +58,7 @@ function UserManagement() {
         filters={filters}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onCreateClick={() => setShowCreateModal(true)}
       />
 
       <EditUserModal
@@ -59,6 +66,12 @@ function UserManagement() {
         onClose={() => setShowEditModal(false)}
         user={selectedUser}
         onSuccess={handleEditSuccess}
+      />
+
+      <CreateUserModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateSuccess}
       />
     </div>
   );

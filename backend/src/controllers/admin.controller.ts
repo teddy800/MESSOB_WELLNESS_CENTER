@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
 import AdminService from "../services/admin.service";
+import prisma from "../config/prisma";
 import {
   UserFilters,
   CenterFilters,
@@ -162,6 +163,232 @@ export const getDashboardMetrics = async (
     res.status(500).json({
       status: "error",
       message: "Failed to retrieve dashboard metrics",
+    });
+  }
+};
+
+/**
+ * PUT /api/v1/admin/users/:id
+ * Update a user
+ */
+export const updateUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const userId = req.params.id as string;
+
+    if (!userId) {
+      res.status(400).json({
+        status: "error",
+        message: "User ID is required",
+      });
+      return;
+    }
+
+    const { fullName, email, role, isActive } = req.body;
+
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+      return;
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+    if (fullName !== undefined) updateData.fullName = fullName;
+    if (email !== undefined) updateData.email = email;
+    if (role !== undefined) updateData.role = role;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        isActive: true,
+        isVerified: true,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: updatedUser,
+      message: "User updated successfully",
+    });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      res.status(400).json({
+        status: "error",
+        message: "Email already exists",
+      });
+      return;
+    }
+    console.error("Update user error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to update user",
+    });
+  }
+};
+
+/**
+ * POST /api/v1/admin/users
+ * Create a new user
+ */
+export const createUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const { fullName, email, password, role, centerId } = req.body;
+
+    if (!fullName || !email || !password || !role) {
+      res.status(400).json({
+        status: "error",
+        message: "fullName, email, password, and role are required",
+      });
+      return;
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      res.status(400).json({
+        status: "error",
+        message: "User with this email already exists",
+      });
+      return;
+    }
+
+    // Hash password
+    const bcrypt = await import("bcryptjs");
+    const hashedPassword = await bcrypt.default.hash(password, 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        fullName,
+        email,
+        password: hashedPassword,
+        role,
+        centerId: centerId || null,
+        isActive: true,
+        isVerified: false,
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        isActive: true,
+        isVerified: true,
+      },
+    });
+
+    res.status(201).json({
+      status: "success",
+      data: newUser,
+      message: "User created successfully",
+    });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      res.status(400).json({
+        status: "error",
+        message: "User with this email already exists",
+      });
+      return;
+    }
+    console.error("Create user error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to create user",
+    });
+  }
+};
+
+/**
+ * DELETE /api/v1/admin/users/:id
+ * Delete a user
+ */
+export const deleteUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const userId = req.params.id as string;
+
+    if (!userId) {
+      res.status(400).json({
+        status: "error",
+        message: "User ID is required",
+      });
+      return;
+    }
+    
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+      return;
+    }
+
+    // Delete user
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to delete user",
     });
   }
 };
