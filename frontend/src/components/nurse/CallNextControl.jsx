@@ -34,6 +34,11 @@ function CallNextControl({ onNavigateToVitals, onStatusChanged }) {
       console.log(`Customers waiting: ${waitingCount}`);
     } catch (err) {
       console.error(err);
+      if (err?.response?.status === 403) {
+        setError('Access denied — Nurse Officer role required.');
+      } else {
+        setError('Failed to load queue.');
+      }
       setCurrentCustomer(null);
     }
   };
