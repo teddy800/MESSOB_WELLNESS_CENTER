@@ -86,9 +86,8 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
     return type === 'ONLINE' ? '📅 Online' : '🚶 Walk-in';
   };
 
-  const handleSendReminder = async (appointmentId, customerName, customerEmail) => {
+  const handleSendEmail = async (appointmentId, customerName, customerEmail) => {
     try {
-      // Send email reminder
       await api.post(`/api/v1/appointments/${appointmentId}/send-reminder`, {
         type: 'email',
         email: customerEmail,
@@ -192,12 +191,12 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
               </div>
 
               <div className="queue-item-actions">
-                {/* Only show Send Reminder and View Details for WAITING and IN_PROGRESS */}
+                {/* Only show Send Email and View Details for WAITING and IN_PROGRESS */}
                 {(item.status === 'WAITING' || item.status === 'IN_PROGRESS') && (
                   <>
                     <button 
                       className="btn btn-small btn-primary"
-                      onClick={() => handleSendReminder(item.appointmentId, item.customerName, item.customerEmail)}
+                      onClick={() => handleSendEmail(item.appointmentId, item.customerName, item.customerEmail)}
                       title="Send email reminder to customer"
                     >
                       📧 Send Email

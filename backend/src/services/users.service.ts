@@ -14,6 +14,7 @@ export async function getUserProfile(userId: string) {
       phone: true,
       emergencyContactName: true,
       emergencyContactPhone: true,
+      profilePicture: true,
       isActive: true,
       isVerified: true,
       isExternal: true,
@@ -32,6 +33,7 @@ export async function updateUserProfile(
     phone?: string;
     emergencyContactName?: string;
     emergencyContactPhone?: string;
+    profilePicture?: string;
   }
 ) {
   // Prepare update data with proper typing
@@ -45,6 +47,7 @@ export async function updateUserProfile(
   if (data.phone !== undefined) updateData.phone = data.phone;
   if (data.emergencyContactName !== undefined) updateData.emergencyContactName = data.emergencyContactName;
   if (data.emergencyContactPhone !== undefined) updateData.emergencyContactPhone = data.emergencyContactPhone;
+  if (data.profilePicture !== undefined) updateData.profilePicture = data.profilePicture;
 
   return prisma.user.update({
     where: { id: userId },
@@ -59,6 +62,7 @@ export async function updateUserProfile(
       phone: true,
       emergencyContactName: true,
       emergencyContactPhone: true,
+      profilePicture: true,
       updatedAt: true,
     },
   });

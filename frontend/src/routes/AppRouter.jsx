@@ -6,7 +6,7 @@ import Dashboard from "../pages/Dashboard";
 import NurseDashboard from "../pages/NurseDashboard";
 import ManagerDashboard from "../pages/ManagerDashboard";
 import RegionalDashboard from "../pages/RegionalDashboard";
-import AdminDashboard from "../pages/AdminDashboard";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 
@@ -43,9 +43,7 @@ function AppRouter() {
         path="/manager"
         element={
           <RoleBasedRoute allowedRoles={["MANAGER"]}>
-            <MainLayout>
-              <ManagerDashboard />
-            </MainLayout>
+            <ManagerDashboard />
           </RoleBasedRoute>
         }
       />
@@ -53,9 +51,7 @@ function AppRouter() {
         path="/regional"
         element={
           <RoleBasedRoute allowedRoles={["REGIONAL_OFFICE", "FEDERAL_OFFICE"]}>
-            <MainLayout>
-              <RegionalDashboard />
-            </MainLayout>
+            <RegionalDashboard />
           </RoleBasedRoute>
         }
       />
@@ -63,9 +59,7 @@ function AppRouter() {
         path="/admin"
         element={
           <RoleBasedRoute allowedRoles={["SYSTEM_ADMIN"]}>
-            <MainLayout>
-              <AdminDashboard />
-            </MainLayout>
+            <AdminDashboard />
           </RoleBasedRoute>
         }
       />

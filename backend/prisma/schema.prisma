@@ -88,6 +88,9 @@ model User {
   gender      Gender?
   phone       String?
   
+  // Profile Picture (stored as base64)
+  profilePicture String? @db.Text
+  
   // Emergency Contact
   emergencyContactName  String?
   emergencyContactPhone String?
