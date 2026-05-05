@@ -2,30 +2,22 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { regionalService } from '../services/regionalService';
 import { analyticsService } from '../services/analyticsService';
+import AdminLayout from '../layouts/AdminLayout';
 import Button from '../components/forms/Button';
 import Input from '../components/forms/Input';
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart
 } from 'recharts';
+import '../styles/admin-layout.css';
+import '../styles/admin-dashboard.css';
 
 // ─── Role guard ───────────────────────────────────────────────────────────────
 const REGIONAL_ROLES = ['REGIONAL_OFFICE', 'FEDERAL_OFFICE', 'SYSTEM_ADMIN'];
 
-// ─── Live Clock ───────────────────────────────────────────────────────────────
-const useLiveClock = () => {
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    const t = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  return time;
-};
-
 // ─── Root Component ───────────────────────────────────────────────────────────
 const RegionalDashboard = () => {
   const { user } = useAuth();
-  const now = useLiveClock();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -123,176 +115,93 @@ const RegionalDashboard = () => {
     : user?.role === 'SYSTEM_ADMIN' ? 'System Admin'
     : 'Regional Office';
 
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="dashboard-section">
+            <div className="section-header">
+              <h2>📊 Regional Overview</h2>
+              <div className="center-selector" style={{
+                background: 'rgba(255,255,255,0.1)', 
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '8px', 
+                padding: '0.5rem'
+              }}>
+                <select
+                  value={selectedCenter}
+                  onChange={(e) => setSelectedCenter(e.target.value)}
+                  style={{
+                    minWidth: '200px',
+                    padding: '0.5rem 2rem 0.5rem 0.85rem',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#2d3748',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    outline: 'none',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                  }}
+                >
+                  <option value="all">🏥 All Centers ({centers.length})</option>
+                  {centers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.status === 'ACTIVE' ? '✅' : '⚠️'} {c.name} — {c.city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <OverviewTab loading={loading} analytics={effectiveAnalytics} centers={filteredCenters} selectedCenter={selectedCenter} centerStats={centerStats} />
+          </div>
+        );
+      case 'centers':
+        return (
+          <div className="dashboard-section">
+            <h2>🏥 Center Management</h2>
+            <CentersTab loading={loading} centers={filteredCenters} selectedCenter={selectedCenter} onRefresh={loadDashboardData} />
+          </div>
+        );
+      case 'managers':
+        return (
+          <div className="dashboard-section">
+            <h2>👔 Manager Oversight</h2>
+            <ManagersTab loading={loading} centers={centers} onRefresh={loadDashboardData} />
+          </div>
+        );
+      case 'performance':
+        return (
+          <div className="dashboard-section">
+            <h2>📈 Performance Analytics</h2>
+            <PerformanceTab loading={loading} analytics={effectiveAnalytics} trendsData={trendsData} centers={filteredCenters} />
+          </div>
+        );
+      default:
+        return <div>Page not found</div>;
+    }
+  };
+
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <h1 style={{ margin: 0 }}>Center Management Dashboard</h1>
-            <span style={{
-              background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
-              borderRadius: '20px', padding: '0.2rem 0.75rem',
-              fontSize: '0.75rem', fontWeight: 700, color: '#ffffff', letterSpacing: '0.05em',
-            }}>{roleLabel.toUpperCase()}</span>
-            <span style={{
-              background: 'rgba(34,197,94,0.2)', border: '1px solid rgba(34,197,94,0.5)',
-              borderRadius: '20px', padding: '0.2rem 0.75rem',
-              fontSize: '0.75rem', fontWeight: 700, color: '#4ade80',
-            }}>
-              ● {centerStats.active}/{centerStats.total} Active
-            </span>
-          </div>
-          <p className="dashboard-subtitle" style={{ marginTop: '0.35rem' }}>
-            Welcome, <strong>{user?.fullName}</strong> · {centerStats.total} centers · {centerStats.totalStaff} staff
-          </p>
-        </div>
-        {/* Right: clock + selector + refresh */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
-          <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>
-            {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>
-            {now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-          </div>
-          {lastUpdated && (
-            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)' }}>
-              ↻ {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
-            <select
-              value={selectedCenter}
-              onChange={(e) => setSelectedCenter(e.target.value)}
-              style={{
-                minWidth: '200px',
-                padding: '0.5rem 2rem 0.5rem 0.85rem',
-                borderRadius: '10px',
-                border: '2px solid rgba(255,255,255,0.5)',
-                background: 'rgba(255,255,255,0.15)',
-                color: '#ffffff',
-                fontSize: '0.88rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                outline: 'none',
-                backdropFilter: 'blur(8px)',
-                WebkitAppearance: 'none',
-                appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.65rem center',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              }}
-              onMouseEnter={(e) => { e.target.style.background = 'rgba(255,255,255,0.25)'; e.target.style.borderColor = 'rgba(255,255,255,0.8)'; }}
-              onMouseLeave={(e) => { e.target.style.background = 'rgba(255,255,255,0.15)'; e.target.style.borderColor = 'rgba(255,255,255,0.5)'; }}
-              onFocus={(e) => { e.target.style.borderColor = '#ffffff'; e.target.style.boxShadow = '0 0 0 3px rgba(255,255,255,0.3)'; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.5)'; e.target.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)'; }}
-            >
-              <option value="all" style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 600 }}>
-                🏥 All Centers ({centers.length})
-              </option>
-              {centers.map((c) => (
-                <option key={c.id} value={c.id} style={{ background: '#1e3a8a', color: '#ffffff', fontWeight: 500 }}>
-                  {c.status === 'ACTIVE' ? '✅' : '⚠️'} {c.name} — {c.city}
-                </option>
-              ))}
-            </select>
-            <button
-              className="tab-btn"
-              onClick={loadDashboardData}
-              disabled={loading}
-              style={{
-                background: 'rgba(255,255,255,0.15)', color: '#ffffff',
-                border: '2px solid rgba(255,255,255,0.4)', borderRadius: '10px',
-                padding: '0.5rem 0.9rem', fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {loading ? '⏳' : '🔄'}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Center Statistics Bar */}
-      <div style={{
-        background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)',
-        padding: '1rem 1.5rem',
-        borderRadius: '12px',
-        marginBottom: '1.5rem',
-        display: 'flex',
-        gap: '1.5rem',
-        alignItems: 'center',
-        color: 'white',
-        boxShadow: '0 4px 12px rgba(76, 111, 190, 0.3)',
-        flexWrap: 'wrap',
-      }}>
-        {[
-          { icon: '🏥', value: centerStats.total, label: 'Total Centers' },
-          { icon: '✅', value: centerStats.active, label: 'Active Centers' },
-          { icon: '👥', value: centerStats.totalStaff, label: 'Total Staff' },
-          { icon: '📊', value: centerStats.totalCapacity, label: 'Total Capacity' },
-        ].map((s, i) => (
-          <React.Fragment key={s.label}>
-            {i > 0 && <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.4rem' }}>{s.icon}</span>
-              <div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>{s.value}</div>
-                <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>{s.label}</div>
-              </div>
-            </div>
-          </React.Fragment>
-        ))}
-        {selectedCenter !== 'all' && (
-          <>
-            <div style={{ width: '1px', height: '40px', background: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.2rem' }}>📍</span>
-              <div>
-                <div style={{ fontSize: '1rem', fontWeight: 700 }}>{filteredCenters[0]?.name}</div>
-                <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>{filteredCenters[0]?.city}, {filteredCenters[0]?.region}</div>
-              </div>
-              <span style={{
-                padding: '0.25rem 0.6rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700,
-                background: filteredCenters[0]?.status === 'ACTIVE' ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)',
-                border: filteredCenters[0]?.status === 'ACTIVE' ? '1px solid #4ade80' : '1px solid #f87171',
-                color: filteredCenters[0]?.status === 'ACTIVE' ? '#4ade80' : '#f87171',
-              }}>{filteredCenters[0]?.status}</span>
-            </div>
-          </>
-        )}
-        <div style={{ marginLeft: selectedCenter === 'all' ? 'auto' : '0', fontSize: '0.8rem', opacity: 0.75 }}>
-          {selectedCenter === 'all' ? '🏥 All Centers' : '🔍 Filtered View'}
-        </div>
-      </div>
-
-      {error && (
-        <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
-          {error}
-        </div>
-      )}
-
-      <div className="dashboard-tabs">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="dashboard-content">
-        {activeTab === 'overview' && <OverviewTab loading={loading} analytics={effectiveAnalytics} centers={filteredCenters} selectedCenter={selectedCenter} centerStats={centerStats} />}
-        {activeTab === 'centers' && <CentersTab loading={loading} centers={filteredCenters} selectedCenter={selectedCenter} onRefresh={loadDashboardData} />}
-        {activeTab === 'managers' && <ManagersTab loading={loading} centers={centers} onRefresh={loadDashboardData} />}
-        {activeTab === 'performance' && <PerformanceTab loading={loading} analytics={effectiveAnalytics} trendsData={trendsData} centers={filteredCenters} />}
-      </div>
-    </div>
+    <AdminLayout 
+      activeTab={activeTab} 
+      onTabChange={setActiveTab}
+      dashboardType="regional"
+      user={user}
+      centerStats={centerStats}
+      centersCount={centers.length}
+      onRefresh={loadDashboardData}
+      loading={loading}
+      lastUpdated={lastUpdated}
+      error={error}
+      selectedCenter={selectedCenter}
+      setSelectedCenter={setSelectedCenter}
+      centers={centers}
+    >
+      {renderContent()}
+    </AdminLayout>
   );
 };
 
