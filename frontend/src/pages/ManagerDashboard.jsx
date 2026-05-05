@@ -1,31 +1,23 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { analyticsService } from '../services/analyticsService';
+import AdminLayout from '../layouts/AdminLayout';
 import Button from '../components/forms/Button';
 import Input from '../components/forms/Input';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
+import '../styles/admin-layout.css';
+import '../styles/admin-dashboard.css';
 
 // ─── Role guard ───────────────────────────────────────────────────────────────
 // MANAGER role only — REGIONAL_OFFICE uses /regional, SYSTEM_ADMIN uses /admin
 const MANAGER_ROLES = ['MANAGER'];
 
-// ─── Live Clock ───────────────────────────────────────────────────────────────
-const useLiveClock = () => {
-  const [time, setTime] = useState(new Date());
-  useEffect(() => {
-    const t = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-  return time;
-};
-
 // ─── Root Component ───────────────────────────────────────────────────────────
 const ManagerDashboard = () => {
   const { user } = useAuth();
-  const now = useLiveClock();
   const [activeTab, setActiveTab]       = useState('overview');
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
@@ -43,7 +35,7 @@ const ManagerDashboard = () => {
     walkInEnabled: true,
     autoConfirmBookings: false,
   });
-  const autoRefreshRef = useRef(null);
+
 
   const hasAccess = MANAGER_ROLES.includes(user?.role);
 
@@ -80,13 +72,11 @@ const ManagerDashboard = () => {
     }
   }, []);
 
-  // Initial load + auto-refresh every 60s
+  // Initial load
   useEffect(() => {
     if (hasAccess) {
       loadDashboardData();
-      autoRefreshRef.current = setInterval(loadDashboardData, 60000);
     }
-    return () => clearInterval(autoRefreshRef.current);
   }, [hasAccess, loadDashboardData]);
 
   if (!hasAccess) {
@@ -115,92 +105,88 @@ const ManagerDashboard = () => {
     : 0;
   const capacityColor = usedPct > 85 ? '#ef4444' : usedPct > 60 ? '#f59e0b' : '#22c55e';
 
-  return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <h1 style={{ margin: 0 }}>Manager Dashboard</h1>
-            <span style={{
-              background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)',
-              borderRadius: '20px', padding: '0.2rem 0.75rem',
-              fontSize: '0.75rem', fontWeight: 700, color: '#ffffff', letterSpacing: '0.05em',
-            }}>CENTER MANAGER</span>
-            {/* Capacity urgency pill */}
-            <span style={{
-              background: capacityColor + '30', border: `1px solid ${capacityColor}80`,
-              borderRadius: '20px', padding: '0.2rem 0.75rem',
-              fontSize: '0.75rem', fontWeight: 700, color: capacityColor,
-            }}>
-              {usedPct > 85 ? '🔴' : usedPct > 60 ? '🟡' : '🟢'} Capacity {usedPct}%
-            </span>
-          </div>
-          <p className="dashboard-subtitle" style={{ marginTop: '0.35rem' }}>
-            Welcome, <strong>{user?.fullName}</strong>
-            {user?.center?.name && ` · ${user.center.name}`}
-          </p>
-        </div>
-        {/* Right side: clock + last updated + refresh */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
-          <div style={{ fontSize: '1.3rem', fontWeight: 800, color: '#ffffff', fontVariantNumeric: 'tabular-nums', letterSpacing: '0.05em' }}>
-            {now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-          </div>
-          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.7)' }}>
-            {now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
-          </div>
-          {lastUpdated && (
-            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.55)' }}>
-              ↻ Updated {lastUpdated.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} · auto-refresh 60s
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="dashboard-section">
+            <div className="section-header">
+              <h2>📊 Center Overview</h2>
+              <div className="capacity-indicator" style={{
+                background: capacityColor + '20', 
+                border: `1px solid ${capacityColor}60`,
+                borderRadius: '8px', 
+                padding: '0.5rem 1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <span style={{ fontSize: '1.2rem' }}>
+                  {usedPct > 85 ? '🔴' : usedPct > 60 ? '🟡' : '🟢'}
+                </span>
+                <span style={{ fontWeight: 600, color: capacityColor }}>
+                  Capacity {usedPct}%
+                </span>
+              </div>
             </div>
-          )}
-          <button
-            className="tab-btn"
-            onClick={loadDashboardData}
-            disabled={loading}
-            style={{
-              background: 'rgba(255,255,255,0.15)', color: '#ffffff',
-              border: '2px solid rgba(255,255,255,0.4)', borderRadius: '10px',
-              padding: '0.4rem 1rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
-              marginTop: '0.25rem',
-            }}
-          >
-            {loading ? '⏳ Loading…' : '🔄 Refresh Now'}
-          </button>
-        </div>
-      </div>
+            <OverviewTab loading={loading} capacityInfo={capacityInfo} bookingStats={bookingStats} />
+          </div>
+        );
+      case 'capacity':
+        return (
+          <div className="dashboard-section">
+            <h2>🎛️ Capacity Management</h2>
+            <CapacityTab loading={loading} capacityInfo={capacityInfo} />
+          </div>
+        );
+      case 'analytics':
+        return (
+          <div className="dashboard-section">
+            <h2>📈 Analytics & Insights</h2>
+            <AnalyticsTab loading={loading} queueData={queueData} healthData={healthData} trendsData={trendsData} />
+          </div>
+        );
+      case 'users':
+        return (
+          <div className="dashboard-section">
+            <h2>👥 Staff Management</h2>
+            <UsersTab loading={loading} users={users} onRefresh={loadDashboardData} />
+          </div>
+        );
+      case 'audit':
+        return (
+          <div className="dashboard-section">
+            <h2>🔍 Audit & Activity Logs</h2>
+            <AuditTab loading={loading} logs={auditLogs} />
+          </div>
+        );
+      case 'settings':
+        return (
+          <div className="dashboard-section">
+            <h2>⚙️ System Settings</h2>
+            <SettingsTab systemSettings={systemSettings} setSystemSettings={setSystemSettings} />
+          </div>
+        );
+      default:
+        return <div>Page not found</div>;
+    }
+  };
 
-      {error && (
-        <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
-          {error}
-        </div>
-      )}
-
-      <div className="dashboard-tabs">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="dashboard-content">
-        {activeTab === 'overview'  && <OverviewTab  loading={loading} capacityInfo={capacityInfo} bookingStats={bookingStats} />}
-        {activeTab === 'capacity'  && <CapacityTab  loading={loading} capacityInfo={capacityInfo} />}
-        {activeTab === 'analytics' && <AnalyticsTab loading={loading} queueData={queueData} healthData={healthData} trendsData={trendsData} />}
-        {activeTab === 'users'     && <UsersTab     loading={loading} users={users} onRefresh={loadDashboardData} />}
-        {activeTab === 'audit'     && <AuditTab     loading={loading} logs={auditLogs} />}
-        {activeTab === 'settings'  && (
-          <SettingsTab
-            systemSettings={systemSettings}
-            setSystemSettings={setSystemSettings}
-          />
-        )}
-      </div>
-    </div>
+  return (
+    <AdminLayout 
+      activeTab={activeTab} 
+      onTabChange={setActiveTab}
+      dashboardType="manager"
+      user={user}
+      capacityInfo={capacityInfo}
+      staffCount={users.length}
+      onRefresh={loadDashboardData}
+      loading={loading}
+      lastUpdated={lastUpdated}
+      error={error}
+    >
+      {renderContent()}
+    </AdminLayout>
   );
 };
 
