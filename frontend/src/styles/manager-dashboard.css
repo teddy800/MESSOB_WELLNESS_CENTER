@@ -596,3 +596,883 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+/* ============================================================
+   ENHANCED DAILY SERVICE DELIVERY & HOURLY CAPACITY CHARTS
+   Outstanding and Astonishing Professional Styling
+   ============================================================ */
+
+/* Enhanced Service Delivery Chart */
+.mgr-enhanced-service-delivery {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.mgr-enhanced-service-delivery::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #284394 0%, #3b82f6 50%, #60a5fa 100%);
+  border-radius: 12px;
+  z-index: -1;
+  margin: -2px;
+}
+
+.mgr-enhanced-service-delivery .mgr-chart-header {
+  background: linear-gradient(135deg, rgba(40, 67, 148, 0.05) 0%, rgba(59, 130, 246, 0.03) 100%);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: -0.25rem -0.5rem 1.5rem -0.5rem;
+  border-bottom: 2px solid rgba(40, 67, 148, 0.1);
+}
+
+.mgr-chart-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.mgr-chart-title-section h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #284394 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mgr-chart-title-section p {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+.mgr-live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.mgr-live-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: mgrLivePulse 2s infinite;
+}
+
+@keyframes mgrLivePulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.mgr-live-text {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #22c55e;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.mgr-chart-metrics {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.mgr-metric-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  min-width: 80px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.mgr-metric-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.mgr-metric-badge.success {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.mgr-metric-badge.primary {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border: 1px solid rgba(40, 67, 148, 0.2);
+}
+
+.mgr-metric-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.mgr-metric-badge.success .mgr-metric-value {
+  color: #16a34a;
+}
+
+.mgr-metric-badge.primary .mgr-metric-value {
+  color: #284394;
+}
+
+.mgr-metric-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.mgr-chart-container {
+  position: relative;
+  padding: 1rem 0;
+}
+
+.mgr-chart-footer {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%);
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin: 1rem -0.5rem -0.25rem -0.5rem;
+  border-top: 1px solid rgba(40, 67, 148, 0.1);
+}
+
+.mgr-performance-indicators {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.mgr-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mgr-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mgr-indicator-dot.success {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.mgr-indicator-dot.primary {
+  background: #284394;
+  box-shadow: 0 0 8px rgba(40, 67, 148, 0.4);
+}
+
+.mgr-indicator-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Enhanced Hourly Capacity Chart */
+.mgr-enhanced-hourly-capacity {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+  overflow: hidden;
+}
+
+.mgr-enhanced-hourly-capacity::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  border-radius: 12px;
+  z-index: -1;
+  margin: -2px;
+}
+
+.mgr-enhanced-hourly-capacity .mgr-chart-header {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(22, 163, 74, 0.03) 100%);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: -0.25rem -0.5rem 1.5rem -0.5rem;
+  border-bottom: 2px solid rgba(34, 197, 94, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.mgr-capacity-status {
+  display: flex;
+  align-items: center;
+}
+
+.mgr-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mgr-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: mgrStatusPulse 2s infinite;
+}
+
+.mgr-status-dot.normal {
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+}
+
+.mgr-status-dot.moderate {
+  background: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+}
+
+.mgr-status-dot.critical {
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+}
+
+@keyframes mgrStatusPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+.mgr-status-text {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mgr-hourly-insights {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.mgr-insight-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  flex: 1;
+  min-width: 0;
+}
+
+.mgr-insight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.mgr-insight-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.mgr-insight-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.mgr-insight-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mgr-insight-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1;
+}
+
+/* Responsive Design for Enhanced Charts */
+@media (max-width: 1024px) {
+  .mgr-chart-metrics {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .mgr-metric-badge {
+    min-width: 60px;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .mgr-hourly-insights {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .mgr-insight-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .mgr-enhanced-service-delivery .mgr-chart-header,
+  .mgr-enhanced-hourly-capacity .mgr-chart-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .mgr-performance-indicators {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .mgr-chart-title-section h3 {
+    font-size: 1.125rem;
+  }
+  
+  .mgr-insight-card {
+    padding: 0.75rem 1rem;
+  }
+  
+  .mgr-insight-icon {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mgr-enhanced-service-delivery .mgr-chart-header,
+  .mgr-enhanced-hourly-capacity .mgr-chart-header {
+    padding: 1rem;
+    margin: -0.25rem -0.25rem 1rem -0.25rem;
+  }
+  
+  .mgr-chart-footer {
+    padding: 0.75rem 1rem;
+    margin: 1rem -0.25rem -0.25rem -0.25rem;
+  }
+  
+  .mgr-chart-metrics {
+    width: 100%;
+  }
+  
+  .mgr-metric-badge {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .mgr-metric-value {
+    font-size: 1.25rem;
+  }
+}
+
+/* Animation Enhancements */
+@keyframes mgrChartFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mgr-enhanced-service-delivery,
+.mgr-enhanced-hourly-capacity {
+  animation: mgrChartFadeIn 0.8s ease-out;
+}
+
+/* Hover Effects for Interactive Elements */
+.mgr-enhanced-service-delivery:hover,
+.mgr-enhanced-hourly-capacity:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+/* Gradient Text Effects */
+.mgr-chart-title-section h3 {
+  position: relative;
+}
+
+.mgr-chart-title-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(135deg, #284394 0%, #3b82f6 100%);
+  transition: width 0.3s ease;
+}
+
+.mgr-enhanced-service-delivery:hover .mgr-chart-title-section h3::after,
+.mgr-enhanced-hourly-capacity:hover .mgr-chart-title-section h3::after {
+  width: 100%;
+}
+/* ============================================================
+   ADVANCED ANIMATIONS & INTERACTIVE FEATURES
+   Making Charts Absolutely Outstanding and Astonishing
+   ============================================================ */
+
+/* Advanced Chart Container Animations */
+.mgr-chart-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.mgr-chart-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(40, 67, 148, 0.03),
+    transparent,
+    rgba(34, 197, 94, 0.03),
+    transparent
+  );
+  animation: mgrChartShimmer 8s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes mgrChartShimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+/* Enhanced Tooltip Animations */
+.recharts-tooltip-wrapper {
+  animation: mgrTooltipFadeIn 0.3s ease-out;
+}
+
+@keyframes mgrTooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Advanced Gradient Overlays */
+.mgr-enhanced-service-delivery::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #284394 0%,
+    #3b82f6 25%,
+    #60a5fa 50%,
+    #93c5fd 75%,
+    #dbeafe 100%
+  );
+  animation: mgrGradientFlow 3s ease-in-out infinite;
+}
+
+.mgr-enhanced-hourly-capacity::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    #22c55e 0%,
+    #16a34a 25%,
+    #15803d 50%,
+    #166534 75%,
+    #14532d 100%
+  );
+  animation: mgrGradientFlow 3s ease-in-out infinite reverse;
+}
+
+@keyframes mgrGradientFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Interactive Metric Badges */
+.mgr-metric-badge {
+  position: relative;
+  overflow: hidden;
+}
+
+.mgr-metric-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.mgr-metric-badge:hover::before {
+  left: 100%;
+}
+
+/* Advanced Status Indicators */
+.mgr-status-indicator {
+  position: relative;
+  overflow: hidden;
+}
+
+.mgr-status-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 70%
+  );
+  animation: mgrStatusShine 2s ease-in-out infinite;
+}
+
+@keyframes mgrStatusShine {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(200%) skewX(-15deg);
+  }
+}
+
+/* Enhanced Insight Cards with 3D Effects */
+.mgr-insight-card {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mgr-insight-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.1) 0%,
+    rgba(16, 185, 129, 0.05) 50%,
+    rgba(6, 182, 212, 0.1) 100%
+  );
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.mgr-insight-card:hover::before {
+  opacity: 1;
+}
+
+.mgr-insight-card:hover {
+  transform: translateY(-4px) rotateX(5deg);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 0 20px rgba(34, 197, 94, 0.1);
+}
+
+/* Advanced Performance Indicators */
+.mgr-performance-indicators {
+  position: relative;
+}
+
+.mgr-indicator {
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mgr-indicator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.mgr-indicator:hover::before {
+  transform: translateX(100%);
+}
+
+.mgr-indicator:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: scale(1.05);
+}
+
+/* Floating Animation for Live Indicators */
+.mgr-live-indicator {
+  animation: mgrFloat 3s ease-in-out infinite;
+}
+
+@keyframes mgrFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Advanced Chart Header Animations */
+.mgr-chart-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.mgr-chart-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  animation: mgrHeaderSweep 4s ease-in-out infinite;
+}
+
+@keyframes mgrHeaderSweep {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: -100%;
+  }
+}
+
+/* Pulsing Glow Effects */
+.mgr-enhanced-service-delivery,
+.mgr-enhanced-hourly-capacity {
+  position: relative;
+}
+
+.mgr-enhanced-service-delivery::before,
+.mgr-enhanced-hourly-capacity::before {
+  animation: mgrGlowPulse 4s ease-in-out infinite;
+}
+
+@keyframes mgrGlowPulse {
+  0%, 100% {
+    opacity: 0.8;
+    filter: blur(1px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+/* Interactive Chart Footer */
+.mgr-chart-footer {
+  position: relative;
+  overflow: hidden;
+}
+
+.mgr-chart-footer::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(40, 67, 148, 0.5),
+    transparent
+  );
+  animation: mgrFooterGlow 2s ease-in-out infinite;
+}
+
+@keyframes mgrFooterGlow {
+  0%, 100% {
+    transform: scaleX(0);
+  }
+  50% {
+    transform: scaleX(1);
+  }
+}
+
+/* Advanced Responsive Animations */
+@media (prefers-reduced-motion: reduce) {
+  .mgr-enhanced-service-delivery::before,
+  .mgr-enhanced-hourly-capacity::before,
+  .mgr-chart-container::before,
+  .mgr-live-pulse,
+  .mgr-status-dot,
+  .mgr-live-indicator {
+    animation: none;
+  }
+}
+
+/* High Performance Mode for Mobile */
+@media (max-width: 768px) {
+  .mgr-chart-container::before,
+  .mgr-chart-header::before,
+  .mgr-chart-footer::before {
+    display: none;
+  }
+  
+  .mgr-enhanced-service-delivery::after,
+  .mgr-enhanced-hourly-capacity::after {
+    height: 2px;
+  }
+}
+
+/* Ultra-wide Screen Optimizations */
+@media (min-width: 1920px) {
+  .mgr-enhanced-service-delivery,
+  .mgr-enhanced-hourly-capacity {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  .mgr-chart-container {
+    padding: 2rem 0;
+  }
+  
+  .mgr-chart-title-section h3 {
+    font-size: 1.5rem;
+  }
+  
+  .mgr-metric-badge {
+    min-width: 120px;
+    padding: 1rem 1.5rem;
+  }
+  
+  .mgr-insight-card {
+    padding: 1.5rem 2rem;
+  }
+}
+
+/* Print Styles for Professional Reports */
+@media print {
+  .mgr-enhanced-service-delivery,
+  .mgr-enhanced-hourly-capacity {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+  }
+  
+  .mgr-enhanced-service-delivery::before,
+  .mgr-enhanced-hourly-capacity::before,
+  .mgr-enhanced-service-delivery::after,
+  .mgr-enhanced-hourly-capacity::after {
+    display: none !important;
+  }
+  
+  .mgr-chart-title-section h3 {
+    color: #1e293b !important;
+    -webkit-text-fill-color: #1e293b !important;
+  }
+}
