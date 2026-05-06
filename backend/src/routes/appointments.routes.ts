@@ -5,6 +5,7 @@ import {
   getAppointment,
   updateAppointment,
   sendReminderHandler,
+  getQueueHandler,
 } from "../controllers/appointments.controller";
 import { authenticate, authorizeMinRole } from "../middleware/auth.middleware";
 import { UserRole } from "../generated/prisma";
@@ -12,25 +13,33 @@ import { UserRole } from "../generated/prisma";
 const router = Router();
 
 // All appointment routes require authentication
-// CUSTOMER_STAFF and above can view and create appointments
+// STAFF and above can view and create appointments
 router.get(
   "/",
   authenticate,
-  authorizeMinRole(UserRole.CUSTOMER_STAFF),
+  authorizeMinRole(UserRole.STAFF),
   getAppointments,
+);
+
+// Get queue - NURSE_OFFICER and above
+router.get(
+  "/queue",
+  authenticate,
+  authorizeMinRole(UserRole.NURSE_OFFICER),
+  getQueueHandler,
 );
 
 router.post(
   "/",
   authenticate,
-  authorizeMinRole(UserRole.CUSTOMER_STAFF),
+  authorizeMinRole(UserRole.STAFF),
   postAppointment,
 );
 
 router.get(
   "/:id",
   authenticate,
-  authorizeMinRole(UserRole.CUSTOMER_STAFF),
+  authorizeMinRole(UserRole.STAFF),
   getAppointment,
 );
 
@@ -42,11 +51,11 @@ router.patch(
   updateAppointment,
 );
 
-// Send SMS reminder - CUSTOMER_STAFF and above can request reminders
+// Send SMS reminder - STAFF and above can request reminders
 router.post(
   "/:id/send-reminder",
   authenticate,
-  authorizeMinRole(UserRole.CUSTOMER_STAFF),
+  authorizeMinRole(UserRole.STAFF),
   sendReminderHandler,
 );
 

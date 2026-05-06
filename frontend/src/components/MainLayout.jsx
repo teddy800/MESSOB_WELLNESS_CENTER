@@ -8,13 +8,15 @@ function MainLayout({ children }) {
   const { user, logout } = useAuth();
   const dashboardTab =
     new URLSearchParams(location.search).get("tab") || "appointments";
+  const nurseTab = new URLSearchParams(location.search).get("tab") || "queue";
   const isCustomerDashboard = location.pathname === "/dashboard";
+  const isNurseDashboard = location.pathname === "/nurse";
 
   // Check if user has manager access
   const hasManagerAccess = () => {
     return (
       user &&
-      ["MANAGER", "REGIONAL_OFFICE", "FEDERAL_ADMIN"].includes(user.role)
+      ["MANAGER", "REGIONAL_OFFICE", "SYSTEM_ADMIN"].includes(user.role)
     );
   };
 
@@ -54,12 +56,18 @@ function MainLayout({ children }) {
       <div className="layout-body">
         <aside className="app-sidebar">
           <nav>
-            <Link
-              className={location.pathname === "/dashboard" ? "active" : ""}
-              to="/dashboard"
-            >
-              Dashboard
-            </Link>
+            {location.pathname === "/nurse" ? (
+              <Link className="active" to="/nurse">
+                Nurse Dashboard
+              </Link>
+            ) : (
+              <Link
+                className={location.pathname === "/dashboard" ? "active" : ""}
+                to="/dashboard"
+              >
+                Dashboard
+              </Link>
+            )}
 
             {isCustomerDashboard && (
               <div
@@ -101,6 +109,44 @@ function MainLayout({ children }) {
                   to="/dashboard?tab=profile"
                 >
                   👤 Profile
+                </Link>
+              </div>
+            )}
+
+            {isNurseDashboard && (
+              <div
+                className="sidebar-subnav"
+                aria-label="Nurse dashboard sections"
+              >
+                <Link
+                  className={nurseTab === "queue" ? "active" : ""}
+                  to="/nurse?tab=queue"
+                >
+                  Queue
+                </Link>
+                <Link
+                  className={nurseTab === "vitals" ? "active" : ""}
+                  to="/nurse?tab=vitals"
+                >
+                  Vitals
+                </Link>
+                <Link
+                  className={nurseTab === "walkin" ? "active" : ""}
+                  to="/nurse?tab=walkin"
+                >
+                  Walk-in
+                </Link>
+                <Link
+                  className={nurseTab === "wellness" ? "active" : ""}
+                  to="/nurse?tab=wellness"
+                >
+                  Wellness
+                </Link>
+                <Link
+                  className={nurseTab === "history" ? "active" : ""}
+                  to="/nurse?tab=history"
+                >
+                  History
                 </Link>
               </div>
             )}

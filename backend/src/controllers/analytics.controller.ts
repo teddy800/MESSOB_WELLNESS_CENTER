@@ -252,7 +252,7 @@ export async function getQueueAnalytics(req: Request, res: Response) {
 export async function getHealthAnalytics(req: Request, res: Response) {
   try {
     const totalPatients = await prisma.user.count({
-      where: { role: UserRole.CUSTOMER_STAFF },
+      where: { role: UserRole.STAFF },
     });
 
     // BP analytics from vital_records
@@ -378,7 +378,8 @@ export async function getStaffUsers(req: AuthRequest, res: Response) {
             UserRole.NURSE_OFFICER,
             UserRole.MANAGER,
             UserRole.REGIONAL_OFFICE,
-            UserRole.FEDERAL_ADMIN,
+            UserRole.FEDERAL_OFFICE,
+            UserRole.SYSTEM_ADMIN,
           ],
         },
       },
@@ -436,7 +437,7 @@ export async function toggleUserStatus(req: AuthRequest, res: Response) {
 // ─── Create Staff User (real DB) ─────────────────────────────────────────────
 export async function createStaffUser(req: AuthRequest, res: Response) {
   try {
-    const { fullName, email, role, password } = req.body;
+    const { fullName, email, role, password, phone, centerId } = req.body;
 
     if (!fullName || !email || !role || !password) {
       res.status(400).json({ success: false, message: "fullName, email, role and password are required" });
@@ -447,12 +448,45 @@ export async function createStaffUser(req: AuthRequest, res: Response) {
       UserRole.NURSE_OFFICER,
       UserRole.MANAGER,
       UserRole.REGIONAL_OFFICE,
-      UserRole.FEDERAL_ADMIN,
+      UserRole.FEDERAL_OFFICE,
+      UserRole.SYSTEM_ADMIN,
     ];
 
     if (!allowedRoles.includes(role)) {
       res.status(400).json({ success: false, message: "Invalid role" });
       return;
+    }
+
+    // CRITICAL: Center Managers can ONLY create NURSE_OFFICER accounts
+    if (req.user?.role === UserRole.MANAGER && role !== UserRole.NURSE_OFFICER) {
+      res.status(403).json({ 
+        success: false, 
+        message: "Center Managers can only create Nurse Officer accounts" 
+      });
+      return;
+    }
+
+    // Regional and Federal offices can create up to their level
+    if (req.user?.role === UserRole.REGIONAL_OFFICE) {
+      const regionalAllowed: UserRole[] = [UserRole.NURSE_OFFICER, UserRole.MANAGER];
+      if (!regionalAllowed.includes(role)) {
+        res.status(403).json({ 
+          success: false, 
+          message: "Regional Officers can only create Nurse Officer and Manager accounts" 
+        });
+        return;
+      }
+    }
+
+    if (req.user?.role === UserRole.FEDERAL_OFFICE) {
+      const federalAllowed: UserRole[] = [UserRole.NURSE_OFFICER, UserRole.MANAGER, UserRole.REGIONAL_OFFICE];
+      if (!federalAllowed.includes(role)) {
+        res.status(403).json({ 
+          success: false, 
+          message: "Federal Officers can only create Nurse Officer, Manager, and Regional Officer accounts" 
+        });
+        return;
+      }
     }
 
     const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
@@ -471,6 +505,8 @@ export async function createStaffUser(req: AuthRequest, res: Response) {
           password: hashedPassword,
           role: role as UserRole,
           isActive: true,
+          phone: phone || null,
+          centerId: centerId || null,
         },
         select: {
           id: true,
@@ -478,6 +514,8 @@ export async function createStaffUser(req: AuthRequest, res: Response) {
           email: true,
           role: true,
           isActive: true,
+          phone: true,
+          centerId: true,
           createdAt: true,
         },
       });
@@ -491,6 +529,70 @@ export async function createStaffUser(req: AuthRequest, res: Response) {
   } catch (error) {
     console.error("Error creating staff user:", error);
     res.status(500).json({ success: false, message: "Failed to create user" });
+  }
+}
+
+// ─── Update Staff User (real DB) ─────────────────────────────────────────────
+export async function updateStaffUser(req: AuthRequest, res: Response) {
+  try {
+    const userId = req.params.userId as string;
+    const { fullName, email, role, phone, centerId } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      res.status(404).json({ success: false, message: "User not found" });
+      return;
+    }
+
+    const allowedRoles: string[] = [
+      UserRole.NURSE_OFFICER,
+      UserRole.MANAGER,
+      UserRole.REGIONAL_OFFICE,
+      UserRole.FEDERAL_OFFICE,
+      UserRole.SYSTEM_ADMIN,
+    ];
+
+    if (role && !allowedRoles.includes(role)) {
+      res.status(400).json({ success: false, message: "Invalid role" });
+      return;
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (email && email.toLowerCase() !== user.email) {
+      const existing = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+      if (existing) {
+        res.status(409).json({ success: false, message: "Email already in use" });
+        return;
+      }
+    }
+
+    const updateData: any = {};
+    if (fullName) updateData.fullName = fullName.trim();
+    if (email) updateData.email = email.toLowerCase().trim();
+    if (role) updateData.role = role as UserRole;
+    if (phone !== undefined) updateData.phone = phone || null;
+    if (centerId !== undefined) updateData.centerId = centerId || null;
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        isActive: true,
+        phone: true,
+        centerId: true,
+        lastLoginAt: true,
+        createdAt: true,
+      },
+    });
+
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    console.error("Error updating staff user:", error);
+    res.status(500).json({ success: false, message: "Failed to update user" });
   }
 }
 
@@ -513,5 +615,70 @@ export async function getAuditLogs(req: AuthRequest, res: Response) {
   } catch (error) {
     console.error("Error fetching audit logs:", error);
     res.status(500).json({ success: false, message: "Failed to fetch audit logs" });
+  }
+}
+
+// ─── Daily / Weekly / Monthly Trends (real DB) ───────────────────────────────
+export async function getTrends(req: Request, res: Response) {
+  try {
+    const now = new Date();
+
+    // ── Daily: last 7 days ──
+    const dailyData = await Promise.all(
+      Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(now);
+        d.setDate(now.getDate() - (6 - i));
+        const start = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+        const end   = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59);
+        const label = d.toLocaleDateString('en-US', { weekday: 'short' });
+        return Promise.all([
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end } } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end }, status: AppointmentStatus.COMPLETED } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end }, status: AppointmentStatus.NO_SHOW } }),
+        ]).then(([total, completed, noShow]) => ({ label, total, completed, noShow }));
+      })
+    );
+
+    // ── Weekly: last 8 weeks ──
+    const weeklyData = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => {
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay() - (7 - i) * 7);
+        weekStart.setHours(0, 0, 0, 0);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+        const label = `W${i + 1}`;
+        return Promise.all([
+          prisma.appointment.count({ where: { scheduledAt: { gte: weekStart, lte: weekEnd } } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: weekStart, lte: weekEnd }, status: AppointmentStatus.COMPLETED } }),
+          prisma.user.count({ where: { createdAt: { gte: weekStart, lte: weekEnd } } }),
+        ]).then(([total, completed, newUsers]) => ({ label, total, completed, newUsers }));
+      })
+    );
+
+    // ── Monthly: last 6 months ──
+    const monthlyData = await Promise.all(
+      Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+        const start = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0);
+        const end   = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+        const label = d.toLocaleDateString('en-US', { month: 'short' });
+        return Promise.all([
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end } } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end }, status: AppointmentStatus.COMPLETED } }),
+          prisma.appointment.count({ where: { scheduledAt: { gte: start, lte: end }, status: AppointmentStatus.NO_SHOW } }),
+          prisma.user.count({ where: { createdAt: { gte: start, lte: end } } }),
+          prisma.vitalRecord.count({ where: { recordedAt: { gte: start, lte: end } } }),
+        ]).then(([total, completed, noShow, newUsers, vitals]) => ({
+          label, total, completed, noShow, newUsers, vitals,
+        }));
+      })
+    );
+
+    res.json({ success: true, data: { daily: dailyData, weekly: weeklyData, monthly: monthlyData } });
+  } catch (error) {
+    console.error("Error fetching trends:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch trends" });
   }
 }

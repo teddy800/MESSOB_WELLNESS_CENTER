@@ -50,6 +50,11 @@ export const analyticsService = {
     return response.data;
   },
 
+  async updateStaffUser(userId, userData) {
+    const response = await api.put(`/api/v1/analytics/users/${userId}`, userData);
+    return response.data;
+  },
+
   async toggleUserStatus(userId) {
     const response = await api.patch(`/api/v1/analytics/users/${userId}/toggle`);
     return response.data;
@@ -58,6 +63,12 @@ export const analyticsService = {
   // ─── Audit Logs ─────────────────────────────────────────────────────────────
   async getAuditLogs(limit = 50) {
     const response = await api.get('/api/v1/analytics/audit-logs', { params: { limit } });
+    return response.data;
+  },
+
+  // ─── Trends (daily / weekly / monthly) ──────────────────────────────────────
+  async getTrends() {
+    const response = await api.get('/api/v1/analytics/trends');
     return response.data;
   },
 };
