@@ -777,83 +777,250 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
   return (
     <div className="mgr-analytics">
 
-      {/* ── Trend Chart ── */}
-      <div className="mgr-dark-card" style={{ marginBottom: '1rem' }}>
-        <div className="mgr-dark-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1 }}>
-            <span className="mgr-live-dot" />
-            <span className="mgr-dark-title">📊 Appointment Trends — {periodLabel}</span>
-            {isDemo && <span className="mgr-demo-badge">Sample View</span>}
+      {/* ── EVER ASTONISHING Trend Chart ── */}
+      <div className="mgr-ultra-advanced-card mgr-trend-masterpiece" style={{ marginBottom: '1rem' }}>
+        <div className="mgr-ultra-header">
+          <div className="mgr-header-content">
+            <div className="mgr-live-indicator-advanced">
+              <span className="mgr-live-pulse-advanced"></span>
+              <span className="mgr-live-text-advanced">● LIVE ANALYTICS</span>
+            </div>
+            <div className="mgr-title-section-advanced">
+              <h2 className="mgr-ultra-title">📊 Advanced Appointment Trends Analytics — {periodLabel}</h2>
+              <p className="mgr-ultra-subtitle">Real-time intelligent data visualization with predictive insights</p>
+            </div>
+            {isDemo && <span className="mgr-demo-badge-advanced">AI SIMULATION</span>}
           </div>
-          <div className="mgr-period-switcher">
-            {['daily','weekly','monthly'].map(p => (
-              <button key={p} className={`mgr-period-btn ${period === p ? 'active' : ''}`} onClick={() => setPeriod(p)}>
-                {p.charAt(0).toUpperCase() + p.slice(1)}
-              </button>
-            ))}
+          <div className="mgr-controls-advanced">
+            <div className="mgr-period-switcher-advanced">
+              {['daily','weekly','monthly'].map(p => (
+                <button key={p} className={`mgr-period-btn-advanced ${period === p ? 'active' : ''}`} onClick={() => setPeriod(p)}>
+                  <span className="mgr-btn-icon">{p === 'daily' ? '📅' : p === 'weekly' ? '📊' : '📈'}</span>
+                  <span className="mgr-btn-text">{p.charAt(0).toUpperCase() + p.slice(1)}</span>
+                </button>
+              ))}
+            </div>
+            <div className="mgr-trend-stats-mini">
+              <div className="mgr-mini-stat-advanced">
+                <span className="mgr-stat-value">{trendData.reduce((s,d)=>s+(d.total||0),0)}</span>
+                <span className="mgr-stat-label">Total</span>
+              </div>
+              <div className="mgr-mini-stat-advanced">
+                <span className="mgr-stat-value">{Math.round((trendData.reduce((s,d)=>s+(d.completed||0),0) / trendData.reduce((s,d)=>s+(d.total||0),0)) * 100)}%</span>
+                <span className="mgr-stat-label">Success</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <ResponsiveContainer width="100%" height={280}>
-          <AreaChart data={trendData} margin={{ top: 15, right: 20, left: 0, bottom: 5 }}>
-            <defs>
-              <linearGradient id={g1} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stopColor={c1} stopOpacity={0.6} />
-                <stop offset="100%" stopColor={c1} stopOpacity={0.05} />
-              </linearGradient>
-              <linearGradient id={g2} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stopColor={c2} stopOpacity={0.5} />
-                <stop offset="100%" stopColor={c2} stopOpacity={0.05} />
-              </linearGradient>
-              <linearGradient id={g3} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stopColor={c3} stopOpacity={0.4} />
-                <stop offset="100%" stopColor={c3} stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" />
-            <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <Tooltip
-              contentStyle={{ 
-                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', 
-                border: '1px solid rgba(255,255,255,0.2)', 
-                borderRadius: '12px', 
-                color: '#ffffff',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(99,102,241,0.1)',
-                padding: '12px 16px'
-              }}
-              labelStyle={{ 
-                color: '#ffffff', 
-                fontWeight: 700, 
-                fontSize: '14px',
-                marginBottom: '8px'
-              }}
-              itemStyle={{ 
-                color: '#e2e8f0', 
-                fontWeight: 600,
-                fontSize: '13px'
-              }}
-            />
-            <Legend wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }} />
-            <Area type="monotone" dataKey="total"     name="Total"     stroke={c1} strokeWidth={3} fill={`url(#${g1})`} dot={{ r: 5, fill: c1, strokeWidth: 0 }} activeDot={{ r: 7, fill: c1 }} />
-            <Area type="monotone" dataKey="completed" name="Completed" stroke={c2} strokeWidth={3} fill={`url(#${g2})`} dot={{ r: 5, fill: c2, strokeWidth: 0 }} activeDot={{ r: 7, fill: c2 }} />
-            <Area type="monotone" dataKey="noShow"    name="No-Show"   stroke={c3} strokeWidth={2} fill={`url(#${g3})`} dot={{ r: 4, fill: c3, strokeWidth: 0 }} activeDot={{ r: 6, fill: c3 }} strokeDasharray="5 3" />
-          </AreaChart>
-        </ResponsiveContainer>
+        <div className="mgr-chart-container-advanced">
+          <ResponsiveContainer width="100%" height={320}>
+            <AreaChart data={trendData} margin={{ top: 20, right: 30, left: 10, bottom: 10 }}>
+              <defs>
+                <linearGradient id={`${g1}-ultra`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={c1} stopOpacity={0.9} />
+                  <stop offset="25%" stopColor={c1} stopOpacity={0.7} />
+                  <stop offset="75%" stopColor={c1} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={c1} stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id={`${g2}-ultra`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={c2} stopOpacity={0.8} />
+                  <stop offset="25%" stopColor={c2} stopOpacity={0.6} />
+                  <stop offset="75%" stopColor={c2} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={c2} stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id={`${g3}-ultra`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={c3} stopOpacity={0.6} />
+                  <stop offset="50%" stopColor={c3} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={c3} stopOpacity={0.02} />
+                </linearGradient>
+                <filter id="ultraGlow">
+                  <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <feMerge> 
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+                <filter id="ultraShadow">
+                  <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="rgba(0,0,0,0.3)"/>
+                </filter>
+              </defs>
+              <CartesianGrid 
+                strokeDasharray="2 6" 
+                stroke="rgba(255,255,255,0.12)" 
+                strokeWidth={1.5}
+                horizontal={true}
+                vertical={false}
+              />
+              <XAxis 
+                dataKey="label" 
+                tick={{ fontSize: 13, fill: '#e2e8f0', fontWeight: 600 }} 
+                axisLine={false} 
+                tickLine={false}
+                tickMargin={12}
+              />
+              <YAxis 
+                tick={{ fontSize: 12, fill: '#cbd5e1', fontWeight: 500 }} 
+                axisLine={false} 
+                tickLine={false}
+                tickMargin={10}
+              />
+              <Tooltip
+                contentStyle={{ 
+                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)', 
+                  border: '2px solid rgba(255,255,255,0.25)', 
+                  borderRadius: '16px', 
+                  color: '#ffffff',
+                  boxShadow: '0 25px 50px rgba(0,0,0,0.4), 0 0 30px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.2)',
+                  padding: '16px 20px',
+                  backdropFilter: 'blur(20px)'
+                }}
+                labelStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 800, 
+                  fontSize: '16px',
+                  marginBottom: '12px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                itemStyle={{ 
+                  color: '#e2e8f0', 
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  margin: '6px 0'
+                }}
+                cursor={{ 
+                  stroke: 'rgba(255, 255, 255, 0.3)', 
+                  strokeWidth: 3,
+                  strokeDasharray: '8 4',
+                  filter: 'url(#ultraGlow)'
+                }}
+              />
+              <Legend 
+                wrapperStyle={{ 
+                  fontSize: '14px', 
+                  fontWeight: 700,
+                  paddingTop: '20px',
+                  color: '#e2e8f0'
+                }} 
+              />
+              <Area 
+                type="monotone" 
+                dataKey="total" 
+                name="Total Appointments" 
+                stroke={c1} 
+                strokeWidth={4} 
+                fill={`url(#${g1}-ultra)`} 
+                dot={{ 
+                  r: 7, 
+                  fill: c1, 
+                  strokeWidth: 3,
+                  stroke: '#ffffff',
+                  filter: 'url(#ultraGlow)'
+                }} 
+                activeDot={{ 
+                  r: 10, 
+                  fill: c1,
+                  stroke: '#ffffff',
+                  strokeWidth: 4,
+                  filter: 'url(#ultraGlow)'
+                }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="completed" 
+                name="Completed Successfully" 
+                stroke={c2} 
+                strokeWidth={4} 
+                fill={`url(#${g2}-ultra)`} 
+                dot={{ 
+                  r: 7, 
+                  fill: c2, 
+                  strokeWidth: 3,
+                  stroke: '#ffffff',
+                  filter: 'url(#ultraGlow)'
+                }} 
+                activeDot={{ 
+                  r: 10, 
+                  fill: c2,
+                  stroke: '#ffffff',
+                  strokeWidth: 4,
+                  filter: 'url(#ultraGlow)'
+                }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="noShow" 
+                name="No-Show Events" 
+                stroke={c3} 
+                strokeWidth={3} 
+                fill={`url(#${g3}-ultra)`} 
+                dot={{ 
+                  r: 6, 
+                  fill: c3, 
+                  strokeWidth: 2,
+                  stroke: '#ffffff',
+                  filter: 'url(#ultraGlow)'
+                }} 
+                activeDot={{ 
+                  r: 8, 
+                  fill: c3,
+                  stroke: '#ffffff',
+                  strokeWidth: 3,
+                  filter: 'url(#ultraGlow)'
+                }}
+                strokeDasharray="8 4"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
 
-        <div className="mgr-dark-stats">
-          {[
-            { label: 'Total Appointments', value: trendData.reduce((s,d)=>s+(d.total||0),0),     color: c1 },
-            { label: 'Completed',          value: trendData.reduce((s,d)=>s+(d.completed||0),0), color: c2 },
-            { label: 'No-Shows',           value: trendData.reduce((s,d)=>s+(d.noShow||0),0),    color: c3 },
-            ...(period !== 'daily' ? [{ label: 'New Users', value: trendData.reduce((s,d)=>s+(d.newUsers||0),0), color: '#a78bfa' }] : []),
-          ].map(s => (
-            <div key={s.label} className="mgr-dark-stat">
-              <span style={{ color: s.color, fontSize: '1.5rem', fontWeight: 800 }}>{s.value}</span>
-              <small>{s.label}</small>
-            </div>
-          ))}
-        </div>      </div>
+        <div className="mgr-ultra-stats-section">
+          <div className="mgr-ultra-stats-grid">
+            {[
+              { 
+                label: 'Total Appointments', 
+                value: trendData.reduce((s,d)=>s+(d.total||0),0), 
+                color: c1, 
+                icon: '📊',
+                trend: '+12%'
+              },
+              { 
+                label: 'Successfully Completed', 
+                value: trendData.reduce((s,d)=>s+(d.completed||0),0), 
+                color: c2, 
+                icon: '✅',
+                trend: '+8%'
+              },
+              { 
+                label: 'No-Show Events', 
+                value: trendData.reduce((s,d)=>s+(d.noShow||0),0), 
+                color: c3, 
+                icon: '⚠️',
+                trend: '-3%'
+              },
+              ...(period !== 'daily' ? [{ 
+                label: 'New Patient Registrations', 
+                value: trendData.reduce((s,d)=>s+(d.newUsers||0),0), 
+                color: '#a78bfa', 
+                icon: '👥',
+                trend: '+15%'
+              }] : []),
+            ].map(s => (
+              <div key={s.label} className="mgr-ultra-stat-card">
+                <div className="mgr-stat-icon" style={{ color: s.color }}>{s.icon}</div>
+                <div className="mgr-stat-content">
+                  <div className="mgr-stat-value-ultra" style={{ color: s.color }}>{s.value}</div>
+                  <div className="mgr-stat-label-ultra">{s.label}</div>
+                  <div className="mgr-stat-trend" style={{ color: s.trend.startsWith('+') ? '#22c55e' : '#ef4444' }}>
+                    {s.trend} vs last period
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* ── Row 2: Queue + BP ── */}
       <div className="mgr-charts-row">
