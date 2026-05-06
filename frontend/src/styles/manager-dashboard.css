@@ -1412,3 +1412,251 @@
     -webkit-text-fill-color: #1e293b !important;
   }
 }
+/* ============================================================
+   OUTSTANDING TOOLTIP ENHANCEMENTS
+   Professional Hover Effects for Analytics Charts
+   ============================================================ */
+
+/* Enhanced Tooltip Animations */
+.recharts-tooltip-wrapper {
+  animation: mgrTooltipSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1000;
+}
+
+@keyframes mgrTooltipSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Professional Tooltip Content Styling */
+.recharts-tooltip-content {
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(99, 102, 241, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Tooltip Label Enhancements */
+.recharts-tooltip-label {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  margin-bottom: 8px !important;
+  text-transform: capitalize !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* Tooltip Item Styling */
+.recharts-tooltip-item {
+  color: #e2e8f0 !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  margin: 4px 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.recharts-tooltip-item-name {
+  color: #cbd5e1 !important;
+  font-weight: 500 !important;
+}
+
+.recharts-tooltip-item-value {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+/* Tooltip Separator */
+.recharts-tooltip-item-separator {
+  color: rgba(255, 255, 255, 0.4) !important;
+  margin: 0 4px !important;
+}
+
+/* Enhanced Cursor Effects */
+.recharts-cartesian-grid .recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid .recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.08) !important;
+  stroke-width: 1 !important;
+}
+
+/* Active Dot Enhancements */
+.recharts-dot.recharts-active-dot {
+  filter: drop-shadow(0 0 8px currentColor) !important;
+  animation: mgrActiveDotPulse 2s ease-in-out infinite !important;
+}
+
+@keyframes mgrActiveDotPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Chart Hover Area Enhancements */
+.recharts-surface:hover {
+  cursor: crosshair;
+}
+
+/* Legend Enhancements */
+.recharts-legend-wrapper {
+  padding-top: 15px !important;
+}
+
+.recharts-legend-item {
+  margin-right: 20px !important;
+}
+
+.recharts-legend-item-text {
+  color: #94a3b8 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+}
+
+/* Bar Chart Hover Effects */
+.recharts-bar-rectangle:hover {
+  filter: brightness(1.1) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transition: all 0.2s ease;
+}
+
+/* Pie Chart Hover Effects */
+.recharts-pie-sector:hover {
+  filter: brightness(1.1) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transition: all 0.2s ease;
+}
+
+/* Area Chart Hover Effects */
+.recharts-area:hover {
+  filter: brightness(1.05);
+  transition: all 0.2s ease;
+}
+
+/* Enhanced Dark Card Tooltips */
+.mgr-dark-card .recharts-tooltip-wrapper {
+  z-index: 1001;
+}
+
+.mgr-dark-card .recharts-tooltip-content {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(16, 185, 129, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Responsive Tooltip Adjustments */
+@media (max-width: 768px) {
+  .recharts-tooltip-content {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+  
+  .recharts-tooltip-label {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+  }
+  
+  .recharts-tooltip-item {
+    font-size: 12px !important;
+    margin: 2px 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .recharts-tooltip-content {
+    padding: 6px 10px !important;
+    max-width: 200px !important;
+  }
+  
+  .recharts-tooltip-label {
+    font-size: 12px !important;
+  }
+  
+  .recharts-tooltip-item {
+    font-size: 11px !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .recharts-tooltip-content {
+    background: #000000 !important;
+    border: 2px solid #ffffff !important;
+    color: #ffffff !important;
+  }
+  
+  .recharts-tooltip-label,
+  .recharts-tooltip-item-value {
+    color: #ffffff !important;
+  }
+  
+  .recharts-tooltip-item-name {
+    color: #cccccc !important;
+  }
+}
+
+/* Print Styles for Tooltips */
+@media print {
+  .recharts-tooltip-wrapper {
+    display: none !important;
+  }
+}
+
+/* Focus Accessibility */
+.recharts-surface:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Enhanced Animation Performance */
+.recharts-tooltip-wrapper,
+.recharts-active-dot,
+.recharts-bar-rectangle,
+.recharts-pie-sector,
+.recharts-area {
+  will-change: transform, opacity, filter;
+}
+
+/* Tooltip Arrow Enhancement (if supported) */
+.recharts-tooltip-content::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 6px solid rgba(30, 41, 59, 0.95);
+  filter: drop-shadow(0 -2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Professional Gradient Overlays for Tooltips */
+.mgr-dark-card .recharts-tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+}

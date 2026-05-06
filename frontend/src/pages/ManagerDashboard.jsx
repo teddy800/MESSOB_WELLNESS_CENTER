@@ -814,9 +814,25 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
             <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
             <Tooltip
-              contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }}
-              labelStyle={{ color: '#e2e8f0', fontWeight: 700 }}
-              itemStyle={{ color: '#cbd5e1' }}
+              contentStyle={{ 
+                background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', 
+                border: '1px solid rgba(255,255,255,0.2)', 
+                borderRadius: '12px', 
+                color: '#ffffff',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(99,102,241,0.1)',
+                padding: '12px 16px'
+              }}
+              labelStyle={{ 
+                color: '#ffffff', 
+                fontWeight: 700, 
+                fontSize: '14px',
+                marginBottom: '8px'
+              }}
+              itemStyle={{ 
+                color: '#e2e8f0', 
+                fontWeight: 600,
+                fontSize: '13px'
+              }}
             />
             <Legend wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }} />
             <Area type="monotone" dataKey="total"     name="Total"     stroke={c1} strokeWidth={3} fill={`url(#${g1})`} dot={{ r: 5, fill: c1, strokeWidth: 0 }} activeDot={{ r: 7, fill: c1 }} />
@@ -858,7 +874,32 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" vertical={false} />
               <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', 
+                  border: '1px solid rgba(255,255,255,0.2)', 
+                  borderRadius: '12px', 
+                  color: '#ffffff',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(6,182,212,0.1)',
+                  padding: '12px 16px'
+                }} 
+                labelStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 700, 
+                  fontSize: '14px',
+                  marginBottom: '8px'
+                }}
+                itemStyle={{ 
+                  color: '#e2e8f0', 
+                  fontWeight: 600,
+                  fontSize: '13px'
+                }}
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+                formatter={(value, name) => [
+                  `${value} patients`,
+                  'Peak Hour Activity'
+                ]}
+              />
               <Bar dataKey="patients" name="Patients" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -880,7 +921,32 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={58} />
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', 
+                  border: '1px solid rgba(255,255,255,0.2)', 
+                  borderRadius: '12px', 
+                  color: '#ffffff',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(16,185,129,0.1)',
+                  padding: '12px 16px'
+                }} 
+                labelStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 700, 
+                  fontSize: '14px',
+                  marginBottom: '8px'
+                }}
+                itemStyle={{ 
+                  color: '#e2e8f0', 
+                  fontWeight: 600,
+                  fontSize: '13px'
+                }}
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+                formatter={(value, name) => [
+                  `${value} patients`,
+                  'BP Risk Level'
+                ]}
+              />
               <Bar dataKey="value" name="Patients" radius={[0, 6, 6, 0]}>
                 {bpDisplay.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
               </Bar>
@@ -908,7 +974,31 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
                 <Pie data={bmiDisplay} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
                   {bmiDisplay.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', 
+                    border: '1px solid rgba(255,255,255,0.2)', 
+                    borderRadius: '12px', 
+                    color: '#ffffff',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(59,130,246,0.1)',
+                    padding: '12px 16px'
+                  }} 
+                  labelStyle={{ 
+                    color: '#ffffff', 
+                    fontWeight: 700, 
+                    fontSize: '14px',
+                    marginBottom: '8px'
+                  }}
+                  itemStyle={{ 
+                    color: '#e2e8f0', 
+                    fontWeight: 600,
+                    fontSize: '13px'
+                  }}
+                  formatter={(value, name) => [
+                    `${value} patients`,
+                    'BMI Category'
+                  ]}
+                />
               </PieChart>
             </ResponsiveContainer>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -942,7 +1032,29 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} formatter={(v) => [`${v}%`, 'Score']} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', 
+                  border: '1px solid rgba(255,255,255,0.2)', 
+                  borderRadius: '12px', 
+                  color: '#ffffff',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.3), 0 0 20px rgba(52,211,153,0.1)',
+                  padding: '12px 16px'
+                }} 
+                labelStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 700, 
+                  fontSize: '14px',
+                  marginBottom: '8px'
+                }}
+                itemStyle={{ 
+                  color: '#e2e8f0', 
+                  fontWeight: 600,
+                  fontSize: '13px'
+                }}
+                formatter={(v) => [`${v}%`, 'Satisfaction Score']} 
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+              />
               <Bar dataKey="score" name="Score" radius={[6, 6, 0, 0]}>
                 {feedbackDisplay.map((d, i) => <Cell key={i} fill={`url(#fb${i})`} />)}
               </Bar>
