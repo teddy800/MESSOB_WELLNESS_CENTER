@@ -1039,11 +1039,10 @@
   animation: mgrChartFadeIn 0.8s ease-out;
 }
 
-/* Hover Effects for Interactive Elements */
+/* Smooth Chart Hover Effects - Non-Disruptive */
 .mgr-enhanced-service-delivery:hover,
 .mgr-enhanced-hourly-capacity:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   transition: all 0.3s ease;
 }
 
@@ -1169,30 +1168,15 @@
   }
 }
 
-/* Interactive Metric Badges */
+/* Smooth Metric Badge Effects - Non-Disruptive */
 .mgr-metric-badge {
   position: relative;
   overflow: hidden;
+  transition: all 0.2s ease;
 }
 
-.mgr-metric-badge::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
-  transition: left 0.6s ease;
-}
-
-.mgr-metric-badge:hover::before {
-  left: 100%;
+.mgr-metric-badge:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
 /* Advanced Status Indicators */
@@ -1226,80 +1210,32 @@
   }
 }
 
-/* Enhanced Insight Cards with 3D Effects */
+/* Enhanced Insight Cards - Smooth and Non-Disruptive */
 .mgr-insight-card {
   position: relative;
-  transform-style: preserve-3d;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.mgr-insight-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(34, 197, 94, 0.1) 0%,
-    rgba(16, 185, 129, 0.05) 50%,
-    rgba(6, 182, 212, 0.1) 100%
-  );
-  border-radius: 12px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: -1;
-}
-
-.mgr-insight-card:hover::before {
-  opacity: 1;
+  transition: all 0.2s ease;
 }
 
 .mgr-insight-card:hover {
-  transform: translateY(-4px) rotateX(5deg);
-  box-shadow: 
-    0 20px 40px rgba(0, 0, 0, 0.15),
-    0 0 20px rgba(34, 197, 94, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: rgba(34, 197, 94, 0.2);
 }
 
-/* Advanced Performance Indicators */
+/* Smooth Performance Indicators - Non-Disruptive */
 .mgr-performance-indicators {
   position: relative;
 }
 
 .mgr-indicator {
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   position: relative;
-  overflow: hidden;
-}
-
-.mgr-indicator::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-}
-
-.mgr-indicator:hover::before {
-  transform: translateX(100%);
 }
 
 .mgr-indicator:hover {
   background: rgba(255, 255, 255, 0.05);
-  transform: scale(1.05);
 }
 
 /* Floating Animation for Live Indicators */

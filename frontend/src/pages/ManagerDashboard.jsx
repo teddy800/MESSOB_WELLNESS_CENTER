@@ -282,13 +282,6 @@ const OverviewTab = ({ loading, capacityInfo, bookingStats }) => {
                     <stop offset="75%" stopColor="#4ade80" stopOpacity={0.3} />
                     <stop offset="100%" stopColor="#dcfce7" stopOpacity={0.05} />
                   </linearGradient>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                    <feMerge> 
-                      <feMergeNode in="coloredBlur"/>
-                      <feMergeNode in="SourceGraphic"/>
-                    </feMerge>
-                  </filter>
                 </defs>
                 <CartesianGrid 
                   strokeDasharray="2 4" 
@@ -350,16 +343,14 @@ const OverviewTab = ({ loading, capacityInfo, bookingStats }) => {
                   dot={{ 
                     r: 6, 
                     fill: '#284394', 
-                    strokeWidth: 3,
-                    stroke: '#ffffff',
-                    filter: 'url(#glow)'
+                    strokeWidth: 2,
+                    stroke: '#ffffff'
                   }} 
                   activeDot={{ 
                     r: 8, 
                     fill: '#284394',
                     stroke: '#ffffff',
-                    strokeWidth: 4,
-                    filter: 'url(#glow)'
+                    strokeWidth: 3
                   }}
                 />
                 <Area 
@@ -372,16 +363,14 @@ const OverviewTab = ({ loading, capacityInfo, bookingStats }) => {
                   dot={{ 
                     r: 6, 
                     fill: '#22c55e', 
-                    strokeWidth: 3,
-                    stroke: '#ffffff',
-                    filter: 'url(#glow)'
+                    strokeWidth: 2,
+                    stroke: '#ffffff'
                   }} 
                   activeDot={{ 
                     r: 8, 
                     fill: '#22c55e',
                     stroke: '#ffffff',
-                    strokeWidth: 4,
-                    filter: 'url(#glow)'
+                    strokeWidth: 3
                   }}
                 />
               </AreaChart>
@@ -549,13 +538,6 @@ const CapacityTab = ({ loading, capacityInfo }) => {
                   <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.6} />
                   <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.1} />
                 </linearGradient>
-                <filter id="hourlyGlow">
-                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                  <feMerge> 
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
               </defs>
               <CartesianGrid 
                 strokeDasharray="2 4" 
@@ -622,15 +604,13 @@ const CapacityTab = ({ loading, capacityInfo }) => {
                   r: 5, 
                   fill: '#284394', 
                   strokeWidth: 2,
-                  stroke: '#ffffff',
-                  filter: 'url(#hourlyGlow)'
+                  stroke: '#ffffff'
                 }}
                 activeDot={{ 
                   r: 7, 
                   fill: '#284394',
                   stroke: '#ffffff',
-                  strokeWidth: 3,
-                  filter: 'url(#hourlyGlow)'
+                  strokeWidth: 2
                 }}
               />
               <Area 
@@ -644,15 +624,13 @@ const CapacityTab = ({ loading, capacityInfo }) => {
                   r: 5, 
                   fill: '#22c55e', 
                   strokeWidth: 2,
-                  stroke: '#ffffff',
-                  filter: 'url(#hourlyGlow)'
+                  stroke: '#ffffff'
                 }}
                 activeDot={{ 
                   r: 7, 
                   fill: '#22c55e',
                   stroke: '#ffffff',
-                  strokeWidth: 3,
-                  filter: 'url(#hourlyGlow)'
+                  strokeWidth: 2
                 }}
               />
             </AreaChart>
