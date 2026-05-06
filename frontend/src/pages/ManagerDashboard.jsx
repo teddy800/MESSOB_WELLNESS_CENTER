@@ -919,7 +919,6 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
                   <span style={{ color: '#ffffff', fontWeight: 900, textShadow: '0 0 10px rgba(255,255,255,0.4)' }}>{`${value} patients`}</span>,
                   <span style={{ color: '#e0e0e0', fontWeight: 600, textTransform: 'capitalize' }}>Peak Hour Activity</span>
                 ]}
-                ]}
               />
               <Bar dataKey="patients" name="Patients" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
             </BarChart>
