@@ -763,3 +763,61 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+/* Enhanced Dropdown Visibility for Performance Metrics */
+.performance-metric-selector {
+  background: rgba(255,255,255,0.1) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  border-radius: 8px !important;
+  padding: 0.5rem 1rem !important;
+  color: #ffffff !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  outline: none !important;
+}
+
+.performance-metric-selector option {
+  background: #1e293b !important;
+  color: #ffffff !important;
+  padding: 0.75rem !important;
+  font-weight: 600 !important;
+  border: none !important;
+}
+
+.performance-metric-selector option:hover {
+  background: #334155 !important;
+  color: #ffffff !important;
+}
+
+.performance-metric-selector option:checked {
+  background: #4c6fbe !important;
+  color: #ffffff !important;
+}
+
+/* Ensure dropdown visibility in all browsers */
+select.performance-metric-selector {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+/* Firefox specific fixes */
+@-moz-document url-prefix() {
+  .performance-metric-selector option {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+  }
+}
+
+/* WebKit specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  .performance-metric-selector option {
+    background: #1e293b !important;
+    color: #ffffff !important;
+  }
+}

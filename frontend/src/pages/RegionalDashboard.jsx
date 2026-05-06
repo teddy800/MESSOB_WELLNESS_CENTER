@@ -1238,15 +1238,16 @@ const PerformanceTab = ({ loading, analytics, trendsData, centers }) => {
                   onClick={() => setPeriod(p)}
                   style={{
                     background: period === p ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : 'transparent',
-                    color: period === p ? '#ffffff' : 'rgba(255,255,255,0.7)',
+                    color: period === p ? '#ffffff' : '#ffffff',
                     border: 'none',
                     borderRadius: '8px',
                     padding: '0.5rem 1rem',
                     fontSize: '0.85rem',
-                    fontWeight: 600,
+                    fontWeight: 700,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    textTransform: 'capitalize'
+                    textTransform: 'capitalize',
+                    boxShadow: period === p ? '0 2px 8px rgba(99, 102, 241, 0.4)' : 'none'
                   }}
                 >
                   📅 {p}
@@ -1258,6 +1259,7 @@ const PerformanceTab = ({ loading, analytics, trendsData, centers }) => {
             <select
               value={selectedMetric}
               onChange={(e) => setSelectedMetric(e.target.value)}
+              className="performance-metric-selector"
               style={{
                 background: 'rgba(255,255,255,0.1)',
                 border: '1px solid rgba(255,255,255,0.2)',
@@ -1270,10 +1272,10 @@ const PerformanceTab = ({ loading, analytics, trendsData, centers }) => {
                 outline: 'none'
               }}
             >
-              <option value="appointments">📊 Appointments Overview</option>
-              <option value="vitals">🩺 Vitals Tracking</option>
-              <option value="users">👥 User Growth</option>
-              <option value="efficiency">⚡ Efficiency Metrics</option>
+              <option value="appointments" style={{ background: '#1e293b', color: '#ffffff', padding: '0.75rem', fontWeight: '600' }}>📊 Appointments Overview</option>
+              <option value="vitals" style={{ background: '#1e293b', color: '#ffffff', padding: '0.75rem', fontWeight: '600' }}>🩺 Vitals Tracking</option>
+              <option value="users" style={{ background: '#1e293b', color: '#ffffff', padding: '0.75rem', fontWeight: '600' }}>👥 User Growth</option>
+              <option value="efficiency" style={{ background: '#1e293b', color: '#ffffff', padding: '0.75rem', fontWeight: '600' }}>⚡ Efficiency Metrics</option>
             </select>
 
             {/* View Mode Toggle */}
@@ -1308,14 +1310,14 @@ const PerformanceTab = ({ loading, analytics, trendsData, centers }) => {
           <div className="mgr-dark-header">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1 }}>
               <span className="mgr-live-dot" />
-              <span className="mgr-dark-title">
+              <span className="mgr-dark-title" style={{ color: '#ffffff', fontWeight: '800', fontSize: '1.25rem' }}>
                 📈 {selectedMetric === 'appointments' ? 'Appointments & Completion Trends' :
                      selectedMetric === 'vitals' ? 'Vitals Recording Trends' :
                      selectedMetric === 'users' ? 'User Registration Trends' :
                      'Efficiency Performance Trends'} — {periodLabel}
               </span>
             </div>
-            <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)' }}>
+            <div style={{ fontSize: '0.8rem', color: '#ffffff', fontWeight: '600', background: 'rgba(255,255,255,0.1)', padding: '0.25rem 0.75rem', borderRadius: '12px' }}>
               Real-time data • Updated every 5 minutes
             </div>
           </div>
