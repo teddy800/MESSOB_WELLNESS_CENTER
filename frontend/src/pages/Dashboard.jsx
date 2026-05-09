@@ -8,7 +8,6 @@ import WellnessPlan from "../components/dashboard/WellnessPlan";
 import ProfileSection from "../components/dashboard/ProfileSection";
 import RiskScoring from "../components/dashboard/RiskScoring";
 import HealthAlerts from "../components/dashboard/HealthAlerts";
-import AppointmentReminders from "../components/dashboard/AppointmentReminders";
 import FeedbackForm from "../components/dashboard/FeedbackForm";
 import LongitudinalRecords from "../components/dashboard/LongitudinalRecords";
 
@@ -27,6 +26,16 @@ function Dashboard() {
     setActiveTab("appointments");
   }, [searchParams]);
 
+  // Listen for profile click from dropdown
+  useEffect(() => {
+    const handleProfileClick = () => {
+      setActiveTab('profile');
+    };
+    
+    window.addEventListener('profileClicked', handleProfileClick);
+    return () => window.removeEventListener('profileClicked', handleProfileClick);
+  }, []);
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -41,7 +50,6 @@ function Dashboard() {
           <>
             <BookingCalendar />
             <MyAppointments />
-            <AppointmentReminders />
           </>
         )}
 

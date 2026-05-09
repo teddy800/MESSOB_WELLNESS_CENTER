@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createCenter,
   getAllCenters,
+  getPublicCenters,
   getCenterById,
   updateCenter,
   deleteCenter,
@@ -13,8 +14,11 @@ import { authenticate } from "../middleware/auth.middleware";
 
 const router = Router();
 
+// Public route for registration page - get centers with optional region filter
+router.get("/", getPublicCenters);
+
+// Protected routes
 router.post("/", authenticate, createCenter);
-router.get("/", authenticate, getAllCenters);
 router.get("/analytics/all", authenticate, getAllAnalytics);
 router.get("/analytics/region/:region", authenticate, getRegionalAnalytics);
 router.get("/:id", authenticate, getCenterById);

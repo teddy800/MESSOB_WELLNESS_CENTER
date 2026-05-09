@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 
 function FeedbackForm() {
   const { user } = useAuth();
-  const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -42,7 +41,6 @@ function FeedbackForm() {
 
       setSuccess(true);
       setTimeout(() => {
-        setShowForm(false);
         setSuccess(false);
         setFormData({
           npsScore: 5,
@@ -72,31 +70,10 @@ function FeedbackForm() {
     return 'Promoter';
   };
 
-  if (!showForm) {
-    return (
-      <div className="card feedback-form">
-        <h3>📝 Share Your Feedback</h3>
-        <p>Help us improve our services by sharing your experience</p>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setShowForm(true)}
-        >
-          Give Feedback
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="card feedback-form">
       <div className="form-header">
         <h3>📝 Service Feedback</h3>
-        <button 
-          className="close-btn"
-          onClick={() => setShowForm(false)}
-        >
-          ✕
-        </button>
       </div>
 
       {success && (
@@ -212,14 +189,6 @@ function FeedbackForm() {
             disabled={loading}
           >
             {loading ? 'Submitting...' : 'Submit Feedback'}
-          </button>
-          <button 
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setShowForm(false)}
-            disabled={loading}
-          >
-            Cancel
           </button>
         </div>
       </form>

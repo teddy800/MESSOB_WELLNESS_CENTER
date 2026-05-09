@@ -5,6 +5,7 @@ import {
   getAppointment,
   updateAppointment,
   sendReminderHandler,
+  getQueueHandler,
 } from "../controllers/appointments.controller";
 import { authenticate, authorizeMinRole } from "../middleware/auth.middleware";
 import { UserRole } from "../generated/prisma";
@@ -18,6 +19,14 @@ router.get(
   authenticate,
   authorizeMinRole(UserRole.STAFF),
   getAppointments,
+);
+
+// Get queue - NURSE_OFFICER and above
+router.get(
+  "/queue",
+  authenticate,
+  authorizeMinRole(UserRole.NURSE_OFFICER),
+  getQueueHandler,
 );
 
 router.post(

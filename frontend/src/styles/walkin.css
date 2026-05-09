@@ -1,0 +1,444 @@
+/* ========================================
+   WALK-IN REGISTRATION STYLING
+   MESOB Brand Theme - Phase 3
+   ======================================== */
+
+:root {
+  --walkin-primary-blue: #3550A0;
+  --walkin-accent-orange: #F59E0B;
+  --walkin-gold: #FFA500;
+  --walkin-white: #FFFFFF;
+  --walkin-light-gray: #F3F4F6;
+  --walkin-border-gray: #E5E7EB;
+  --walkin-error-red: #EF4444;
+  --walkin-success-green: #10B981;
+  --walkin-warning-yellow: #F59E0B;
+}
+
+/* Walk-in Card Container */
+.register-walk-in {
+  background: var(--walkin-white);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.register-walk-in.form-open {
+  padding: 2rem;
+  max-width: 100%;
+}
+
+/* Form Header */
+.walkin-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--walkin-border-gray);
+}
+
+.walkin-form-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--walkin-primary-blue);
+  margin: 0;
+}
+
+.walkin-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #6B7280;
+  padding: 0.25rem 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.walkin-close-btn:hover {
+  color: var(--walkin-error-red);
+}
+
+/* Form Container */
+.walkin-form-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.walkin-form-container.full-width {
+  grid-template-columns: 1fr;
+}
+
+/* Form Group */
+.walkin-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.walkin-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Form Label */
+.walkin-form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--walkin-primary-blue);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.walkin-form-label .icon {
+  font-size: 1rem;
+}
+
+.walkin-required {
+  color: var(--walkin-error-red);
+  font-weight: 700;
+}
+
+/* Form Input */
+.walkin-form-input,
+.walkin-form-select,
+.walkin-form-textarea {
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--walkin-border-gray);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  background: var(--walkin-white);
+}
+
+.walkin-form-input:focus,
+.walkin-form-select:focus,
+.walkin-form-textarea:focus {
+  outline: none;
+  border-color: var(--walkin-accent-orange);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.walkin-form-input:disabled,
+.walkin-form-select:disabled,
+.walkin-form-textarea:disabled {
+  background-color: var(--walkin-light-gray);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.walkin-form-input.error,
+.walkin-form-select.error,
+.walkin-form-textarea.error {
+  border-color: var(--walkin-error-red);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.walkin-form-input.success,
+.walkin-form-select.success,
+.walkin-form-textarea.success {
+  border-color: var(--walkin-success-green);
+  background-color: rgba(16, 185, 129, 0.05);
+}
+
+/* Form Textarea */
+.walkin-form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-size: 0.9rem;
+}
+
+/* Checkbox Group */
+.walkin-checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  grid-column: 1 / -1;
+}
+
+.walkin-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.walkin-checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--walkin-accent-orange);
+}
+
+.walkin-checkbox-item label {
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Radio Group */
+.walkin-radio-group {
+  display: flex;
+  gap: 1.5rem;
+  grid-column: 1 / -1;
+}
+
+.walkin-radio-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.walkin-radio-item input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--walkin-accent-orange);
+}
+
+.walkin-radio-item label {
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Form Error Message */
+.walkin-form-error {
+  font-size: 0.8rem;
+  color: var(--walkin-error-red);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.walkin-form-error::before {
+  content: '⚠';
+  font-size: 0.9rem;
+}
+
+/* Form Success Message */
+.walkin-form-success {
+  font-size: 0.8rem;
+  color: var(--walkin-success-green);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.walkin-form-success::before {
+  content: '✓';
+  font-size: 0.9rem;
+}
+
+/* Alert Messages */
+.walkin-alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.walkin-alert-error {
+  background-color: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.walkin-alert-success {
+  background-color: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #6EE7B7;
+}
+
+.walkin-alert-warning {
+  background-color: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+}
+
+.walkin-alert-info {
+  background-color: #DBEAFE;
+  color: #0C4A6E;
+  border: 1px solid #93C5FD;
+}
+
+/* Form Actions */
+.walkin-form-actions {
+  display: flex;
+  gap: 1rem;
+  grid-column: 1 / -1;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--walkin-border-gray);
+}
+
+/* Buttons */
+.walkin-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.walkin-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.walkin-btn-primary {
+  background: var(--walkin-primary-blue);
+  color: var(--walkin-white);
+}
+
+.walkin-btn-primary:hover:not(:disabled) {
+  background: #2A3F7F;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(53, 80, 160, 0.3);
+}
+
+.walkin-btn-secondary {
+  background: var(--walkin-light-gray);
+  color: var(--walkin-primary-blue);
+  border: 2px solid var(--walkin-border-gray);
+}
+
+.walkin-btn-secondary:hover:not(:disabled) {
+  background: var(--walkin-border-gray);
+  transform: translateY(-2px);
+}
+
+/* Section Title */
+.walkin-section-title {
+  grid-column: 1 / -1;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--walkin-primary-blue);
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Capacity Status */
+.walkin-capacity-status {
+  grid-column: 1 / -1;
+  padding: 1rem;
+  border-radius: 8px;
+  background: var(--walkin-light-gray);
+  border-left: 4px solid var(--walkin-accent-orange);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.walkin-capacity-status.available {
+  border-left-color: var(--walkin-success-green);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.walkin-capacity-status.unavailable {
+  border-left-color: var(--walkin-error-red);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.walkin-capacity-text {
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.walkin-capacity-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--walkin-accent-orange);
+  color: var(--walkin-white);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .walkin-form-container {
+    grid-template-columns: 1fr;
+  }
+
+  .walkin-form-actions {
+    flex-direction: column;
+  }
+
+  .walkin-btn {
+    width: 100%;
+  }
+
+  .walkin-radio-group {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .walkin-checkbox-group {
+    grid-template-columns: 1fr;
+  }
+
+  .register-walk-in {
+    padding: 1rem;
+  }
+
+  .register-walk-in.form-open {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .walkin-form-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .walkin-close-btn {
+    align-self: flex-end;
+  }
+
+  .walkin-form-label {
+    font-size: 0.8rem;
+  }
+
+  .walkin-form-input,
+  .walkin-form-select,
+  .walkin-form-textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
