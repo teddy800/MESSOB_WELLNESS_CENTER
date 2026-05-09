@@ -3,12 +3,12 @@
    Only affects .dashboard-container and mgr-* classes
    ============================================================ */
 
-/* ── White canvas ── */
+/* ── White canvas — matches admin-content background ── */
 .dashboard-container {
-  background: #f4f6fb;
-  border-radius: 12px;
-  padding: 1.5rem;
-  min-height: calc(100vh - 120px);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  min-height: auto;
   color: #1e293b;
 }
 
@@ -475,19 +475,156 @@
 
 .settings-form .form-group label input[type="checkbox"] { margin-right: 0.5rem; }
 
-/* ── Responsive ── */
-@media (max-width: 900px) {
-  .mgr-charts-row { grid-template-columns: 1fr; }
-  .mgr-kpi-grid   { grid-template-columns: repeat(2, 1fr); }
+/* ── Responsive — All Devices ── */
+
+/* Tablet Landscape (1024px) */
+@media (max-width: 1024px) {
+  .mgr-charts-row          { grid-template-columns: 1fr; }
+  .mgr-kpi-grid            { grid-template-columns: repeat(3, 1fr); }
+  .dashboard-container     { padding: 1.25rem; }
+  .mgr-chart-card          { padding: 1.25rem; }
+  .mgr-dark-card           { padding: 1rem 1.25rem; }
+  .mgr-performance-indicators { gap: 0.75rem; }
+  .mgr-hourly-insights     { flex-direction: column; gap: 0.75rem; }
+  .mgr-insight-card        { width: 100%; }
 }
 
-@media (max-width: 600px) {
-  .mgr-kpi-grid   { grid-template-columns: 1fr 1fr; }
-  .dashboard-tabs { gap: 0.25rem; }
-  .tab-btn        { padding: 0.45rem 0.75rem; font-size: 0.8rem; }
-  .users-table    { overflow-x: auto; }
-  .modal-actions  { flex-direction: column; }
+/* Tablet Portrait (900px) */
+@media (max-width: 900px) {
+  .mgr-charts-row          { grid-template-columns: 1fr; }
+  .mgr-kpi-grid            { grid-template-columns: repeat(2, 1fr); }
+  .mgr-chart-title-section h3 { font-size: 1.1rem; }
+  .mgr-metric-badge        { min-width: 70px; padding: 0.5rem 0.75rem; }
+  .mgr-metric-value        { font-size: 1.4rem; }
 }
+
+/* Mobile Landscape (768px) */
+@media (max-width: 768px) {
+  .dashboard-container     { padding: 0.75rem; border-radius: 8px; }
+  .mgr-kpi-grid            { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .mgr-charts-row          { grid-template-columns: 1fr; gap: 0.75rem; }
+  .mgr-dark-card           { padding: 0.875rem 1rem; }
+  .mgr-chart-card          { padding: 1rem; }
+  .mgr-chart-header        { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .mgr-chart-metrics       { flex-direction: row; flex-wrap: wrap; gap: 0.5rem; width: 100%; }
+  .mgr-metric-badge        { flex: 1 1 auto; min-width: 80px; flex-direction: row; justify-content: space-between; padding: 0.5rem 0.75rem; }
+  .mgr-metric-value        { font-size: 1.25rem; }
+  .mgr-chart-title-section h3 { font-size: 1rem; }
+  .mgr-chart-title-section p  { font-size: 0.78rem; }
+  .mgr-performance-indicators { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+  .mgr-indicator           { width: 100%; }
+  .mgr-chart-footer        { padding: 0.75rem; margin: 0.75rem -0.25rem -0.25rem; }
+  .mgr-hourly-insights     { flex-direction: column; gap: 0.5rem; }
+  .mgr-insight-card        { padding: 0.75rem 1rem; }
+  .mgr-dark-stats          { flex-wrap: wrap; gap: 0.5rem; }
+  .mgr-dark-stat           { flex: 1 1 calc(33% - 0.5rem); min-width: 80px; }
+  .mgr-dark-stat span      { font-size: 1.1rem; }
+  .mgr-period-switcher     { flex-wrap: wrap; }
+  .settings-form           { padding: 1.25rem; }
+  .users-table             { overflow-x: auto; }
+  .modal-actions           { flex-direction: column; }
+  .mgr-enhanced-service-delivery .mgr-chart-header,
+  .mgr-enhanced-hourly-capacity .mgr-chart-header {
+    flex-direction: column; gap: 0.75rem; align-items: flex-start;
+    padding: 1rem; margin: -0.25rem -0.25rem 1rem;
+  }
+}
+
+/* Mobile Portrait (600px) */
+@media (max-width: 600px) {
+  .mgr-kpi-grid            { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+  .dashboard-tabs          { gap: 0.2rem; padding: 0.35rem; }
+  .tab-btn                 { padding: 0.4rem 0.6rem; font-size: 0.78rem; }
+  .mgr-chart-title-section h3 { font-size: 0.95rem; }
+  .mgr-dark-header         { flex-wrap: wrap; gap: 0.5rem; }
+  .mgr-dark-title          { font-size: 0.85rem; }
+  .mgr-period-btn          { padding: 0.25rem 0.6rem; font-size: 0.75rem; }
+}
+
+/* Small Mobile (480px) */
+@media (max-width: 480px) {
+  .dashboard-container     { padding: 0.5rem; border-radius: 6px; }
+  .mgr-kpi-grid            { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .mgr-chart-card          { padding: 0.75rem; }
+  .mgr-dark-card           { padding: 0.75rem; }
+  .mgr-chart-title-section h3 { font-size: 0.9rem; }
+  .mgr-metric-value        { font-size: 1.1rem; }
+  .mgr-metric-label        { font-size: 0.65rem; }
+  .mgr-dark-stat span      { font-size: 1rem; }
+  .mgr-dark-stat small     { font-size: 0.62rem; }
+  .mgr-insight-icon        { font-size: 1.2rem; }
+  .mgr-insight-value       { font-size: 0.9rem; }
+  .mgr-insight-label       { font-size: 0.68rem; }
+  .settings-form           { padding: 1rem; }
+  .modal                   { width: 95vw; }
+}
+
+/* Extra Small (360px) */
+@media (max-width: 360px) {
+  .dashboard-container     { padding: 0.4rem; }
+  .mgr-kpi-grid            { grid-template-columns: 1fr; }
+  .tab-btn                 { padding: 0.35rem 0.5rem; font-size: 0.72rem; }
+  .mgr-chart-card          { padding: 0.6rem; }
+}
+
+/* Ultra-wide (1920px+) */
+@media (min-width: 1920px) {
+  .mgr-enhanced-service-delivery,
+  .mgr-enhanced-hourly-capacity {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .mgr-chart-container     { padding: 2rem 0; }
+  .mgr-chart-title-section h3 { font-size: 1.5rem; }
+  .mgr-metric-badge        { min-width: 120px; padding: 1rem 1.5rem; }
+  .mgr-insight-card        { padding: 1.5rem 2rem; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .mgr-enhanced-service-delivery::before,
+  .mgr-enhanced-hourly-capacity::before,
+  .mgr-chart-container::before,
+  .mgr-live-pulse,
+  .mgr-status-dot,
+  .mgr-live-indicator {
+    animation: none;
+  }
+}
+
+/* High performance on mobile */
+@media (max-width: 768px) {
+  .mgr-chart-container::before,
+  .mgr-chart-header::before,
+  .mgr-chart-footer::before {
+    display: none;
+  }
+  .mgr-enhanced-service-delivery::after,
+  .mgr-enhanced-hourly-capacity::after {
+    height: 2px;
+  }
+}
+
+/* Print */
+@media print {
+  .mgr-enhanced-service-delivery,
+  .mgr-enhanced-hourly-capacity {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+  }
+  .mgr-enhanced-service-delivery::before,
+  .mgr-enhanced-hourly-capacity::before,
+  .mgr-enhanced-service-delivery::after,
+  .mgr-enhanced-hourly-capacity::after {
+    display: none !important;
+  }
+  .mgr-chart-title-section h3 {
+    color: #1e293b !important;
+    -webkit-text-fill-color: #1e293b !important;
+  }
+}
+
 
 /* ── Period Switcher ── */
 .mgr-period-switcher {
@@ -618,7 +755,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #284394 0%, #3b82f6 50%, #60a5fa 100%);
+  background: transparent;
   border-radius: 12px;
   z-index: -1;
   margin: -2px;
@@ -640,15 +777,12 @@
 }
 
 .mgr-chart-title-section h3 {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 900;
   color: #1e293b;
   margin: 0;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #284394 0%, #3b82f6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  line-height: 1.2;
 }
 
 .mgr-chart-title-section p {
@@ -707,33 +841,34 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  min-width: 80px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 1rem 1.5rem;
+  border-radius: 14px;
+  min-width: 100px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  border: 2px solid transparent;
 }
 
 .mgr-metric-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
 }
 
 .mgr-metric-badge.success {
   background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  border: 2px solid rgba(34, 197, 94, 0.3);
 }
 
 .mgr-metric-badge.primary {
   background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border: 1px solid rgba(40, 67, 148, 0.2);
+  border: 2px solid rgba(40, 67, 148, 0.3);
 }
 
 .mgr-metric-value {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 2rem;
+  font-weight: 900;
   line-height: 1;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.4rem;
 }
 
 .mgr-metric-badge.success .mgr-metric-value {
@@ -745,11 +880,11 @@
 }
 
 .mgr-metric-label {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
+  letter-spacing: 0.06em;
+  color: #475569;
 }
 
 .mgr-chart-container {
@@ -817,7 +952,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%);
+  background: transparent;
   border-radius: 12px;
   z-index: -1;
   margin: -2px;
@@ -1036,15 +1171,11 @@
 
 .mgr-enhanced-service-delivery,
 .mgr-enhanced-hourly-capacity {
-  animation: mgrChartFadeIn 0.8s ease-out;
+  animation: none;
 }
 
 /* Smooth Chart Hover Effects - Non-Disruptive */
-.mgr-enhanced-service-delivery:hover,
-.mgr-enhanced-hourly-capacity:hover {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  transition: all 0.3s ease;
-}
+/* Hover effects removed for Daily Service Delivery Excellence and Hourly Capacity Distribution Excellence */
 
 /* Gradient Text Effects */
 .mgr-chart-title-section h3 {
@@ -1062,10 +1193,7 @@
   transition: width 0.3s ease;
 }
 
-.mgr-enhanced-service-delivery:hover .mgr-chart-title-section h3::after,
-.mgr-enhanced-hourly-capacity:hover .mgr-chart-title-section h3::after {
-  width: 100%;
-}
+/* Hover underline effects removed */
 /* ============================================================
    ADVANCED ANIMATIONS & INTERACTIVE FEATURES
    Making Charts Absolutely Outstanding and Astonishing
@@ -1129,16 +1257,9 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(
-    90deg,
-    #284394 0%,
-    #3b82f6 25%,
-    #60a5fa 50%,
-    #93c5fd 75%,
-    #dbeafe 100%
-  );
-  animation: mgrGradientFlow 3s ease-in-out infinite;
+  height: 0px;
+  background: transparent;
+  animation: none;
 }
 
 .mgr-enhanced-hourly-capacity::after {
@@ -1147,16 +1268,9 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(
-    90deg,
-    #22c55e 0%,
-    #16a34a 25%,
-    #15803d 50%,
-    #166534 75%,
-    #14532d 100%
-  );
-  animation: mgrGradientFlow 3s ease-in-out infinite reverse;
+  height: 0px;
+  background: transparent;
+  animation: none;
 }
 
 @keyframes mgrGradientFlow {
@@ -1294,7 +1408,7 @@
 
 .mgr-enhanced-service-delivery::before,
 .mgr-enhanced-hourly-capacity::before {
-  animation: mgrGlowPulse 4s ease-in-out infinite;
+  animation: none;
 }
 
 @keyframes mgrGlowPulse {

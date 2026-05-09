@@ -9,9 +9,8 @@
 }
 
 .app-header {
-  padding: 0.75rem 2rem;
-  background: linear-gradient(to bottom, #e8eef5 0%, #d4dce8 100%);
-  border-bottom: 8px solid #284394;
+  padding: 0.5rem 1rem;
+  background: #223E8E;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
@@ -36,7 +35,7 @@
   margin: 0;
   font-family: Sora, Manrope, sans-serif;
   font-size: 2rem;
-  color: #2563eb;
+  color: #ffffff;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -94,9 +93,8 @@
 
 .app-sidebar {
   padding: 1.25rem;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  background: #233F8F;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .app-sidebar nav {
@@ -121,9 +119,9 @@
 
 .app-sidebar a {
   text-decoration: none;
-  color: white;
+  color: #ffffff;
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 10px;
   padding: 0.75rem 1rem;
   font-weight: 600;
@@ -131,15 +129,17 @@
 }
 
 .app-sidebar a:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
   transform: translateX(4px);
 }
 
 .app-sidebar a.active {
-  background: linear-gradient(135deg, #8b5cf6, #6366f1);
-  border-color: #8b5cf6;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  background: linear-gradient(135deg, #3550A0 0%, #2A4080 100%);
+  border-color: #3550A0;
+  color: #FFA500;
+  box-shadow: 0 4px 12px rgba(53, 80, 160, 0.4);
+  font-weight: 700;
 }
 
 .app-main {
@@ -155,5 +155,130 @@
   .app-sidebar {
     border-right: 0;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* ========================================
+   HEADER USER MENU STYLES
+   ======================================== */
+
+.user-menu-header {
+  position: relative;
+}
+
+.user-btn-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 0.5rem 1.25rem;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+  min-height: 100px;
+}
+
+.user-btn-header:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.user-avatar-header {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-img-header {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-initials-header {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+}
+
+.avatar-icon-header {
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-name-header {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-arrow-header {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.user-dropdown-header {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  margin-top: 0.5rem;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dropdown-item-header {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  color: #1e293b;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item-header:hover {
+  background: #f1f5f9;
+  color: #3550A0;
+}
+
+.dropdown-item-header.logout-header:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.dropdown-divider-header {
+  margin: 0.5rem 0;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .user-name-header {
+    display: none;
+  }
+
+  .user-btn-header {
+    padding: 0.5rem;
   }
 }
