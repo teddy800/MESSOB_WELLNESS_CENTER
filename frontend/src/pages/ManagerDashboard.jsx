@@ -10,6 +10,122 @@ import {
 } from 'recharts';
 import '../styles/admin-layout.css';
 import '../styles/admin-dashboard.css';
+import '../styles/tooltip-fix.css';
+import '../styles/dashboard-tokens.css';
+
+// ─── Custom Tooltip Components ────────────────────────────────────────────────
+// Outstanding custom tooltips with perfect visibility
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: '#1f2937',
+        border: '2px solid #284394',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        color: '#ffffff',
+        cursor: 'pointer'
+      }}>
+        <p style={{
+          margin: '0 0 8px 0',
+          fontWeight: 800,
+          fontSize: '14px',
+          color: '#ffffff',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          paddingBottom: '6px'
+        }}>
+          {label}
+        </p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{
+            margin: '4px 0',
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#ffffff'
+          }}>
+            <span style={{ color: entry.color }}>●</span> {entry.name}: <strong>{entry.value}</strong>
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomPieTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: '#1f2937',
+        border: '2px solid #284394',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        color: '#ffffff',
+        cursor: 'pointer'
+      }}>
+        <p style={{
+          margin: '0 0 8px 0',
+          fontWeight: 800,
+          fontSize: '14px',
+          color: '#ffffff',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          paddingBottom: '6px'
+        }}>
+          {payload[0].name}
+        </p>
+        <p style={{
+          margin: '4px 0',
+          fontSize: '13px',
+          fontWeight: 700,
+          color: '#ffffff'
+        }}>
+          <span style={{ color: payload[0].payload.color || payload[0].payload.fill }}>●</span> Count: <strong>{payload[0].value}</strong>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomCapacityTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: '#1f2937',
+        border: '2px solid #284394',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        color: '#ffffff',
+        cursor: 'pointer'
+      }}>
+        <p style={{
+          margin: '0 0 8px 0',
+          fontWeight: 800,
+          fontSize: '14px',
+          color: '#ffffff',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          paddingBottom: '6px'
+        }}>
+          {label}
+        </p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{
+            margin: '4px 0',
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#ffffff'
+          }}>
+            {entry.dataKey === 'used' ? '🔵' : '🟢'} {entry.dataKey === 'used' ? 'Slots Used' : 'Slots Available'}: <strong>{entry.value} slots</strong>
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 // ─── Role guard ───────────────────────────────────────────────────────────────
 // MANAGER role only — REGIONAL_OFFICE uses /regional, SYSTEM_ADMIN uses /admin
@@ -92,7 +208,6 @@ const ManagerDashboard = () => {
 
   const tabs = [
     { id: 'overview',  label: '📊 Overview'  },
-    { id: 'capacity',  label: '🎛️ Capacity'  },
     { id: 'analytics', label: '📈 Analytics' },
     { id: 'users',     label: `👥 Staff (${users.length})`     },
     { id: 'audit',     label: '🔍 Audit'     },
@@ -130,13 +245,6 @@ const ManagerDashboard = () => {
               </div>
             </div>
             <OverviewTab loading={loading} capacityInfo={capacityInfo} bookingStats={bookingStats} />
-          </div>
-        );
-      case 'capacity':
-        return (
-          <div className="dashboard-section">
-            <h2>🎛️ Capacity Management</h2>
-            <CapacityTab loading={loading} capacityInfo={capacityInfo} />
           </div>
         );
       case 'analytics':
@@ -228,217 +336,356 @@ const OverviewTab = ({ loading, capacityInfo, bookingStats }) => {
 
   return (
     <div className="mgr-overview">
-      {/* KPI Cards */}
-      <div className="mgr-kpi-grid">
+      {/* KPI Cards — Production-Level Design */}
+      <div className="dash-kpi-grid">
         {statCards.map((c) => (
-          <div key={c.label} className="mgr-kpi-card">
-            <div className="mgr-kpi-icon" style={{ background: c.color + '18', color: c.color }}>{c.icon}</div>
-            <div className="mgr-kpi-body">
-              <div className="mgr-kpi-value" style={{ color: c.color }}>{c.value}</div>
-              <div className="mgr-kpi-label">{c.label}</div>
-              <div className="mgr-kpi-sub">{c.sub}</div>
+          <div key={c.label} className="dash-kpi-card">
+            <div className="dash-kpi-icon" style={{ background: `${c.color}18`, color: c.color }}>
+              {c.icon}
+            </div>
+            <div className="dash-kpi-body">
+              <div className="dash-kpi-value" style={{ color: c.color }}>{c.value}</div>
+              <div className="dash-kpi-label">{c.label}</div>
+              <div className="dash-kpi-sub">{c.sub}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Charts Row */}
-      <div className="mgr-charts-row">
-        {/* Enhanced Daily Service Delivery Chart */}
-        <div className="mgr-chart-card mgr-chart-wide mgr-enhanced-service-delivery">
-          <div className="mgr-chart-header">
-            <div className="mgr-chart-title-section">
-              <div className="mgr-live-indicator">
-                <span className="mgr-live-pulse"></span>
+      <div className="dash-charts-row">
+        {/* Daily Service Delivery Chart */}
+        <div className="dash-chart-card mgr-enhanced-service-delivery" style={{
+          borderRadius: '12px',
+          padding: '1.25rem',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div className="mgr-chart-header" style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+            <div className="mgr-chart-title-section" style={{ flex: '1 1 auto', minWidth: '250px' }}>
+              <div className="mgr-live-indicator" style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: 'rgba(34, 197, 94, 0.12)',
+                border: '1px solid rgba(34, 197, 94, 0.25)',
+                borderRadius: '16px',
+                padding: '0.3rem 0.6rem',
+                marginBottom: '0.5rem',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color: '#16a34a'
+              }}>
+                <span className="mgr-live-pulse" style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: '#22c55e',
+                  boxShadow: '0 0 6px #22c55e',
+                  animation: 'pulse 2s infinite'
+                }}></span>
                 <span className="mgr-live-text">LIVE</span>
               </div>
-              <h3>Daily Service Delivery Excellence</h3>
-              <p>Real-time appointment performance & completion analytics</p>
+              <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', fontWeight: 800, color: '#1f2937', letterSpacing: '-0.01em', lineHeight: 1.2 }}>Daily Service Delivery Excellence</h3>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#6b7280', fontWeight: 500, lineHeight: 1.3 }}>Real-time appointment performance & completion analytics</p>
             </div>
-            <div className="mgr-chart-metrics">
-              <div className="mgr-metric-badge success">
-                <span className="mgr-metric-value">{appointmentTrend.reduce((s,d)=>s+d.completed,0)}</span>
-                <span className="mgr-metric-label">Completed</span>
+            <div className="mgr-chart-metrics" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div className="mgr-metric-badge success" style={{
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.04) 100%)',
+                border: '2px solid rgba(34, 197, 94, 0.25)',
+                borderRadius: '10px',
+                padding: '0.6rem 1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.2rem',
+                boxShadow: '0 2px 6px rgba(34, 197, 94, 0.06)',
+                minWidth: '80px'
+              }}>
+                <span className="mgr-metric-value" style={{ fontSize: '1.5rem', fontWeight: 900, color: '#22c55e', lineHeight: 1 }}>{appointmentTrend.reduce((s,d)=>s+d.completed,0)}</span>
+                <span className="mgr-metric-label" style={{ fontSize: '0.65rem', color: '#16a34a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Completed</span>
               </div>
-              <div className="mgr-metric-badge primary">
-                <span className="mgr-metric-value">{appointmentTrend.reduce((s,d)=>s+d.appointments,0)}</span>
-                <span className="mgr-metric-label">Total</span>
+              <div className="mgr-metric-badge primary" style={{
+                background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.12) 0%, rgba(107, 114, 128, 0.04) 100%)',
+                border: '2px solid rgba(107, 114, 128, 0.25)',
+                borderRadius: '10px',
+                padding: '0.6rem 1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.2rem',
+                boxShadow: '0 2px 6px rgba(107, 114, 128, 0.06)',
+                minWidth: '80px'
+              }}>
+                <span className="mgr-metric-value" style={{ fontSize: '1.5rem', fontWeight: 900, color: '#6b7280', lineHeight: 1 }}>{appointmentTrend.reduce((s,d)=>s+d.appointments,0)}</span>
+                <span className="mgr-metric-label" style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total</span>
               </div>
             </div>
           </div>
-          <div className="mgr-chart-container">
+          <div className="mgr-chart-container" style={{ marginTop: '1rem', position: 'relative', zIndex: 2 }}>
             <ResponsiveContainer width="100%" height={280}>
-              <AreaChart data={appointmentTrend} margin={{ top: 20, right: 30, left: 10, bottom: 10 }}>
+              <AreaChart data={appointmentTrend} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
                 <defs>
-                  <linearGradient id="gradApptEnhanced" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#284394" stopOpacity={0.8} />
-                    <stop offset="25%" stopColor="#3b82f6" stopOpacity={0.6} />
-                    <stop offset="75%" stopColor="#60a5fa" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#dbeafe" stopOpacity={0.05} />
+                  <linearGradient id="gradApptClean" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6b7280" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#6b7280" stopOpacity={0.02} />
                   </linearGradient>
-                  <linearGradient id="gradCompEnhanced" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
-                    <stop offset="25%" stopColor="#16a34a" stopOpacity={0.6} />
-                    <stop offset="75%" stopColor="#4ade80" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#dcfce7" stopOpacity={0.05} />
+                  <linearGradient id="gradCompClean" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid 
-                  strokeDasharray="2 4" 
-                  stroke="rgba(148, 163, 184, 0.2)" 
+                  strokeDasharray="3 3" 
+                  stroke="#e5e7eb" 
                   strokeWidth={1}
+                  vertical={false}
                 />
                 <XAxis 
                   dataKey="day" 
-                  tick={{ fontSize: 13, fill: '#64748b', fontWeight: 600 }} 
+                  tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 600 }} 
                   axisLine={false} 
                   tickLine={false}
-                  tickMargin={10}
+                  tickMargin={8}
                 />
                 <YAxis 
-                  tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }} 
+                  tick={{ fontSize: 10, fill: '#6b7280', fontWeight: 600 }} 
                   axisLine={false} 
                   tickLine={false}
-                  tickMargin={10}
+                  tickMargin={5}
+                  width={35}
                 />
-                <Tooltip
-                  contentStyle={{ 
-                    background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                    border: 'none', 
-                    borderRadius: '12px', 
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.15), 0 0 20px rgba(40,67,148,0.1)',
-                    padding: '12px 16px'
-                  }}
-                  labelStyle={{ 
-                    fontWeight: 700, 
-                    color: '#1e293b', 
-                    fontSize: '14px',
-                    marginBottom: '8px'
-                  }}
-                  itemStyle={{ 
-                    color: '#475569', 
-                    fontWeight: 600,
-                    fontSize: '13px'
-                  }}
-                  cursor={{ 
-                    stroke: 'rgba(40, 67, 148, 0.2)', 
-                    strokeWidth: 2,
-                    strokeDasharray: '5 5'
-                  }}
-                />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#284394', strokeWidth: 2, strokeDasharray: '5 5' }} />
                 <Legend 
                   wrapperStyle={{ 
-                    fontSize: '13px', 
-                    fontWeight: 600,
-                    paddingTop: '15px'
-                  }} 
+                    fontSize: '12px', 
+                    fontWeight: 700,
+                    paddingTop: '12px',
+                    color: '#1f2937'
+                  }}
+                  iconType="line"
+                  iconSize={16}
+                  formatter={(value, entry) => (
+                    <span style={{ 
+                      color: '#1f2937',
+                      fontWeight: 700,
+                      fontSize: '12px',
+                      letterSpacing: '0.01em'
+                    }}>
+                      {value}
+                    </span>
+                  )}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="appointments" 
-                  name="Total Appointments" 
-                  stroke="#284394" 
-                  strokeWidth={3.5} 
-                  fill="url(#gradApptEnhanced)" 
-                  dot={{ 
-                    r: 6, 
-                    fill: '#284394', 
-                    strokeWidth: 2,
-                    stroke: '#ffffff'
-                  }} 
-                  activeDot={{ 
-                    r: 8, 
-                    fill: '#284394',
-                    stroke: '#ffffff',
-                    strokeWidth: 3
-                  }}
+                  name="📊 Total Appointments" 
+                  stroke="#6b7280" 
+                  strokeWidth={2.5} 
+                  fill="url(#gradApptClean)" 
+                  dot={{ r: 4, fill: '#6b7280', strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#6b7280' }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="completed" 
-                  name="Completed Services" 
+                  name="✅ Completed Services" 
                   stroke="#22c55e" 
-                  strokeWidth={3.5} 
-                  fill="url(#gradCompEnhanced)" 
-                  dot={{ 
-                    r: 6, 
-                    fill: '#22c55e', 
-                    strokeWidth: 2,
-                    stroke: '#ffffff'
-                  }} 
-                  activeDot={{ 
-                    r: 8, 
-                    fill: '#22c55e',
-                    stroke: '#ffffff',
-                    strokeWidth: 3
-                  }}
+                  strokeWidth={2.5} 
+                  fill="url(#gradCompClean)" 
+                  dot={{ r: 4, fill: '#22c55e', strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#22c55e' }}
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="mgr-chart-footer">
-            <div className="mgr-performance-indicators">
-              <div className="mgr-indicator">
-                <span className="mgr-indicator-dot success"></span>
-                <span className="mgr-indicator-text">Completion Rate: {Math.round((appointmentTrend.reduce((s,d)=>s+d.completed,0) / appointmentTrend.reduce((s,d)=>s+d.appointments,0)) * 100)}%</span>
+          <div className="mgr-chart-footer" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid #e5e7eb', position: 'relative', zIndex: 1 }}>
+            <div className="mgr-performance-indicators" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="mgr-indicator" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.02) 100%)',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(34, 197, 94, 0.2)',
+                flex: '1 1 auto',
+                minWidth: '120px'
+              }}>
+                <span className="mgr-indicator-dot success" style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34, 197, 94, 0.5)', flexShrink: 0 }}></span>
+                <div>
+                  <span className="mgr-indicator-label" style={{ fontSize: '0.6rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', display: 'block', lineHeight: 1 }}>Completion</span>
+                  <span className="mgr-indicator-text" style={{ fontSize: '1rem', fontWeight: 900, color: '#22c55e', lineHeight: 1 }}>{Math.round((appointmentTrend.reduce((s,d)=>s+d.completed,0) / Math.max(1, appointmentTrend.reduce((s,d)=>s+d.appointments,0))) * 100)}%</span>
+                </div>
               </div>
-              <div className="mgr-indicator">
-                <span className="mgr-indicator-dot primary"></span>
-                <span className="mgr-indicator-text">Weekly Trend: {appointmentTrend[appointmentTrend.length-1].appointments > appointmentTrend[0].appointments ? '↗ Increasing' : '↘ Stable'}</span>
+              <div className="mgr-indicator" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.6rem',
+                background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.08) 0%, rgba(107, 114, 128, 0.02) 100%)',
+                padding: '0.6rem 0.9rem',
+                borderRadius: '10px',
+                border: '1px solid rgba(107, 114, 128, 0.2)',
+                flex: '1 1 auto',
+                minWidth: '150px'
+              }}>
+                <span className="mgr-indicator-dot primary" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#6b7280', boxShadow: '0 0 8px rgba(107, 114, 128, 0.5)', flexShrink: 0 }}></span>
+                <div>
+                  <span className="mgr-indicator-label" style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', lineHeight: 1 }}>Trend</span>
+                  <span className="mgr-indicator-text" style={{ fontSize: '1.1rem', fontWeight: 900, color: '#6b7280', lineHeight: 1 }}>{appointmentTrend[appointmentTrend.length-1].appointments > appointmentTrend[0].appointments ? '↗ Up' : '↘ Stable'}</span>
+                </div>
+              </div>
+              <div className="mgr-indicator" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.6rem',
+                background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.08) 0%, rgba(107, 114, 128, 0.02) 100%)',
+                padding: '0.6rem 0.9rem',
+                borderRadius: '10px',
+                border: '1px solid rgba(107, 114, 128, 0.2)',
+                flex: '1 1 auto',
+                minWidth: '150px'
+              }}>
+                <span className="mgr-indicator-dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#6b7280', boxShadow: '0 0 8px rgba(107, 114, 128, 0.5)', flexShrink: 0 }}></span>
+                <div>
+                  <span className="mgr-indicator-label" style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', lineHeight: 1 }}>Total</span>
+                  <span className="mgr-indicator-text" style={{ fontSize: '1.1rem', fontWeight: 900, color: '#6b7280', lineHeight: 1 }}>{appointmentTrend.reduce((s,d)=>s+d.appointments,0)}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Pie Chart — Today's Breakdown */}
-        <div className="mgr-chart-card">
-          <div className="mgr-chart-header">
-            <span className="mgr-live-badge">● LIVE</span>
-            <h3>Today's Breakdown</h3>
-            <p>Appointment status distribution</p>
+        <div className="mgr-chart-card" style={{
+          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+          border: '2px solid #e5e7eb',
+          borderRadius: '16px',
+          padding: '2rem',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div className="mgr-chart-header" style={{ position: 'relative', zIndex: 1 }}>
+            <span className="mgr-live-badge" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              background: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: '20px',
+              padding: '0.5rem 1rem',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              color: '#d97706',
+              marginBottom: '0.75rem'
+            }}>● LIVE</span>
+            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 800, color: '#1f2937', letterSpacing: '-0.01em' }}>Today's Breakdown</h3>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569', fontWeight: 500 }}>Appointment status distribution</p>
           </div>
           {hasBreakdown ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={280} style={{ marginTop: '1.5rem', position: 'relative', zIndex: 1 }}>
               <PieChart>
-                <Pie data={breakdownData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
+                <Pie data={breakdownData} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value">
                   {breakdownData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
-                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Tooltip content={<CustomPieTooltip />} cursor={{ fill: 'rgba(40, 67, 148, 0.1)' }} />
+                <Legend 
+                  wrapperStyle={{ 
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: '#1f2937',
+                    paddingTop: '16px'
+                  }}
+                  iconType="circle"
+                  iconSize={12}
+                  formatter={(value, entry) => (
+                    <span style={{ 
+                      color: '#1f2937',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      letterSpacing: '0.02em'
+                    }}>
+                      {value}
+                    </span>
+                  )}
+                />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="mgr-empty-chart">
-              <div className="mgr-empty-icon">📋</div>
-              <p>No appointments today yet</p>
+            <div className="mgr-empty-chart" style={{ marginTop: '1.5rem', padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>
+              <div className="mgr-empty-icon" style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>📋</div>
+              <p style={{ margin: 0, fontSize: '0.95rem' }}>No appointments today yet</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Capacity Bar */}
-      <div className="mgr-chart-card" style={{ marginTop: '1rem' }}>
-        <div className="mgr-chart-header">
-          <h3>Capacity Utilisation — {capacityInfo?.date ?? 'Today'}</h3>
-          <span className={`mgr-status-badge ${usedPct > 85 ? 'critical' : usedPct > 60 ? 'moderate' : 'normal'}`}>
+      {/* Capacity Bar — Enhanced */}
+      <div className="mgr-chart-card" style={{
+        marginTop: '1.5rem',
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        padding: '2rem',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div className="mgr-chart-header" style={{ position: 'relative', zIndex: 1 }}>
+          <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: 700, color: '#1f2937' }}>Capacity Utilisation — {capacityInfo?.date ?? 'Today'}</h3>
+          <span className={`mgr-status-badge`} style={{
+            display: 'inline-block',
+            padding: '0.4rem 0.8rem',
+            borderRadius: '20px',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            background: usedPct > 85 ? 'rgba(239, 68, 68, 0.15)' : usedPct > 60 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+            color: usedPct > 85 ? '#ef4444' : usedPct > 60 ? '#f59e0b' : '#22c55e',
+            border: usedPct > 85 ? '1px solid #ef4444' : usedPct > 60 ? '1px solid #f59e0b' : '1px solid #22c55e'
+          }}>
             {usedPct > 85 ? '🔴 Critical' : usedPct > 60 ? '🟡 Moderate' : '🟢 Normal'}
           </span>
         </div>
-        <div className="mgr-capacity-row">
-          <div className="mgr-capacity-stat"><span>{capacityInfo?.slotsUsed ?? 0}</span><small>Used</small></div>
-          <div className="mgr-capacity-bar-wrap">
-            <div className="mgr-capacity-track">
+        <div className="mgr-capacity-row" style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', position: 'relative', zIndex: 1 }}>
+          <div className="mgr-capacity-stat" style={{ textAlign: 'center', minWidth: '80px' }}>
+            <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#284394', display: 'block' }}>{capacityInfo?.slotsUsed ?? 0}</span>
+            <small style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 500 }}>Used</small>
+          </div>
+          <div className="mgr-capacity-bar-wrap" style={{ flex: 1 }}>
+            <div className="mgr-capacity-track" style={{
+              height: '12px',
+              background: '#e5e7eb',
+              borderRadius: '6px',
+              overflow: 'hidden'
+            }}>
               <div className="mgr-capacity-fill" style={{
+                height: '100%',
                 width: `${usedPct}%`,
                 background: usedPct > 85 ? 'linear-gradient(90deg,#dc2626,#ef4444)' : usedPct > 60 ? 'linear-gradient(90deg,#d97706,#f59e0b)' : 'linear-gradient(90deg,#16a34a,#22c55e)',
+                borderRadius: '6px',
+                transition: 'width 0.8s ease'
               }} />
             </div>
-            <div className="mgr-capacity-pct">{usedPct}%</div>
           </div>
-          <div className="mgr-capacity-stat"><span>{capacityInfo?.slotsRemaining ?? 0}</span><small>Remaining</small></div>
-          <div className="mgr-capacity-stat"><span>{capacityInfo?.dailyLimit ?? 100}</span><small>Daily Limit</small></div>
+          <div className="mgr-capacity-pct" style={{
+            fontSize: '1.5rem',
+            fontWeight: 800,
+            color: usedPct > 85 ? '#ef4444' : usedPct > 60 ? '#f59e0b' : '#22c55e',
+            minWidth: '60px',
+            textAlign: 'right'
+          }}>{usedPct}%</div>
+          <div className="mgr-capacity-stat" style={{ textAlign: 'center', minWidth: '80px' }}>
+            <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0891b2', display: 'block' }}>{capacityInfo?.slotsRemaining ?? 0}</span>
+            <small style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 500 }}>Remaining</small>
+          </div>
+          <div className="mgr-capacity-stat" style={{ textAlign: 'center', minWidth: '80px' }}>
+            <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#7c3aed', display: 'block' }}>{capacityInfo?.dailyLimit ?? 100}</span>
+            <small style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 500 }}>Daily Limit</small>
+          </div>
         </div>
       </div>
     </div>
@@ -557,35 +804,7 @@ const CapacityTab = ({ loading, capacityInfo }) => {
                 tickLine={false}
                 tickMargin={8}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-                  border: 'none', 
-                  borderRadius: '12px', 
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.15), 0 0 20px rgba(40,67,148,0.1)',
-                  padding: '12px 16px'
-                }}
-                labelStyle={{ 
-                  fontWeight: 700, 
-                  color: '#1e293b', 
-                  fontSize: '14px',
-                  marginBottom: '8px'
-                }}
-                itemStyle={{ 
-                  color: '#475569', 
-                  fontWeight: 600,
-                  fontSize: '13px'
-                }}
-                cursor={{ 
-                  stroke: 'rgba(40, 67, 148, 0.2)', 
-                  strokeWidth: 2,
-                  strokeDasharray: '5 5'
-                }}
-                formatter={(value, name) => [
-                  `${value} slots`,
-                  name === 'used' ? 'Slots Used' : 'Slots Available'
-                ]}
-              />
+              <Tooltip content={<CustomCapacityTooltip />} cursor={{ stroke: '#284394', strokeWidth: 2, strokeDasharray: '5 5' }} />
               <Legend 
                 wrapperStyle={{ 
                   fontSize: '13px', 
@@ -975,7 +1194,6 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
                 formatter={(value, name) => [
                   <span style={{ color: '#ffffff', fontWeight: 900, textShadow: '0 0 10px rgba(255,255,255,0.4)' }}>{`${value} patients`}</span>,
                   <span style={{ color: '#e0e0e0', fontWeight: 600, textTransform: 'capitalize' }}>BP Risk Category</span>
-                ]}
                 ]}
               />
               <Bar dataKey="value" name="Patients" radius={[0, 6, 6, 0]}>

@@ -1,0 +1,40 @@
+/* ============================================================
+   REGIONAL DASHBOARD — Responsive All Devices
+   ============================================================ */
+
+/* Center selector full width on small screens */
+@media (max-width: 768px) {
+  .center-selector { width: 100% !important; }
+  .center-selector select { width: 100% !important; min-width: unset !important; }
+  .regional-charts-row { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+  .regional-centers-grid { grid-template-columns: 1fr !important; }
+  .regional-managers-table { overflow-x: auto !important; }
+  .regional-center-banner { flex-direction: column !important; gap: 0.75rem !important; padding: 0.875rem 1rem !important; }
+  .regional-center-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important; gap: 0.5rem !important; }
+  .regional-performance-chart { padding: 1rem !important; border-radius: 12px !important; }
+  .regional-summary-pills { flex-wrap: wrap !important; gap: 0.5rem !important; }
+}
+
+@media (max-width: 480px) {
+  .regional-center-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.4rem !important; }
+  .regional-center-item { padding: 0.5rem 0.75rem !important; font-size: 0.75rem !important; }
+  .regional-performance-chart { padding: 0.75rem !important; border-radius: 8px !important; }
+}
+
+@media (max-width: 360px) {
+  .regional-center-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .center-selector select { min-height: 44px; font-size: 1rem; }
+  .mgr-kpi-card:hover { transform: none !important; }
+  .mgr-insight-card:hover { transform: none !important; }
+}
+
+/* Landscape mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .admin-sidebar { max-height: 52px !important; }
+  .admin-content { padding: 0.5rem 1rem !important; }
+  .mgr-kpi-grid { grid-template-columns: repeat(3, 1fr) !important; }
+}
