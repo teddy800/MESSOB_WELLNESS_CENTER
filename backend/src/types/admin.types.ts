@@ -1,4 +1,4 @@
-import type { UserRole, AppointmentStatus, CenterStatus, BmiCategory, BloodPressureCategory } from "@prisma/client";
+import type { UserRole, AppointmentStatus, CenterStatus, BmiCategory, BloodPressureCategory } from "../generated/prisma";
 
 // ============ FILTER TYPES ============
 

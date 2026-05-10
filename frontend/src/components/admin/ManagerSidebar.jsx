@@ -22,7 +22,6 @@ function ManagerSidebar({
 
   const menuItems = [
     { id: "overview", label: "Overview", icon: "📊" },
-    { id: "capacity", label: "Capacity", icon: "🎛️" },
     { id: "analytics", label: "Analytics", icon: "📈" },
     { id: "users", label: "Staff", icon: "👥", count: staffCount },
     { id: "audit", label: "Audit", icon: "🔍" },

@@ -236,7 +236,7 @@ export async function sendReminderHandler(req: AuthRequest, res: Response): Prom
 
     // Send email reminder
     const emailSent = await sendAppointmentReminder(
-      appointment.user.email,
+      appointment.user.email || "",
       appointment.user.fullName,
       appointmentId,
       new Date(appointment.scheduledAt).toLocaleString(),
