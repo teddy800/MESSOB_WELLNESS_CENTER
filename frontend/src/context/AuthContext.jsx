@@ -58,12 +58,17 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   };
 
+  const updateUser = (updatedUserData) => {
+    setUser(updatedUserData);
+  };
+
   const value = {
     user,
     loading,
     error,
     login,
     logout,
+    updateUser,
     isAuthenticated: !!user,
   };
 

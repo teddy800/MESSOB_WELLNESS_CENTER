@@ -1,5 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
+import { UserRole } from "../generated/prisma";
 import * as CentersService from "../services/centers.service";
 
 export const createCenter = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -12,10 +13,12 @@ export const createCenter = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    if (req.user.role !== "FEDERAL_ADMIN") {
+    // Allow REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN to create centers
+    const allowedRoles: UserRole[] = [UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_OFFICE, UserRole.SYSTEM_ADMIN];
+    if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
-        message: "Only FEDERAL_ADMIN can create centers",
+        message: "Only REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN can create centers",
       });
       return;
     }
@@ -92,6 +95,32 @@ export const getAllCenters = async (req: AuthRequest, res: Response): Promise<vo
   }
 };
 
+/**
+ * Public endpoint for getting centers (used by registration page)
+ * No authentication required
+ */
+export const getPublicCenters = async (req: any, res: Response): Promise<void> => {
+  try {
+    const { region } = req.query;
+
+    const filters: any = { status: "ACTIVE" };
+    if (region) filters.region = region as string;
+
+    const centers = await CentersService.getAllCenters(filters);
+
+    res.status(200).json({
+      status: "success",
+      data: centers,
+    });
+  } catch (error) {
+    console.error("Get public centers error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to retrieve centers",
+    });
+  }
+};
+
 export const getCenterById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -145,10 +174,12 @@ export const updateCenter = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    if (req.user.role !== "FEDERAL_ADMIN") {
+    // Allow REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN to update centers
+    const allowedRoles: UserRole[] = [UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_OFFICE, UserRole.SYSTEM_ADMIN];
+    if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
-        message: "Only FEDERAL_ADMIN can update centers",
+        message: "Only REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN can update centers",
       });
       return;
     }
@@ -200,10 +231,10 @@ export const deleteCenter = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    if (req.user.role !== "FEDERAL_ADMIN") {
+    if (req.user.role !== UserRole.SYSTEM_ADMIN) {
       res.status(403).json({
         status: "error",
-        message: "Only FEDERAL_ADMIN can delete centers",
+        message: "Only SYSTEM_ADMIN can delete centers",
       });
       return;
     }
@@ -253,7 +284,7 @@ export const getCenterAnalytics = async (req: AuthRequest, res: Response): Promi
       return;
     }
 
-    const allowedRoles = ["NURSE_OFFICER", "MANAGER", "REGIONAL_OFFICE", "FEDERAL_ADMIN"];
+    const allowedRoles: UserRole[] = [UserRole.NURSE_OFFICER, UserRole.MANAGER, UserRole.REGIONAL_OFFICE, UserRole.SYSTEM_ADMIN];
     if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
@@ -297,11 +328,11 @@ export const getRegionalAnalytics = async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    const allowedRoles = ["REGIONAL_OFFICE", "FEDERAL_ADMIN"];
+    const allowedRoles: UserRole[] = [UserRole.REGIONAL_OFFICE, UserRole.SYSTEM_ADMIN];
     if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
-        message: "Only REGIONAL_OFFICE and FEDERAL_ADMIN can view regional analytics",
+        message: "Only REGIONAL_OFFICE and SYSTEM_ADMIN can view regional analytics",
       });
       return;
     }
@@ -331,10 +362,12 @@ export const getAllAnalytics = async (req: AuthRequest, res: Response): Promise<
       return;
     }
 
-    if (req.user.role !== "FEDERAL_ADMIN") {
+    // Allow REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN to view all analytics
+    const allowedRoles: UserRole[] = [UserRole.REGIONAL_OFFICE, UserRole.FEDERAL_OFFICE, UserRole.SYSTEM_ADMIN];
+    if (!allowedRoles.includes(req.user.role)) {
       res.status(403).json({
         status: "error",
-        message: "Only FEDERAL_ADMIN can view all analytics",
+        message: "Only REGIONAL_OFFICE, FEDERAL_OFFICE, and SYSTEM_ADMIN can view all analytics",
       });
       return;
     }

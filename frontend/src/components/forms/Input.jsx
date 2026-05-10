@@ -9,7 +9,8 @@ function Input({
   error, 
   required = false,
   placeholder,
-  disabled = false 
+  disabled = false,
+  ...rest
 }) {
   return (
     <div className="form-group">
@@ -31,6 +32,7 @@ function Input({
         className={`form-input ${error ? 'form-input-error' : ''}`}
         aria-invalid={error ? 'true' : 'false'}
         aria-describedby={error ? `${name}-error` : undefined}
+        {...rest}
       />
       {error && (
         <span id={`${name}-error`} className="form-error" role="alert">

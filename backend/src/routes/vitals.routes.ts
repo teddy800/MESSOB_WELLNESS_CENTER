@@ -1,12 +1,19 @@
 import { Router } from "express";
 import {
   getVitalsModuleStatus,
+  postVitals,
   postBmi,
   postBloodPressure,
   getVitalsHistoryHandler,
   getLatestVitalsHandler,
+  getRiskScoreHandler,
+  getAllVitalsHandler,
 } from "../controllers/vitals.controller";
-import { authenticate, authorize, authorizeSelfOrAdmin } from "../middleware/auth.middleware";
+import {
+  authenticate,
+  authorize,
+  authorizeSelfOrAdmin,
+} from "../middleware/auth.middleware";
 import { UserRole } from "../generated/prisma";
 
 const router = Router();
@@ -14,8 +21,35 @@ const router = Router();
 // Public route - no authentication required
 router.get("/status", getVitalsModuleStatus);
 
+// Get all vitals (for analytics) - only nurses and above
+router.get(
+  "/all",
+  authenticate,
+  authorize(
+    UserRole.NURSE_OFFICER,
+    UserRole.MANAGER,
+    UserRole.REGIONAL_OFFICE,
+    UserRole.FEDERAL_OFFICE,
+    UserRole.SYSTEM_ADMIN,
+  ),
+  getAllVitalsHandler,
+);
+
 // Protected routes - require authentication
 // Only NURSE_OFFICER and higher roles can record vitals
+router.post(
+  "/",
+  authenticate,
+  authorize(
+    UserRole.NURSE_OFFICER,
+    UserRole.MANAGER,
+    UserRole.REGIONAL_OFFICE,
+    UserRole.FEDERAL_OFFICE,
+    UserRole.SYSTEM_ADMIN,
+  ),
+  postVitals,
+);
+
 router.post(
   "/bmi",
   authenticate,
@@ -23,7 +57,7 @@ router.post(
     UserRole.NURSE_OFFICER,
     UserRole.MANAGER,
     UserRole.REGIONAL_OFFICE,
-    UserRole.FEDERAL_ADMIN,
+    UserRole.SYSTEM_ADMIN,
   ),
   postBmi,
 );
@@ -35,7 +69,7 @@ router.post(
     UserRole.NURSE_OFFICER,
     UserRole.MANAGER,
     UserRole.REGIONAL_OFFICE,
-    UserRole.FEDERAL_ADMIN,
+    UserRole.SYSTEM_ADMIN,
   ),
   postBloodPressure,
 );
@@ -54,6 +88,14 @@ router.get(
   authenticate,
   authorizeSelfOrAdmin("userId"),
   getLatestVitalsHandler,
+);
+
+// Get risk score - user can view own risk score, admins can view any
+router.get(
+  "/risk-score/:userId",
+  authenticate,
+  authorizeSelfOrAdmin("userId"),
+  getRiskScoreHandler,
 );
 
 export default router;

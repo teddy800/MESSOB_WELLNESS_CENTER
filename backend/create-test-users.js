@@ -1,98 +1,64 @@
-const bcrypt = require('bcryptjs');
-const { Pool } = require('pg');
+const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcryptjs");
 
-const pool = new Pool({
-  host: 'localhost',
-  port: 5432,
-  user: 'postgres',
-  password: 'postgres',
-  database: 'mesob_wellness',
-});
+const prisma = new PrismaClient();
 
-const SALT_ROUNDS = 12;
+async function main() {
+  console.log("Creating test users...");
 
-const testUsers = [
-  {
-    email: 'customer@mesob.et',
-    password: 'Customer123!',
-    fullName: 'Customer Staff',
-    role: 'CUSTOMER_STAFF',
-    phone: '+251911111111',
-  },
-  {
-    email: 'nurse@mesob.et',
-    password: 'Nurse123!',
-    fullName: 'Nurse Officer',
-    role: 'NURSE_OFFICER',
-    phone: '+251922222222',
-  },
-  {
-    email: 'manager@mesob.et',
-    password: 'Manager123!',
-    fullName: 'Manager User',
-    role: 'MANAGER',
-    phone: '+251933333333',
-  },
-  {
-    email: 'regional@mesob.et',
-    password: 'Regional123!',
-    fullName: 'Regional Office',
-    role: 'REGIONAL_OFFICE',
-    phone: '+251944444444',
-  },
-  {
-    email: 'admin@mesob.et',
-    password: 'Admin123!',
-    fullName: 'Federal Admin',
-    role: 'FEDERAL_ADMIN',
-    phone: '+251955555555',
-  },
-];
+  // Create a region
+  const region = await prisma.region.upsert({
+    where: { name: "Addis Ababa" },
+    update: {},
+    create: { name: "Addis Ababa", code: "AA" },
+  });
 
-async function createUsers() {
-  try {
-    console.log('🌱 Creating test users...\n');
+  // Create a center
+  const center = await prisma.center.upsert({
+    where: { name: "Bole Center" },
+    update: {},
+    create: {
+      name: "Bole Center",
+      region: "Addis Ababa",
+      city: "Addis Ababa",
+      address: "Bole, Addis Ababa",
+      phone: "+251911234567",
+      email: "bole@mesob.et",
+      status: "ACTIVE",
+    },
+  });
 
-    for (const user of testUsers) {
-      const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS);
-      const userId = require('crypto').randomUUID();
+  const testUsers = [
+    { email: "admin@mesob.et", password: "Admin123!", fullName: "System Admin", role: "SYSTEM_ADMIN" },
+    { email: "staff@mesob.et", password: "Staff123!", fullName: "Staff Member", role: "STAFF" },
+    { email: "nurse@mesob.et", password: "Nurse123!", fullName: "Nurse Officer", role: "NURSE_OFFICER" },
+    { email: "manager@mesob.et", password: "Manager123!", fullName: "Center Manager", role: "MANAGER" },
+    { email: "regional@mesob.et", password: "Regional123!", fullName: "Regional Officer", role: "REGIONAL_OFFICE" },
+    { email: "federal@mesob.et", password: "Federal123!", fullName: "Federal Officer", role: "FEDERAL_OFFICE" },
+  ];
 
-      const query = `
-        INSERT INTO users (id, email, password, "fullName", role, phone, "isActive", "isVerified", "createdAt", "updatedAt")
-        VALUES ($1, $2, $3, $4, $5, $6, true, true, NOW(), NOW())
-        ON CONFLICT (email) DO UPDATE SET password = $3
-      `;
-
-      await pool.query(query, [userId, user.email, hashedPassword, user.fullName, user.role, user.phone]);
-
-      // Create health profile
-      const healthQuery = `
-        INSERT INTO health_profiles (id, "userId", "createdAt", "updatedAt")
-        VALUES ($1, $2, NOW(), NOW())
-        ON CONFLICT DO NOTHING
-      `;
-
-      const healthId = require('crypto').randomUUID();
-      await pool.query(healthQuery, [healthId, userId]);
-
-      console.log(`✅ Created: ${user.email} (${user.role})`);
-    }
-
-    console.log('\n✨ All test users created successfully!');
-    console.log('\n📝 Test Credentials:');
-    console.log('─'.repeat(60));
-    testUsers.forEach(user => {
-      console.log(`Email: ${user.email}`);
-      console.log(`Password: ${user.password}`);
-      console.log(`Role: ${user.role}`);
-      console.log('─'.repeat(60));
+  for (const userData of testUsers) {
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    const user = await prisma.user.upsert({
+      where: { email: userData.email },
+      update: {},
+      create: {
+        email: userData.email,
+        password: hashedPassword,
+        fullName: userData.fullName,
+        role: userData.role,
+        centerId: center.id,
+        isActive: true,
+        isVerified: true,
+        canLogin: true,
+      },
     });
-  } catch (error) {
-    console.error('❌ Error creating users:', error);
-    process.exit(1);
-  } finally {
-    await pool.end();
+    console.log(`✅ Created: ${user.email} (${user.role})`);
   }
+
+  console.log("✨ Done!");
 }
 
-createUsers();
+main()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());

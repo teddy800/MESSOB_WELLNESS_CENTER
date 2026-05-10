@@ -17,11 +17,12 @@ function RoleBasedRoute({ children, allowedRoles }) {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to appropriate dashboard based on user role
     const roleRoutes = {
-      CUSTOMER_STAFF: '/dashboard',
+      STAFF: '/dashboard',
       NURSE_OFFICER: '/nurse',
       MANAGER: '/manager',
       REGIONAL_OFFICE: '/regional',
-      FEDERAL_ADMIN: '/admin',
+      FEDERAL_OFFICE: '/regional',
+      SYSTEM_ADMIN: '/admin',
     };
     return <Navigate to={roleRoutes[user.role] || '/dashboard'} replace />;
   }
