@@ -43,8 +43,14 @@ function CreateUserModal({ isOpen, onClose, onSuccess }) {
   const fetchRegions = async () => {
     setRegionsLoading(true);
     try {
-      const regions = await adminService.getRegions();
-      setRegions(regions);
+      const url = `${import.meta.env.VITE_API_URL}/api/v1/regions`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.status === "success" && Array.isArray(data.data)) {
+        setRegions(data.data);
+      } else {
+        console.error('Invalid regions response format:', data);
+      }
     } catch (error) {
       console.error("Error fetching regions:", error);
     } finally {
@@ -55,8 +61,15 @@ function CreateUserModal({ isOpen, onClose, onSuccess }) {
   const fetchCenters = async (region) => {
     setCentersLoading(true);
     try {
-      const centers = await adminService.getCentersByRegion(region);
-      setCenters(centers);
+      const url = `${import.meta.env.VITE_API_URL}/api/v1/centers?region=${encodeURIComponent(region)}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      if (data.status === "success" && Array.isArray(data.data)) {
+        setCenters(data.data);
+      } else {
+        console.error('Invalid centers response format:', data);
+        setCenters([]);
+      }
     } catch (error) {
       console.error("Error fetching centers:", error);
       setCenters([]);
@@ -100,13 +113,19 @@ function CreateUserModal({ isOpen, onClose, onSuccess }) {
 
     try {
       setLoading(true);
-      await adminService.createUser({
+      const userData = {
         fullName: formData.fullName,
         email: formData.email,
         password: formData.password,
         role: formData.role,
-        centerId: formData.centerId || null,
-      });
+      };
+      
+      // Only include centerId if it's provided
+      if (formData.centerId) {
+        userData.centerId = formData.centerId;
+      }
+      
+      await adminService.createUser(userData);
       onSuccess?.();
       onClose();
       setFormData({

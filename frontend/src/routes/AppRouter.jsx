@@ -8,6 +8,8 @@ import Dashboard from "../pages/Dashboard";
 import NurseDashboard from "../pages/NurseDashboard";
 import ManagerDashboard from "../pages/ManagerDashboard";
 import RegionalDashboard from "../pages/RegionalDashboard";
+import ManagerDashboardProfile from "../pages/ManagerDashboardProfile";
+import RegionalDashboardProfile from "../pages/RegionalDashboardProfile";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
@@ -31,9 +33,12 @@ function AppRouter() {
   }, []);
 
   // Show maintenance page for non-admin users when maintenance mode is on
-  // Admins can always access /admin route
+  // Allow login and admin routes even in maintenance mode
+  const isLoginRoute = window.location.pathname === "/login";
+  const isRegisterRoute = window.location.pathname === "/register";
   const isAdminRoute = window.location.pathname.startsWith("/admin");
-  if (maintenanceMode && user?.role !== "SYSTEM_ADMIN" && !isAdminRoute) {
+  
+  if (maintenanceMode && user?.role !== "SYSTEM_ADMIN" && !isLoginRoute && !isRegisterRoute && !isAdminRoute) {
     return <MaintenanceMode />;
   }
   return (
@@ -68,9 +73,15 @@ function AppRouter() {
         path="/manager"
         element={
           <RoleBasedRoute allowedRoles={["MANAGER"]}>
-            <MainLayout>
-              <ManagerDashboard />
-            </MainLayout>
+            <ManagerDashboard />
+          </RoleBasedRoute>
+        }
+      />
+      <Route
+        path="/manager-profile"
+        element={
+          <RoleBasedRoute allowedRoles={["MANAGER"]}>
+            <ManagerDashboardProfile />
           </RoleBasedRoute>
         }
       />
@@ -78,9 +89,15 @@ function AppRouter() {
         path="/regional"
         element={
           <RoleBasedRoute allowedRoles={["REGIONAL_OFFICE", "FEDERAL_OFFICE"]}>
-            <MainLayout>
-              <RegionalDashboard />
-            </MainLayout>
+            <RegionalDashboard />
+          </RoleBasedRoute>
+        }
+      />
+      <Route
+        path="/regional-profile"
+        element={
+          <RoleBasedRoute allowedRoles={["REGIONAL_OFFICE", "FEDERAL_OFFICE"]}>
+            <RegionalDashboardProfile />
           </RoleBasedRoute>
         }
       />

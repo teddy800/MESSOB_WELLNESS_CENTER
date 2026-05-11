@@ -289,7 +289,13 @@ function NurseAnalytics({ refreshTrigger = 0 }) {
       generateChartData(mappedAppointments, noShow);
     } catch (err) {
       console.error('Failed to fetch analytics:', err);
-      setError('Failed to load analytics');
+      if (err?.response?.status === 403) {
+        setError('Access denied — Nurse Officer role required to view analytics.');
+      } else if (err?.response?.status === 401) {
+        setError('Session expired. Please log in again.');
+      } else {
+        setError('Failed to load analytics. Please refresh.');
+      }
     } finally {
       setLoading(false);
     }

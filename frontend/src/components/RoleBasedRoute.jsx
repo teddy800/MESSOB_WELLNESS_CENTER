@@ -21,6 +21,7 @@ function RoleBasedRoute({ children, allowedRoles }) {
       NURSE_OFFICER: '/nurse',
       MANAGER: '/manager',
       REGIONAL_OFFICE: '/regional',
+      FEDERAL_OFFICE: '/regional',
       SYSTEM_ADMIN: '/admin',
     };
     return <Navigate to={roleRoutes[user.role] || '/dashboard'} replace />;

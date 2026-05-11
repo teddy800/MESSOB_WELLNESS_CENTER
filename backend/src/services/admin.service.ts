@@ -146,8 +146,19 @@ const AdminService = {
         averageHeartRate: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.heartRate || 0), 0) / vitals.length : 0,
         averageTemperature: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.temperature || 0), 0) / vitals.length : 0,
         averageOxygenSaturation: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.oxygenSaturation || 0), 0) / vitals.length : 0,
-        byBmiCategory: {},
-        byBpCategory: {},
+        byBmiCategory: {
+          UNDERWEIGHT: 0,
+          NORMAL: 0,
+          OVERWEIGHT: 0,
+          OBESITY: 0,
+        },
+        byBpCategory: {
+          NORMAL: 0,
+          ELEVATED: 0,
+          HYPERTENSION_STAGE_1: 0,
+          HYPERTENSION_STAGE_2: 0,
+          HYPERTENSIVE_CRISIS: 0,
+        },
       };
 
       // Get feedback stats

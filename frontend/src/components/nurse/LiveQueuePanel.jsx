@@ -47,7 +47,13 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
       setError('');
     } catch (err) {
       console.error('❌ Queue fetch error:', err);
-      setError('Failed to load queue');
+      if (err?.response?.status === 403) {
+        setError('Access denied — Nurse Officer role required to view the queue.');
+      } else if (err?.response?.status === 401) {
+        setError('Session expired. Please log in again.');
+      } else {
+        setError('Failed to load queue. Please refresh.');
+      }
     } finally {
       setLoading(false);
     }
