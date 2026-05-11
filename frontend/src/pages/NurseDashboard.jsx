@@ -9,13 +9,14 @@ import VitalsEntry from "../components/nurse/VitalsEntry";
 import CallNextControl from "../components/nurse/CallNextControl";
 import WellnessPlanCreation from "../components/nurse/WellnessPlanCreation";
 import CustomerHistoryView from "../components/nurse/CustomerHistoryView";
+import ProfileSection from "../components/dashboard/ProfileSection";
 
 function NurseDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history"];
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "profile"];
     return tab && allowedTabs.includes(tab) ? tab : "analytics";
   });
   const [capacity, setCapacity] = useState(null);
@@ -26,11 +27,21 @@ function NurseDashboard() {
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history"];
+    const allowedTabs = ["analytics", "queue", "vitals", "walkin", "wellness", "history", "profile"];
     if (tab && allowedTabs.includes(tab)) {
       setActiveTab(tab);
     }
   }, [searchParams]);
+
+  // Listen for profile click from dropdown
+  useEffect(() => {
+    const handleProfileClick = () => {
+      setActiveTab('profile');
+    };
+    
+    window.addEventListener('profileClicked', handleProfileClick);
+    return () => window.removeEventListener('profileClicked', handleProfileClick);
+  }, []);
 
   const handleCapacityUpdate = (newCapacity) => {
     setCapacity(newCapacity);
@@ -175,6 +186,7 @@ function NurseDashboard() {
             {activeTab === 'walkin' && '🚶 Register Walk-in'}
             {activeTab === 'wellness' && '🎯 Create Wellness Plan'}
             {activeTab === 'history' && '📚 Customer History'}
+            {activeTab === 'profile' && '👤 Profile'}
           </h1>
         </div>
 
@@ -232,6 +244,12 @@ function NurseDashboard() {
         {activeTab === "history" && (
           <div className="history-section">
             <CustomerHistoryView customerId={selectedCustomer} />
+          </div>
+        )}
+
+        {activeTab === "profile" && (
+          <div className="profile-section">
+            <ProfileSection onLogout={logout} />
           </div>
         )}
         </div>
