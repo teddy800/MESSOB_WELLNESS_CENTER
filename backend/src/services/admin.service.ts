@@ -146,8 +146,19 @@ const AdminService = {
         averageHeartRate: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.heartRate || 0), 0) / vitals.length : 0,
         averageTemperature: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.temperature || 0), 0) / vitals.length : 0,
         averageOxygenSaturation: vitals.length > 0 ? vitals.reduce((sum, v) => sum + (v.oxygenSaturation || 0), 0) / vitals.length : 0,
-        byBmiCategory: {},
-        byBpCategory: {},
+        byBmiCategory: {
+          UNDERWEIGHT: 0,
+          NORMAL: 0,
+          OVERWEIGHT: 0,
+          OBESITY: 0,
+        },
+        byBpCategory: {
+          NORMAL: 0,
+          ELEVATED: 0,
+          HYPERTENSION_STAGE_1: 0,
+          HYPERTENSION_STAGE_2: 0,
+          HYPERTENSIVE_CRISIS: 0,
+        },
       };
 
       // Get feedback stats
@@ -199,7 +210,11 @@ const AdminService = {
       if (filters.role) where.role = filters.role;
       if (filters.status) where.isActive = filters.status === 'active';
       if (filters.verification) where.isVerified = filters.verification === 'verified';
-      if (filters.region) where.center = { region: filters.region };
+      if (filters.region) {
+        where.center = {
+          region: filters.region,
+        };
+      }
       if (filters.center) where.centerId = filters.center;
       if (filters.search) {
         where.OR = [
@@ -213,15 +228,15 @@ const AdminService = {
           where,
           skip,
           take,
-          select: {
-            id: true,
-            email: true,
-            fullName: true,
-            role: true,
-            isActive: true,
-            isVerified: true,
-            centerId: true,
-            createdAt: true,
+          include: {
+            center: {
+              select: {
+                id: true,
+                name: true,
+                region: true,
+                city: true,
+              },
+            },
           },
         }),
         prisma.user.count({ where }),

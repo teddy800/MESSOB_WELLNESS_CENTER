@@ -2,6 +2,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
 import AdminService from "../services/admin.service";
 import prisma from "../config/prisma";
+import { NotificationService } from "../services/notifications.service";
 import {
   UserFilters,
   CenterFilters,
@@ -194,7 +195,7 @@ export const updateUser = async (
       return;
     }
 
-    const { fullName, email, role, isActive } = req.body;
+    const { fullName, email, role, isActive, password } = req.body;
 
     // Check if user exists
     const user = await prisma.user.findUnique({
@@ -215,6 +216,12 @@ export const updateUser = async (
     if (email !== undefined) updateData.email = email;
     if (role !== undefined) updateData.role = role;
     if (isActive !== undefined) updateData.isActive = isActive;
+
+    // Handle password update if provided
+    if (password) {
+      const bcrypt = await import("bcryptjs");
+      updateData.password = await bcrypt.default.hash(password, 10);
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -302,7 +309,8 @@ export const createUser = async (
         role,
         centerId: centerId || null,
         isActive: true,
-        isVerified: false,
+        // Only external patients are unverified, others are verified by default
+        isVerified: role !== "EXTERNAL_PATIENT",
       },
       select: {
         id: true,
@@ -313,6 +321,28 @@ export const createUser = async (
         isVerified: true,
       },
     });
+
+    // Create notification for system admin about new user creation
+    try {
+      const admins = await prisma.user.findMany({
+        where: { role: "SYSTEM_ADMIN" },
+        select: { id: true },
+      });
+
+      for (const admin of admins) {
+        await NotificationService.createNotification(
+          admin.id,
+          "USER_REGISTRATION",
+          "HIGH",
+          "New User Created",
+          `New ${role} created by admin: ${fullName} (${email})`,
+          newUser.id
+        );
+      }
+    } catch (notificationError) {
+      // Log but don't fail user creation if notification creation fails
+      console.warn("Failed to create user creation notification:", notificationError);
+    }
 
     res.status(201).json({
       status: "success",
@@ -653,6 +683,71 @@ export const getAuditLogs = async (
     res.status(500).json({
       status: "error",
       message: "Failed to retrieve audit logs",
+    });
+  }
+};
+
+/**
+ * POST /api/v1/admin/users/:id/unlock
+ * Unlock a user account that is locked due to failed login attempts
+ */
+export const unlockUser = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const { id } = req.params;
+
+    if (!id || typeof id !== 'string') {
+      res.status(400).json({
+        status: "error",
+        message: "User ID is required",
+      });
+      return;
+    }
+
+    // Update user to unlock account - removed as lock fields no longer exist
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      status: "success",
+      message: "User account unlock feature removed",
+      data: {
+        id: user.id,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      res.status(404).json({
+        status: "error",
+        message: "User not found",
+      });
+      return;
+    }
+
+    console.error("Unlock user error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to unlock user account",
     });
   }
 };

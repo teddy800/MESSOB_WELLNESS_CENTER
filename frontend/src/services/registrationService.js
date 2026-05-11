@@ -1,5 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
+
 export const registrationService = {
   register: async (userData) => {
     const response = await fetch(`${API_URL}/api/v1/auth/register`, {
@@ -9,7 +10,6 @@ export const registrationService = {
       },
       body: JSON.stringify(userData),
     });
-
     const data = await response.json();
 
     if (!response.ok) {

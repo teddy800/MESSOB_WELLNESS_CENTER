@@ -23,7 +23,7 @@ function RegionalSidebar({
     { id: "overview", label: "Overview", icon: "📊" },
     { id: "centers", label: "Centers", icon: "🏥", count: centersCount },
     { id: "managers", label: "Managers", icon: "👔" },
-    { id: "performance", label: "Performance", icon: "📈" },
+    { id: "performance", label: "Analytics", icon: "📈" },
   ];
 
   return (
@@ -81,59 +81,11 @@ function RegionalSidebar({
       </nav>
 
       <div className="sidebar-footer">
-        {/* Center Selector */}
-        {centers.length > 0 && setSelectedCenter && (
-          <div style={{
-            padding: '1rem',
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-            marginBottom: '1rem'
-          }}>
-            <div style={{
-              fontSize: '0.875rem',
-              fontWeight: 600,
-              marginBottom: '0.5rem',
-              color: 'rgba(255,255,255,0.9)'
-            }}>
-              🔍 Filter Centers
-            </div>
-            <select
-              value={selectedCenter || 'all'}
-              onChange={(e) => setSelectedCenter(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                borderRadius: '6px',
-                border: '1px solid rgba(255,255,255,0.2)',
-                background: 'rgba(255,255,255,0.1)',
-                color: 'white',
-                fontSize: '0.75rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                outline: 'none',
-                WebkitAppearance: 'none',
-                appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 8L1 3h10z'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 0.5rem center',
-              }}
-            >
-              <option value="all" style={{ background: '#1e3a8a', color: '#ffffff' }}>
-                🏥 All Centers ({centers.length})
-              </option>
-              {centers.map((c) => (
-                <option key={c.id} value={c.id} style={{ background: '#1e3a8a', color: '#ffffff' }}>
-                  {c.status === 'ACTIVE' ? '✅' : '⚠️'} {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
         {/* Center Statistics */}
         {centerStats && (
           <div style={{
             padding: '1rem',
-            borderTop: centers.length > 0 ? 'none' : '1px solid rgba(255,255,255,0.1)',
+            borderTop: '1px solid rgba(255,255,255,0.1)',
             marginBottom: '1rem'
           }}>
             <div style={{

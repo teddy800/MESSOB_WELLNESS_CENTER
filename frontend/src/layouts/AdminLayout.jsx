@@ -88,6 +88,10 @@ function AdminLayout({
           onRefresh={onRefresh}
           loading={loading}
           lastUpdated={lastUpdated}
+          selectedCenter={selectedCenter}
+          setSelectedCenter={setSelectedCenter}
+          centers={centers}
+          activeTab={activeTab}
         />
         
         <main className="admin-content">

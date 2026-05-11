@@ -6,6 +6,7 @@ import {
   getCurrentUser,
   logout,
   verifyToken,
+  changePassword,
 } from "../controllers/auth.controller";
 import { authenticate } from "../middleware/auth.middleware";
 
@@ -36,5 +37,8 @@ router.get("/me", authenticate, getCurrentUser);
 
 // POST /api/v1/auth/logout - Logout user
 router.post("/logout", authenticate, logout);
+
+// POST /api/v1/auth/change-password - Change user password
+router.post("/change-password", authenticate, changePassword);
 
 export default router;

@@ -89,12 +89,7 @@
   min-height: 100vh;
 }
 
-.nurse-content-header {
-  background: white;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #dee2e6;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
+
 
 .nurse-content-header h1 {
   margin: 0;

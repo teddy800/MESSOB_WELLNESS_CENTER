@@ -10,6 +10,122 @@ import {
 } from 'recharts';
 import '../styles/admin-layout.css';
 import '../styles/admin-dashboard.css';
+import '../styles/tooltip-fix.css';
+import '../styles/dashboard-tokens.css';
+
+// ─── Custom Tooltip Components ────────────────────────────────────────────────
+// Outstanding custom tooltips with perfect visibility
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: '#1f2937',
+        border: '2px solid #284394',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        color: '#ffffff',
+        cursor: 'pointer'
+      }}>
+        <p style={{
+          margin: '0 0 8px 0',
+          fontWeight: 800,
+          fontSize: '14px',
+          color: '#ffffff',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          paddingBottom: '6px'
+        }}>
+          {label}
+        </p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{
+            margin: '4px 0',
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#ffffff'
+          }}>
+            <span style={{ color: entry.color }}>●</span> {entry.name}: <strong>{entry.value}</strong>
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomPieTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: '#1f2937',
+        border: '2px solid #284394',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        color: '#ffffff',
+        cursor: 'pointer'
+      }}>
+        <p style={{
+          margin: '0 0 8px 0',
+          fontWeight: 800,
+          fontSize: '14px',
+          color: '#ffffff',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          paddingBottom: '6px'
+        }}>
+          {payload[0].name}
+        </p>
+        <p style={{
+          margin: '4px 0',
+          fontSize: '13px',
+          fontWeight: 700,
+          color: '#ffffff'
+        }}>
+          <span style={{ color: payload[0].payload.color || payload[0].payload.fill }}>●</span> Count: <strong>{payload[0].value}</strong>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomCapacityTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: '#1f2937',
+        border: '2px solid #284394',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        color: '#ffffff',
+        cursor: 'pointer'
+      }}>
+        <p style={{
+          margin: '0 0 8px 0',
+          fontWeight: 800,
+          fontSize: '14px',
+          color: '#ffffff',
+          borderBottom: '1px solid rgba(255,255,255,0.2)',
+          paddingBottom: '6px'
+        }}>
+          {label}
+        </p>
+        {payload.map((entry, index) => (
+          <p key={index} style={{
+            margin: '4px 0',
+            fontSize: '13px',
+            fontWeight: 700,
+            color: '#ffffff'
+          }}>
+            {entry.dataKey === 'used' ? '🔵' : '🟢'} {entry.dataKey === 'used' ? 'Slots Used' : 'Slots Available'}: <strong>{entry.value} slots</strong>
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 // ─── Role guard ───────────────────────────────────────────────────────────────
 // MANAGER role only — REGIONAL_OFFICE uses /regional, SYSTEM_ADMIN uses /admin
@@ -92,7 +208,6 @@ const ManagerDashboard = () => {
 
   const tabs = [
     { id: 'overview',  label: '📊 Overview'  },
-    { id: 'capacity',  label: '🎛️ Capacity'  },
     { id: 'analytics', label: '📈 Analytics' },
     { id: 'users',     label: `👥 Staff (${users.length})`     },
     { id: 'audit',     label: '🔍 Audit'     },
@@ -130,13 +245,6 @@ const ManagerDashboard = () => {
               </div>
             </div>
             <OverviewTab loading={loading} capacityInfo={capacityInfo} bookingStats={bookingStats} />
-          </div>
-        );
-      case 'capacity':
-        return (
-          <div className="dashboard-section">
-            <h2>🎛️ Capacity Management</h2>
-            <CapacityTab loading={loading} capacityInfo={capacityInfo} />
           </div>
         );
       case 'analytics':
@@ -228,104 +336,356 @@ const OverviewTab = ({ loading, capacityInfo, bookingStats }) => {
 
   return (
     <div className="mgr-overview">
-      {/* KPI Cards */}
-      <div className="mgr-kpi-grid">
+      {/* KPI Cards — Production-Level Design */}
+      <div className="dash-kpi-grid">
         {statCards.map((c) => (
-          <div key={c.label} className="mgr-kpi-card">
-            <div className="mgr-kpi-icon" style={{ background: c.color + '18', color: c.color }}>{c.icon}</div>
-            <div className="mgr-kpi-body">
-              <div className="mgr-kpi-value" style={{ color: c.color }}>{c.value}</div>
-              <div className="mgr-kpi-label">{c.label}</div>
-              <div className="mgr-kpi-sub">{c.sub}</div>
+          <div key={c.label} className="dash-kpi-card">
+            <div className="dash-kpi-icon" style={{ background: `${c.color}18`, color: c.color }}>
+              {c.icon}
+            </div>
+            <div className="dash-kpi-body">
+              <div className="dash-kpi-value" style={{ color: c.color }}>{c.value}</div>
+              <div className="dash-kpi-label">{c.label}</div>
+              <div className="dash-kpi-sub">{c.sub}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Charts Row */}
-      <div className="mgr-charts-row">
-        {/* Area Chart — Appointment Trend */}
-        <div className="mgr-chart-card mgr-chart-wide">
-          <div className="mgr-chart-header">
-            <span className="mgr-live-badge">● LIVE</span>
-            <h3>Daily Service Delivery</h3>
-            <p>This week's appointment activity</p>
+      <div className="dash-charts-row">
+        {/* Daily Service Delivery Chart */}
+        <div className="dash-chart-card mgr-enhanced-service-delivery" style={{
+          borderRadius: '12px',
+          padding: '1.25rem',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div className="mgr-chart-header" style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+            <div className="mgr-chart-title-section" style={{ flex: '1 1 auto', minWidth: '250px' }}>
+              <div className="mgr-live-indicator" style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: 'rgba(34, 197, 94, 0.12)',
+                border: '1px solid rgba(34, 197, 94, 0.25)',
+                borderRadius: '16px',
+                padding: '0.3rem 0.6rem',
+                marginBottom: '0.5rem',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color: '#16a34a'
+              }}>
+                <span className="mgr-live-pulse" style={{
+                  width: '6px',
+                  height: '6px',
+                  borderRadius: '50%',
+                  background: '#22c55e',
+                  boxShadow: '0 0 6px #22c55e',
+                  animation: 'pulse 2s infinite'
+                }}></span>
+                <span className="mgr-live-text">LIVE</span>
+              </div>
+              <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem', fontWeight: 800, color: '#1f2937', letterSpacing: '-0.01em', lineHeight: 1.2 }}>Daily Service Delivery Excellence</h3>
+              <p style={{ margin: 0, fontSize: '0.8rem', color: '#6b7280', fontWeight: 500, lineHeight: 1.3 }}>Real-time appointment performance & completion analytics</p>
+            </div>
+            <div className="mgr-chart-metrics" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div className="mgr-metric-badge success" style={{
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.04) 100%)',
+                border: '2px solid rgba(34, 197, 94, 0.25)',
+                borderRadius: '10px',
+                padding: '0.6rem 1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.2rem',
+                boxShadow: '0 2px 6px rgba(34, 197, 94, 0.06)',
+                minWidth: '80px'
+              }}>
+                <span className="mgr-metric-value" style={{ fontSize: '1.5rem', fontWeight: 900, color: '#22c55e', lineHeight: 1 }}>{appointmentTrend.reduce((s,d)=>s+d.completed,0)}</span>
+                <span className="mgr-metric-label" style={{ fontSize: '0.65rem', color: '#16a34a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Completed</span>
+              </div>
+              <div className="mgr-metric-badge primary" style={{
+                background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.12) 0%, rgba(107, 114, 128, 0.04) 100%)',
+                border: '2px solid rgba(107, 114, 128, 0.25)',
+                borderRadius: '10px',
+                padding: '0.6rem 1rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.2rem',
+                boxShadow: '0 2px 6px rgba(107, 114, 128, 0.06)',
+                minWidth: '80px'
+              }}>
+                <span className="mgr-metric-value" style={{ fontSize: '1.5rem', fontWeight: 900, color: '#6b7280', lineHeight: 1 }}>{appointmentTrend.reduce((s,d)=>s+d.appointments,0)}</span>
+                <span className="mgr-metric-label" style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total</span>
+              </div>
+            </div>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={appointmentTrend} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="gradAppt" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#284394" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#284394" stopOpacity={0.02} />
-                </linearGradient>
-                <linearGradient id="gradComp" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0.02} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-              <Tooltip
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}
-                labelStyle={{ fontWeight: 600, color: '#1e293b' }}
-              />
-              <Legend wrapperStyle={{ fontSize: '12px' }} />
-              <Area type="monotone" dataKey="appointments" name="Appointments" stroke="#284394" strokeWidth={2.5} fill="url(#gradAppt)" dot={{ r: 4, fill: '#284394', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-              <Area type="monotone" dataKey="completed"    name="Completed"    stroke="#22c55e" strokeWidth={2.5} fill="url(#gradComp)" dot={{ r: 4, fill: '#22c55e', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-            </AreaChart>
-          </ResponsiveContainer>
+          <div className="mgr-chart-container" style={{ marginTop: '1rem', position: 'relative', zIndex: 2 }}>
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={appointmentTrend} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                <defs>
+                  <linearGradient id="gradApptClean" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#6b7280" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="#6b7280" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="gradCompClean" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#e5e7eb" 
+                  strokeWidth={1}
+                  vertical={false}
+                />
+                <XAxis 
+                  dataKey="day" 
+                  tick={{ fontSize: 11, fill: '#6b7280', fontWeight: 600 }} 
+                  axisLine={false} 
+                  tickLine={false}
+                  tickMargin={8}
+                />
+                <YAxis 
+                  tick={{ fontSize: 10, fill: '#6b7280', fontWeight: 600 }} 
+                  axisLine={false} 
+                  tickLine={false}
+                  tickMargin={5}
+                  width={35}
+                />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#284394', strokeWidth: 2, strokeDasharray: '5 5' }} />
+                <Legend 
+                  wrapperStyle={{ 
+                    fontSize: '12px', 
+                    fontWeight: 700,
+                    paddingTop: '12px',
+                    color: '#1f2937'
+                  }}
+                  iconType="line"
+                  iconSize={16}
+                  formatter={(value, entry) => (
+                    <span style={{ 
+                      color: '#1f2937',
+                      fontWeight: 700,
+                      fontSize: '12px',
+                      letterSpacing: '0.01em'
+                    }}>
+                      {value}
+                    </span>
+                  )}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="appointments" 
+                  name="📊 Total Appointments" 
+                  stroke="#6b7280" 
+                  strokeWidth={2.5} 
+                  fill="url(#gradApptClean)" 
+                  dot={{ r: 4, fill: '#6b7280', strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#6b7280' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="completed" 
+                  name="✅ Completed Services" 
+                  stroke="#22c55e" 
+                  strokeWidth={2.5} 
+                  fill="url(#gradCompClean)" 
+                  dot={{ r: 4, fill: '#22c55e', strokeWidth: 0 }}
+                  activeDot={{ r: 6, fill: '#22c55e' }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="mgr-chart-footer" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid #e5e7eb', position: 'relative', zIndex: 1 }}>
+            <div className="mgr-performance-indicators" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="mgr-indicator" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.02) 100%)',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(34, 197, 94, 0.2)',
+                flex: '1 1 auto',
+                minWidth: '120px'
+              }}>
+                <span className="mgr-indicator-dot success" style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px rgba(34, 197, 94, 0.5)', flexShrink: 0 }}></span>
+                <div>
+                  <span className="mgr-indicator-label" style={{ fontSize: '0.6rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.03em', display: 'block', lineHeight: 1 }}>Completion</span>
+                  <span className="mgr-indicator-text" style={{ fontSize: '1rem', fontWeight: 900, color: '#22c55e', lineHeight: 1 }}>{Math.round((appointmentTrend.reduce((s,d)=>s+d.completed,0) / Math.max(1, appointmentTrend.reduce((s,d)=>s+d.appointments,0))) * 100)}%</span>
+                </div>
+              </div>
+              <div className="mgr-indicator" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.6rem',
+                background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.08) 0%, rgba(107, 114, 128, 0.02) 100%)',
+                padding: '0.6rem 0.9rem',
+                borderRadius: '10px',
+                border: '1px solid rgba(107, 114, 128, 0.2)',
+                flex: '1 1 auto',
+                minWidth: '150px'
+              }}>
+                <span className="mgr-indicator-dot primary" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#6b7280', boxShadow: '0 0 8px rgba(107, 114, 128, 0.5)', flexShrink: 0 }}></span>
+                <div>
+                  <span className="mgr-indicator-label" style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', lineHeight: 1 }}>Trend</span>
+                  <span className="mgr-indicator-text" style={{ fontSize: '1.1rem', fontWeight: 900, color: '#6b7280', lineHeight: 1 }}>{appointmentTrend[appointmentTrend.length-1].appointments > appointmentTrend[0].appointments ? '↗ Up' : '↘ Stable'}</span>
+                </div>
+              </div>
+              <div className="mgr-indicator" style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.6rem',
+                background: 'linear-gradient(135deg, rgba(107, 114, 128, 0.08) 0%, rgba(107, 114, 128, 0.02) 100%)',
+                padding: '0.6rem 0.9rem',
+                borderRadius: '10px',
+                border: '1px solid rgba(107, 114, 128, 0.2)',
+                flex: '1 1 auto',
+                minWidth: '150px'
+              }}>
+                <span className="mgr-indicator-dot" style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#6b7280', boxShadow: '0 0 8px rgba(107, 114, 128, 0.5)', flexShrink: 0 }}></span>
+                <div>
+                  <span className="mgr-indicator-label" style={{ fontSize: '0.65rem', color: '#6b7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', lineHeight: 1 }}>Total</span>
+                  <span className="mgr-indicator-text" style={{ fontSize: '1.1rem', fontWeight: 900, color: '#6b7280', lineHeight: 1 }}>{appointmentTrend.reduce((s,d)=>s+d.appointments,0)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Pie Chart — Today's Breakdown */}
-        <div className="mgr-chart-card">
-          <div className="mgr-chart-header">
-            <span className="mgr-live-badge">● LIVE</span>
-            <h3>Today's Breakdown</h3>
-            <p>Appointment status distribution</p>
+        <div className="mgr-chart-card" style={{
+          background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+          border: '2px solid #e5e7eb',
+          borderRadius: '16px',
+          padding: '2rem',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div className="mgr-chart-header" style={{ position: 'relative', zIndex: 1 }}>
+            <span className="mgr-live-badge" style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              background: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: '20px',
+              padding: '0.5rem 1rem',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              color: '#d97706',
+              marginBottom: '0.75rem'
+            }}>● LIVE</span>
+            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 800, color: '#1f2937', letterSpacing: '-0.01em' }}>Today's Breakdown</h3>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: '#475569', fontWeight: 500 }}>Appointment status distribution</p>
           </div>
           {hasBreakdown ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={280} style={{ marginTop: '1.5rem', position: 'relative', zIndex: 1 }}>
               <PieChart>
-                <Pie data={breakdownData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
+                <Pie data={breakdownData} cx="50%" cy="50%" innerRadius={70} outerRadius={110} paddingAngle={4} dataKey="value">
                   {breakdownData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
-                <Legend wrapperStyle={{ fontSize: '12px' }} />
+                <Tooltip content={<CustomPieTooltip />} cursor={{ fill: 'rgba(40, 67, 148, 0.1)' }} />
+                <Legend 
+                  wrapperStyle={{ 
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: '#1f2937',
+                    paddingTop: '16px'
+                  }}
+                  iconType="circle"
+                  iconSize={12}
+                  formatter={(value, entry) => (
+                    <span style={{ 
+                      color: '#1f2937',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      letterSpacing: '0.02em'
+                    }}>
+                      {value}
+                    </span>
+                  )}
+                />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="mgr-empty-chart">
-              <div className="mgr-empty-icon">📋</div>
-              <p>No appointments today yet</p>
+            <div className="mgr-empty-chart" style={{ marginTop: '1.5rem', padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>
+              <div className="mgr-empty-icon" style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>📋</div>
+              <p style={{ margin: 0, fontSize: '0.95rem' }}>No appointments today yet</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Capacity Bar */}
-      <div className="mgr-chart-card" style={{ marginTop: '1rem' }}>
-        <div className="mgr-chart-header">
-          <h3>Capacity Utilisation — {capacityInfo?.date ?? 'Today'}</h3>
-          <span className={`mgr-status-badge ${usedPct > 85 ? 'critical' : usedPct > 60 ? 'moderate' : 'normal'}`}>
+      {/* Capacity Bar — Enhanced */}
+      <div className="mgr-chart-card" style={{
+        marginTop: '1.5rem',
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        padding: '2rem',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div className="mgr-chart-header" style={{ position: 'relative', zIndex: 1 }}>
+          <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: 700, color: '#1f2937' }}>Capacity Utilisation — {capacityInfo?.date ?? 'Today'}</h3>
+          <span className={`mgr-status-badge`} style={{
+            display: 'inline-block',
+            padding: '0.4rem 0.8rem',
+            borderRadius: '20px',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            background: usedPct > 85 ? 'rgba(239, 68, 68, 0.15)' : usedPct > 60 ? 'rgba(245, 158, 11, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+            color: usedPct > 85 ? '#ef4444' : usedPct > 60 ? '#f59e0b' : '#22c55e',
+            border: usedPct > 85 ? '1px solid #ef4444' : usedPct > 60 ? '1px solid #f59e0b' : '1px solid #22c55e'
+          }}>
             {usedPct > 85 ? '🔴 Critical' : usedPct > 60 ? '🟡 Moderate' : '🟢 Normal'}
           </span>
         </div>
-        <div className="mgr-capacity-row">
-          <div className="mgr-capacity-stat"><span>{capacityInfo?.slotsUsed ?? 0}</span><small>Used</small></div>
-          <div className="mgr-capacity-bar-wrap">
-            <div className="mgr-capacity-track">
+        <div className="mgr-capacity-row" style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', position: 'relative', zIndex: 1 }}>
+          <div className="mgr-capacity-stat" style={{ textAlign: 'center', minWidth: '80px' }}>
+            <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#284394', display: 'block' }}>{capacityInfo?.slotsUsed ?? 0}</span>
+            <small style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 500 }}>Used</small>
+          </div>
+          <div className="mgr-capacity-bar-wrap" style={{ flex: 1 }}>
+            <div className="mgr-capacity-track" style={{
+              height: '12px',
+              background: '#e5e7eb',
+              borderRadius: '6px',
+              overflow: 'hidden'
+            }}>
               <div className="mgr-capacity-fill" style={{
+                height: '100%',
                 width: `${usedPct}%`,
                 background: usedPct > 85 ? 'linear-gradient(90deg,#dc2626,#ef4444)' : usedPct > 60 ? 'linear-gradient(90deg,#d97706,#f59e0b)' : 'linear-gradient(90deg,#16a34a,#22c55e)',
+                borderRadius: '6px',
+                transition: 'width 0.8s ease'
               }} />
             </div>
-            <div className="mgr-capacity-pct">{usedPct}%</div>
           </div>
-          <div className="mgr-capacity-stat"><span>{capacityInfo?.slotsRemaining ?? 0}</span><small>Remaining</small></div>
-          <div className="mgr-capacity-stat"><span>{capacityInfo?.dailyLimit ?? 100}</span><small>Daily Limit</small></div>
+          <div className="mgr-capacity-pct" style={{
+            fontSize: '1.5rem',
+            fontWeight: 800,
+            color: usedPct > 85 ? '#ef4444' : usedPct > 60 ? '#f59e0b' : '#22c55e',
+            minWidth: '60px',
+            textAlign: 'right'
+          }}>{usedPct}%</div>
+          <div className="mgr-capacity-stat" style={{ textAlign: 'center', minWidth: '80px' }}>
+            <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0891b2', display: 'block' }}>{capacityInfo?.slotsRemaining ?? 0}</span>
+            <small style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 500 }}>Remaining</small>
+          </div>
+          <div className="mgr-capacity-stat" style={{ textAlign: 'center', minWidth: '80px' }}>
+            <span style={{ fontSize: '1.75rem', fontWeight: 800, color: '#7c3aed', display: 'block' }}>{capacityInfo?.dailyLimit ?? 100}</span>
+            <small style={{ fontSize: '0.8rem', color: '#6b7280', fontWeight: 500 }}>Daily Limit</small>
+          </div>
         </div>
       </div>
     </div>
@@ -387,34 +747,139 @@ const CapacityTab = ({ loading, capacityInfo }) => {
         </div>
       </div>
 
-      {/* Hourly Chart */}
-      <div className="mgr-chart-card">
+      {/* Enhanced Hourly Capacity Distribution Chart */}
+      <div className="mgr-chart-card mgr-enhanced-hourly-capacity">
         <div className="mgr-chart-header">
-          <span className="mgr-live-badge">● LIVE</span>
-          <h3>Hourly Capacity Distribution</h3>
-          <p>Estimated slot usage throughout the day</p>
+          <div className="mgr-chart-title-section">
+            <div className="mgr-live-indicator">
+              <span className="mgr-live-pulse"></span>
+              <span className="mgr-live-text">LIVE</span>
+            </div>
+            <h3>Hourly Capacity Distribution Excellence</h3>
+            <p>Real-time slot utilization & availability analytics throughout the day</p>
+          </div>
+          <div className="mgr-capacity-status">
+            <div className="mgr-status-indicator">
+              <span className={`mgr-status-dot ${pct > 85 ? 'critical' : pct > 60 ? 'moderate' : 'normal'}`}></span>
+              <span className="mgr-status-text">{statusLabel}</span>
+            </div>
+          </div>
         </div>
-        <ResponsiveContainer width="100%" height={240}>
-          <AreaChart data={hours} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="gradUsed" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#284394" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="#284394" stopOpacity={0.02} />
-              </linearGradient>
-              <linearGradient id="gradAvail" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#22c55e" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#22c55e" stopOpacity={0.02} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="time" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-            <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }} />
-            <Legend wrapperStyle={{ fontSize: '12px' }} />
-            <Area type="monotone" dataKey="used"      name="Slots Used"      stroke="#284394" strokeWidth={2.5} fill="url(#gradUsed)"  dot={{ r: 3, fill: '#284394' }} />
-            <Area type="monotone" dataKey="available" name="Slots Available" stroke="#22c55e" strokeWidth={2.5} fill="url(#gradAvail)" dot={{ r: 3, fill: '#22c55e' }} />
-          </AreaChart>
-        </ResponsiveContainer>
+        <div className="mgr-chart-container">
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={hours} margin={{ top: 20, right: 30, left: 10, bottom: 10 }}>
+              <defs>
+                <linearGradient id="gradUsedEnhanced" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#284394" stopOpacity={0.9} />
+                  <stop offset="20%" stopColor="#3b82f6" stopOpacity={0.7} />
+                  <stop offset="60%" stopColor="#60a5fa" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#dbeafe" stopOpacity={0.1} />
+                </linearGradient>
+                <linearGradient id="gradAvailEnhanced" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
+                  <stop offset="25%" stopColor="#16a34a" stopOpacity={0.6} />
+                  <stop offset="75%" stopColor="#4ade80" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#dcfce7" stopOpacity={0.05} />
+                </linearGradient>
+                <linearGradient id="gradPeakHours" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.6} />
+                  <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid 
+                strokeDasharray="2 4" 
+                stroke="rgba(148, 163, 184, 0.2)" 
+                strokeWidth={1}
+              />
+              <XAxis 
+                dataKey="time" 
+                tick={{ fontSize: 12, fill: '#64748b', fontWeight: 600 }} 
+                axisLine={false} 
+                tickLine={false}
+                tickMargin={8}
+              />
+              <YAxis 
+                tick={{ fontSize: 11, fill: '#64748b', fontWeight: 500 }} 
+                axisLine={false} 
+                tickLine={false}
+                tickMargin={8}
+              />
+              <Tooltip content={<CustomCapacityTooltip />} cursor={{ stroke: '#284394', strokeWidth: 2, strokeDasharray: '5 5' }} />
+              <Legend 
+                wrapperStyle={{ 
+                  fontSize: '13px', 
+                  fontWeight: 600,
+                  paddingTop: '15px'
+                }} 
+              />
+              <Area 
+                type="monotone" 
+                dataKey="used" 
+                name="Slots Used" 
+                stroke="#284394" 
+                strokeWidth={3.5} 
+                fill="url(#gradUsedEnhanced)" 
+                dot={{ 
+                  r: 5, 
+                  fill: '#284394', 
+                  strokeWidth: 2,
+                  stroke: '#ffffff'
+                }}
+                activeDot={{ 
+                  r: 7, 
+                  fill: '#284394',
+                  stroke: '#ffffff',
+                  strokeWidth: 2
+                }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="available" 
+                name="Slots Available" 
+                stroke="#22c55e" 
+                strokeWidth={3.5} 
+                fill="url(#gradAvailEnhanced)" 
+                dot={{ 
+                  r: 5, 
+                  fill: '#22c55e', 
+                  strokeWidth: 2,
+                  stroke: '#ffffff'
+                }}
+                activeDot={{ 
+                  r: 7, 
+                  fill: '#22c55e',
+                  stroke: '#ffffff',
+                  strokeWidth: 2
+                }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mgr-chart-footer">
+          <div className="mgr-hourly-insights">
+            <div className="mgr-insight-card">
+              <div className="mgr-insight-icon">🕘</div>
+              <div className="mgr-insight-content">
+                <span className="mgr-insight-label">Peak Hours</span>
+                <span className="mgr-insight-value">9:00 - 11:00 AM</span>
+              </div>
+            </div>
+            <div className="mgr-insight-card">
+              <div className="mgr-insight-icon">📊</div>
+              <div className="mgr-insight-content">
+                <span className="mgr-insight-label">Avg Utilization</span>
+                <span className="mgr-insight-value">{Math.round(hours.reduce((s,h)=>s+h.used,0)/hours.length)} slots/hr</span>
+              </div>
+            </div>
+            <div className="mgr-insight-card">
+              <div className="mgr-insight-icon">⚡</div>
+              <div className="mgr-insight-content">
+                <span className="mgr-insight-label">Efficiency</span>
+                <span className="mgr-insight-value">{Math.round((hours.reduce((s,h)=>s+h.used,0)/(hours.reduce((s,h)=>s+h.used+h.available,0)))*100)}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -568,9 +1033,35 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
             <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
             <Tooltip
-              contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }}
-              labelStyle={{ color: '#e2e8f0', fontWeight: 700 }}
-              itemStyle={{ color: '#cbd5e1' }}
+              contentStyle={{ 
+                background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%)', 
+                border: '3px solid rgba(255,255,255,0.5)', 
+                borderRadius: '16px', 
+                color: '#ffffff',
+                boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 50px rgba(255,255,255,0.25), inset 0 2px 0 rgba(255,255,255,0.4)',
+                padding: '16px 20px',
+                backdropFilter: 'blur(25px)',
+                minWidth: '200px'
+              }}
+              labelStyle={{ 
+                color: '#ffffff', 
+                fontWeight: 900, 
+                fontSize: '16px',
+                marginBottom: '12px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                textShadow: '0 0 10px rgba(255,255,255,0.5)',
+                borderBottom: '2px solid rgba(255,255,255,0.3)',
+                paddingBottom: '8px',
+                display: 'block'
+              }}
+              itemStyle={{ 
+                color: '#ffffff', 
+                fontWeight: 700,
+                fontSize: '14px',
+                margin: '8px 0',
+                textShadow: '0 0 8px rgba(255,255,255,0.3)'
+              }}
             />
             <Legend wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }} />
             <Area type="monotone" dataKey="total"     name="Total"     stroke={c1} strokeWidth={3} fill={`url(#${g1})`} dot={{ r: 5, fill: c1, strokeWidth: 0 }} activeDot={{ r: 7, fill: c1 }} />
@@ -612,7 +1103,42 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" vertical={false} />
               <XAxis dataKey="hour" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%)', 
+                  border: '3px solid rgba(255,255,255,0.5)', 
+                  borderRadius: '16px', 
+                  color: '#ffffff',
+                  boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 50px rgba(255,255,255,0.25), inset 0 2px 0 rgba(255,255,255,0.4)',
+                  padding: '16px 20px',
+                  backdropFilter: 'blur(25px)',
+                  minWidth: '200px'
+                }} 
+                labelStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 900, 
+                  fontSize: '16px',
+                  marginBottom: '12px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  textShadow: '0 0 10px rgba(255,255,255,0.5)',
+                  borderBottom: '2px solid rgba(255,255,255,0.3)',
+                  paddingBottom: '8px',
+                  display: 'block'
+                }}
+                itemStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  margin: '8px 0',
+                  textShadow: '0 0 8px rgba(255,255,255,0.3)'
+                }}
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+                formatter={(value, name) => [
+                  <span style={{ color: '#ffffff', fontWeight: 900, textShadow: '0 0 10px rgba(255,255,255,0.4)' }}>{`${value} patients`}</span>,
+                  <span style={{ color: '#e0e0e0', fontWeight: 600, textTransform: 'capitalize' }}>Peak Hour Activity</span>
+                ]}
+              />
               <Bar dataKey="patients" name="Patients" fill="url(#barGrad)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -634,7 +1160,42 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={58} />
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%)', 
+                  border: '3px solid rgba(255,255,255,0.5)', 
+                  borderRadius: '16px', 
+                  color: '#ffffff',
+                  boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 50px rgba(255,255,255,0.25), inset 0 2px 0 rgba(255,255,255,0.4)',
+                  padding: '16px 20px',
+                  backdropFilter: 'blur(25px)',
+                  minWidth: '200px'
+                }} 
+                labelStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 900, 
+                  fontSize: '16px',
+                  marginBottom: '12px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  textShadow: '0 0 10px rgba(255,255,255,0.5)',
+                  borderBottom: '2px solid rgba(255,255,255,0.3)',
+                  paddingBottom: '8px',
+                  display: 'block'
+                }}
+                itemStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  margin: '8px 0',
+                  textShadow: '0 0 8px rgba(255,255,255,0.3)'
+                }}
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+                formatter={(value, name) => [
+                  <span style={{ color: '#ffffff', fontWeight: 900, textShadow: '0 0 10px rgba(255,255,255,0.4)' }}>{`${value} patients`}</span>,
+                  <span style={{ color: '#e0e0e0', fontWeight: 600, textTransform: 'capitalize' }}>BP Risk Category</span>
+                ]}
+              />
               <Bar dataKey="value" name="Patients" radius={[0, 6, 6, 0]}>
                 {bpDisplay.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
               </Bar>
@@ -662,7 +1223,41 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
                 <Pie data={bmiDisplay} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
                   {bmiDisplay.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%)', 
+                    border: '3px solid rgba(255,255,255,0.5)', 
+                    borderRadius: '16px', 
+                    color: '#ffffff',
+                    boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 50px rgba(255,255,255,0.25), inset 0 2px 0 rgba(255,255,255,0.4)',
+                    padding: '16px 20px',
+                    backdropFilter: 'blur(25px)',
+                    minWidth: '200px'
+                  }} 
+                  labelStyle={{ 
+                    color: '#ffffff', 
+                    fontWeight: 900, 
+                    fontSize: '16px',
+                    marginBottom: '12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    textShadow: '0 0 10px rgba(255,255,255,0.5)',
+                    borderBottom: '2px solid rgba(255,255,255,0.3)',
+                    paddingBottom: '8px',
+                    display: 'block'
+                  }}
+                  itemStyle={{ 
+                    color: '#ffffff', 
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    margin: '8px 0',
+                    textShadow: '0 0 8px rgba(255,255,255,0.3)'
+                  }}
+                  formatter={(value, name) => [
+                    <span style={{ color: '#ffffff', fontWeight: 900, textShadow: '0 0 10px rgba(255,255,255,0.4)' }}>{`${value} patients`}</span>,
+                    <span style={{ color: '#e0e0e0', fontWeight: 600, textTransform: 'capitalize' }}>BMI Category</span>
+                  ]}
+                />
               </PieChart>
             </ResponsiveContainer>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -696,7 +1291,42 @@ const AnalyticsTab = ({ loading, queueData, healthData, trendsData }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.07)" vertical={false} />
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', color: '#f1f5f9' }} formatter={(v) => [`${v}%`, 'Score']} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  background: 'linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%)', 
+                  border: '3px solid rgba(255,255,255,0.5)', 
+                  borderRadius: '16px', 
+                  color: '#ffffff',
+                  boxShadow: '0 30px 60px rgba(0,0,0,0.9), 0 0 50px rgba(255,255,255,0.25), inset 0 2px 0 rgba(255,255,255,0.4)',
+                  padding: '16px 20px',
+                  backdropFilter: 'blur(25px)',
+                  minWidth: '200px'
+                }} 
+                labelStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 900, 
+                  fontSize: '16px',
+                  marginBottom: '12px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  textShadow: '0 0 10px rgba(255,255,255,0.5)',
+                  borderBottom: '2px solid rgba(255,255,255,0.3)',
+                  paddingBottom: '8px',
+                  display: 'block'
+                }}
+                itemStyle={{ 
+                  color: '#ffffff', 
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  margin: '8px 0',
+                  textShadow: '0 0 8px rgba(255,255,255,0.3)'
+                }}
+                formatter={(v) => [
+                  <span style={{ color: '#ffffff', fontWeight: 900, textShadow: '0 0 10px rgba(255,255,255,0.4)' }}>{`${v}%`}</span>,
+                  <span style={{ color: '#e0e0e0', fontWeight: 600, textTransform: 'capitalize' }}>Satisfaction Score</span>
+                ]} 
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }} 
+              />
               <Bar dataKey="score" name="Score" radius={[6, 6, 0, 0]}>
                 {feedbackDisplay.map((d, i) => <Cell key={i} fill={`url(#fb${i})`} />)}
               </Bar>
