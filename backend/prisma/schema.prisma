@@ -32,6 +32,7 @@ model User {
   auditLogs             AuditLog[]
   feedback              Feedback[]
   healthProfile         HealthProfile?
+  notifications         Notification[]
   center                Center?        @relation(fields: [centerId], references: [id])
   recordedVitals        VitalRecord[]  @relation("RecordedBy")
   vitalsRecords         VitalRecord[]
@@ -192,6 +193,40 @@ model Center {
   @@index([code])
   @@index([region, status])
   @@map("centers")
+}
+
+model Notification {
+  id        String              @id @default(uuid()) @db.Uuid
+  userId    String              @db.Uuid
+  type      NotificationType
+  severity  NotificationSeverity @default(MEDIUM)
+  title     String
+  message   String
+  isRead    Boolean             @default(false)
+  createdAt DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime            @updatedAt @db.Timestamptz(3)
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  APPOINTMENT_REMINDER
+  APPOINTMENT_CONFIRMED
+  APPOINTMENT_CANCELLED
+  SYSTEM_ALERT
+  WELLNESS_TIP
+  FEEDBACK_REQUEST
+}
+
+enum NotificationSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
 enum UserRole {

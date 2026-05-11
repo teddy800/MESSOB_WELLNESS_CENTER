@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { Pie, Line, Bar } from 'react-chartjs-2';
 import '../../styles/nurse-analytics.css';
 
-ChartJS.register(ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
+ChartJS.register(ArcElement, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
 
 function NurseAnalytics({ refreshTrigger = 0 }) {
   const [loading, setLoading] = useState(true);

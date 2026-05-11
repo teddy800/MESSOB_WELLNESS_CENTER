@@ -497,7 +497,7 @@ const OverviewTab = ({ loading, analytics, centers, selectedCenter, centerStats 
             gap: '0.6rem',
           }}>
             {centerBreakdownData.map((c, i) => (
-              <div key={c.name} style={{
+              <div key={`${c.name}-${c.city}-${i}`} style={{
                 display: 'flex', alignItems: 'center', gap: '0.5rem',
                 background: 'rgba(255,255,255,0.07)',
                 borderRadius: '8px', padding: '0.4rem 0.75rem',
@@ -533,67 +533,7 @@ const OverviewTab = ({ loading, analytics, centers, selectedCenter, centerStats 
         </div>
       )}
 
-      {/* Center Quick Stats Grid */}
-      {isAllCenters && centers.length > 0 && (
-        <div className="mgr-chart-card" style={{ marginTop: '1.5rem' }}>
-          <div className="mgr-chart-header">
-            <h3>Center Quick Stats</h3>
-            <p>Overview of all centers in selection</p>
-          </div>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-            gap: '1rem',
-            padding: '1rem'
-          }}>
-            {centers.slice(0, 6).map((center) => (
-              <div key={center.id} style={{
-                background: 'linear-gradient(135deg, #4c6fbe 0%, #5b7fd6 100%)',
-                padding: '1rem',
-                borderRadius: '12px',
-                border: '2px solid rgba(255, 255, 255, 0.2)',
-                transition: 'all 0.3s ease',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 8px 16px rgba(76, 111, 190, 0.4)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
-                  <div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>{center.name}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'rgba(255, 255, 255, 0.85)', marginTop: '0.25rem' }}>
-                      📍 {center.city}, {center.region}
-                    </div>
-                  </div>
-                  <span className={`status ${center.status === 'ACTIVE' ? 'active' : 'inactive'}`} style={{ fontSize: '0.75rem' }}>
-                    {center.status}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff' }}>{center._count?.staff || 0}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.85)' }}>👥 Staff</div>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ffffff' }}>{center.capacity || 0}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.85)' }}>📊 Capacity</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-          {centers.length > 6 && (
-            <div style={{ textAlign: 'center', padding: '1rem', color: '#6b7280', fontSize: '0.9rem' }}>
-              + {centers.length - 6} more centers
-            </div>
-          )}
-        </div>
-      )}
+
     </div>
   );
 };
@@ -609,6 +549,8 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
   const [editingCenter, setEditingCenter] = useState(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const [availableRegions, setAvailableRegions] = useState([]);
+  const [loadingRegions, setLoadingRegions] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -673,6 +615,7 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
       email: '',
       status: 'ACTIVE',
     });
+    loadRegions(); // Load regions when opening modal
     setShowModal(true);
   };
 
@@ -689,7 +632,24 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
       email: center.email || '',
       status: center.status || 'ACTIVE',
     });
+    loadRegions(); // Load regions when opening modal
     setShowModal(true);
+  };
+
+  // Load available regions from admin
+  const loadRegions = async () => {
+    try {
+      setLoadingRegions(true);
+      const regionsData = await regionalService.getRegions();
+      const regions = regionsData?.data || regionsData || [];
+      setAvailableRegions(regions);
+    } catch (error) {
+      console.error('Error loading regions:', error);
+      setFormError('Failed to load regions. Please try again.');
+      setAvailableRegions([]);
+    } finally {
+      setLoadingRegions(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -972,13 +932,42 @@ const CentersTab = ({ loading, centers, selectedCenter, onRefresh }) => {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <Input
-                  label="Region *"
-                  value={formData.region}
-                  onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-                  required
-                  placeholder="Addis Ababa"
-                />
+                <div className="form-group">
+                  <label>Region *</label>
+                  {loadingRegions ? (
+                    <div style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', color: '#6b7280' }}>
+                      Loading regions...
+                    </div>
+                  ) : (
+                    <select
+                      value={formData.region}
+                      onChange={(e) => setFormData({ ...formData, region: e.target.value })}
+                      className="form-input"
+                      required
+                      style={{
+                        padding: '0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '6px',
+                        fontSize: '0.875rem',
+                        backgroundColor: '#ffffff',
+                        color: '#374151',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <option value="">Select a region...</option>
+                      {availableRegions.map((region) => (
+                        <option key={region} value={region}>
+                          {region}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {availableRegions.length === 0 && !loadingRegions && (
+                    <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                      No regions available. Please contact an admin to create regions first.
+                    </div>
+                  )}
+                </div>
                 <Input
                   label="City *"
                   value={formData.city}
@@ -1575,7 +1564,7 @@ const PerformanceTab = ({ loading, analytics, trendsData, centers }) => {
               const barColor = pct >= 80 ? '#4ade80' : pct >= 50 ? '#60a5fa' : '#f59e0b';
               const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
               return (
-                <div key={c.name} style={{
+                <div key={`${c.name}-${c.region}-${i}`} style={{
                   display: 'flex', alignItems: 'center', gap: '0.75rem',
                   background: i < 3 ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)',
                   borderRadius: '12px', padding: '0.75rem 1rem',
