@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware";
 import * as UsersService from "../services/users.service";
+import { prisma } from "../config/prisma";
 
 /**
  * GET /api/v1/users
@@ -29,6 +30,7 @@ export const searchUsers = async (req: AuthRequest, res: Response): Promise<void
         phone: user.phone,
         role: user.role,
         isExternal: user.isExternal,
+        userId: user.userId,
       })),
     });
   } catch (error) {
@@ -42,7 +44,7 @@ export const searchUsers = async (req: AuthRequest, res: Response): Promise<void
 
 /**
  * GET /api/v1/users/:id
- * Get user by ID
+ * Get user by ID (UUID or employeeId)
  */
 export const getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -56,7 +58,29 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
       return;
     }
 
-    const user = await UsersService.getUserProfile(userId);
+    let user;
+    
+    // Check if it's a 4-digit userId format (0001, 0009, etc.)
+    if (/^\d{4}$/.test(userId)) {
+      // Search by userId
+      user = await prisma.user.findUnique({
+        where: { userId: userId },
+        select: {
+          id: true,
+          email: true,
+          fullName: true,
+          role: true,
+          phone: true,
+          dateOfBirth: true,
+          gender: true,
+          isExternal: true,
+          userId: true,
+        },
+      });
+    } else {
+      // Search by UUID
+      user = await UsersService.getUserProfile(userId);
+    }
 
     if (!user) {
       res.status(404).json({
@@ -77,6 +101,7 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
         dateOfBirth: user.dateOfBirth,
         gender: user.gender,
         isExternal: user.isExternal,
+        userId: user.userId,
       },
     });
   } catch (error) {
@@ -147,18 +172,42 @@ export const updateCurrentUser = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    const { name, dateOfBirth, gender, phone, emergencyContactName, emergencyContactPhone, profilePicture } = req.body;
+    const { name, fullName, dateOfBirth, gender, phone, emergencyContactName, emergencyContactPhone, profilePicture } = req.body;
+
+    console.log('Update user request received:', {
+      userId: req.user.userId,
+      name,
+      fullName,
+      dateOfBirth,
+      gender,
+      phone,
+      emergencyContactName,
+      emergencyContactPhone,
+      profilePictureLength: profilePicture ? profilePicture.length : 0,
+    });
 
     // Prepare update data
     const updateData: any = {};
     
-    if (name) updateData.fullName = name;
-    if (dateOfBirth) updateData.dateOfBirth = new Date(dateOfBirth);
-    if (gender) updateData.gender = gender;
-    if (phone) updateData.phone = phone;
-    if (emergencyContactName) updateData.emergencyContactName = emergencyContactName;
-    if (emergencyContactPhone) updateData.emergencyContactPhone = emergencyContactPhone;
-    if (profilePicture) updateData.profilePicture = profilePicture;
+    // Accept both 'name' and 'fullName' for compatibility
+    if (name !== undefined && name !== null && name !== '') updateData.fullName = name;
+    if (fullName !== undefined && fullName !== null && fullName !== '') updateData.fullName = fullName;
+    if (dateOfBirth !== undefined && dateOfBirth) {
+      const date = new Date(dateOfBirth);
+      if (!isNaN(date.getTime())) {
+        updateData.dateOfBirth = date;
+      }
+    }
+    if (gender !== undefined && gender !== null && gender !== '') updateData.gender = gender;
+    if (phone !== undefined && phone !== null && phone !== '') updateData.phone = phone;
+    if (emergencyContactName !== undefined && emergencyContactName !== null && emergencyContactName !== '') updateData.emergencyContactName = emergencyContactName;
+    if (emergencyContactPhone !== undefined && emergencyContactPhone !== null && emergencyContactPhone !== '') updateData.emergencyContactPhone = emergencyContactPhone;
+    if (profilePicture !== undefined) updateData.profilePicture = profilePicture;
+
+    console.log('Update data to be saved:', {
+      ...updateData,
+      profilePicture: updateData.profilePicture ? `[base64 image, ${updateData.profilePicture.length} chars]` : undefined,
+    });
 
     const updatedUser = await UsersService.updateUserProfile(req.user.userId, updateData);
 
@@ -167,16 +216,21 @@ export const updateCurrentUser = async (req: AuthRequest, res: Response): Promis
       data: {
         id: updatedUser.id,
         name: updatedUser.fullName,
+        fullName: updatedUser.fullName,
         email: updatedUser.email,
         phone: updatedUser.phone,
         profilePicture: updatedUser.profilePicture,
+        dateOfBirth: updatedUser.dateOfBirth,
+        gender: updatedUser.gender,
       },
     });
   } catch (error) {
     console.error("Update user error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     res.status(500).json({
       status: "error",
       message: "Failed to update user information",
+      details: errorMessage,
     });
   }
 };

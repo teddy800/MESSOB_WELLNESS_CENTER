@@ -193,75 +193,238 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
   };
 
   const getRiskLevel = (value, type) => {
-    let level = "normal";
+    let level = "Normal";
     let color = "green";
+    let category = "";
+    let description = "";
 
     if (type === "systolicBP") {
-      if (value < 120) level = "normal";
-      else if (value < 140) {
-        level = "caution";
-        color = "yellow";
-      } else {
-        level = "high";
+      if (value < 90) {
+        level = "Low";
+        color = "blue";
+        category = "Hypotension";
+        description = "Low blood pressure";
+      } else if (value >= 90 && value < 120) {
+        level = "Normal";
+        color = "green";
+        category = "Optimal";
+        description = "Normal blood pressure";
+      } else if (value >= 120 && value < 130) {
+        level = "Normal";
+        color = "green";
+        category = "Elevated";
+        description = "Slightly elevated";
+      } else if (value >= 130 && value < 140) {
+        level = "High";
+        color = "orange";
+        category = "Stage 1 Hypertension";
+        description = "High blood pressure";
+      } else if (value >= 140 && value < 180) {
+        level = "High";
         color = "red";
+        category = "Stage 2 Hypertension";
+        description = "Very high blood pressure";
+      } else if (value >= 180) {
+        level = "High";
+        color = "red";
+        category = "Hypertensive Crisis";
+        description = "Emergency - seek immediate care";
       }
     } else if (type === "diastolicBP") {
-      if (value < 80) level = "normal";
-      else if (value < 90) {
-        level = "caution";
-        color = "yellow";
-      } else {
-        level = "high";
+      if (value < 60) {
+        level = "Low";
+        color = "blue";
+        category = "Hypotension";
+        description = "Low blood pressure";
+      } else if (value >= 60 && value < 80) {
+        level = "Normal";
+        color = "green";
+        category = "Optimal";
+        description = "Normal blood pressure";
+      } else if (value >= 80 && value < 85) {
+        level = "Normal";
+        color = "green";
+        category = "Elevated";
+        description = "Slightly elevated";
+      } else if (value >= 85 && value < 90) {
+        level = "High";
+        color = "orange";
+        category = "Stage 1 Hypertension";
+        description = "High blood pressure";
+      } else if (value >= 90 && value < 120) {
+        level = "High";
         color = "red";
+        category = "Stage 2 Hypertension";
+        description = "Very high blood pressure";
+      } else if (value >= 120) {
+        level = "High";
+        color = "red";
+        category = "Hypertensive Crisis";
+        description = "Emergency - seek immediate care";
       }
     } else if (type === "heartRate") {
-      if (value >= 60 && value <= 100) level = "normal";
-      else if ((value >= 50 && value < 60) || (value > 100 && value <= 120)) {
-        level = "caution";
-        color = "yellow";
-      } else {
-        level = "high";
+      if (value < 40) {
+        level = "Low";
         color = "red";
+        category = "Severe Bradycardia";
+        description = "Dangerously low heart rate";
+      } else if (value >= 40 && value < 60) {
+        level = "Low";
+        color = "orange";
+        category = "Bradycardia";
+        description = "Low heart rate";
+      } else if (value >= 60 && value <= 100) {
+        level = "Normal";
+        color = "green";
+        category = "Normal Range";
+        description = "Normal resting heart rate";
+      } else if (value > 100 && value <= 120) {
+        level = "High";
+        color = "orange";
+        category = "Mild Tachycardia";
+        description = "Elevated heart rate";
+      } else if (value > 120 && value <= 150) {
+        level = "High";
+        color = "red";
+        category = "Moderate Tachycardia";
+        description = "High heart rate";
+      } else if (value > 150) {
+        level = "High";
+        color = "red";
+        category = "Severe Tachycardia";
+        description = "Dangerously high heart rate";
       }
     } else if (type === "bmi") {
-      if (value >= 18.5 && value < 25) level = "normal";
-      else if (value < 18.5 || (value >= 25 && value < 30)) {
-        level = "caution";
-        color = "yellow";
-      } else {
-        level = "high";
+      if (value < 16) {
+        level = "Low";
         color = "red";
+        category = "Severe Underweight";
+        description = "Severely underweight";
+      } else if (value >= 16 && value < 18.5) {
+        level = "Low";
+        color = "orange";
+        category = "Underweight";
+        description = "Below normal weight";
+      } else if (value >= 18.5 && value < 25) {
+        level = "Normal";
+        color = "green";
+        category = "Normal Weight";
+        description = "Healthy weight range";
+      } else if (value >= 25 && value < 30) {
+        level = "High";
+        color = "orange";
+        category = "Overweight";
+        description = "Above normal weight";
+      } else if (value >= 30 && value < 35) {
+        level = "High";
+        color = "red";
+        category = "Obesity Class I";
+        description = "Moderately obese";
+      } else if (value >= 35 && value < 40) {
+        level = "High";
+        color = "red";
+        category = "Obesity Class II";
+        description = "Severely obese";
+      } else if (value >= 40) {
+        level = "High";
+        color = "red";
+        category = "Obesity Class III";
+        description = "Morbidly obese";
       }
     } else if (type === "glucose") {
-      if (value < 100) level = "normal";
-      else if (value < 126) {
-        level = "caution";
-        color = "yellow";
-      } else {
-        level = "high";
+      if (value < 70) {
+        level = "Low";
         color = "red";
+        category = "Hypoglycemia";
+        description = "Dangerously low blood sugar";
+      } else if (value >= 70 && value < 100) {
+        level = "Normal";
+        color = "green";
+        category = "Normal Fasting";
+        description = "Normal blood glucose";
+      } else if (value >= 100 && value < 126) {
+        level = "High";
+        color = "orange";
+        category = "Prediabetes";
+        description = "Elevated blood glucose";
+      } else if (value >= 126 && value < 200) {
+        level = "High";
+        color = "red";
+        category = "Diabetes";
+        description = "Diabetic range";
+      } else if (value >= 200) {
+        level = "High";
+        color = "red";
+        category = "Severe Hyperglycemia";
+        description = "Dangerously high blood sugar";
       }
     } else if (type === "temperature") {
-      if (value >= 36.5 && value <= 37.5) level = "normal";
-      else if ((value >= 35 && value < 36.5) || (value > 37.5 && value <= 38.5)) {
-        level = "caution";
-        color = "yellow";
-      } else {
-        level = "high";
+      if (value < 35) {
+        level = "Low";
         color = "red";
+        category = "Severe Hypothermia";
+        description = "Dangerously low temperature";
+      } else if (value >= 35 && value < 36.1) {
+        level = "Low";
+        color = "orange";
+        category = "Mild Hypothermia";
+        description = "Below normal temperature";
+      } else if (value >= 36.1 && value <= 37.2) {
+        level = "Normal";
+        color = "green";
+        category = "Normal Range";
+        description = "Normal body temperature";
+      } else if (value > 37.2 && value <= 38.0) {
+        level = "High";
+        color = "orange";
+        category = "Low-grade Fever";
+        description = "Slightly elevated temperature";
+      } else if (value > 38.0 && value <= 39.0) {
+        level = "High";
+        color = "red";
+        category = "Moderate Fever";
+        description = "Fever present";
+      } else if (value > 39.0 && value <= 41.0) {
+        level = "High";
+        color = "red";
+        category = "High Fever";
+        description = "High fever - monitor closely";
+      } else if (value > 41.0) {
+        level = "High";
+        color = "red";
+        category = "Hyperthermia";
+        description = "Dangerously high temperature";
       }
     } else if (type === "oxygenSaturation") {
-      if (value >= 95) level = "normal";
-      else if (value >= 90) {
-        level = "caution";
-        color = "yellow";
-      } else {
-        level = "high";
+      if (value < 85) {
+        level = "Low";
         color = "red";
+        category = "Severe Hypoxemia";
+        description = "Critically low oxygen";
+      } else if (value >= 85 && value < 90) {
+        level = "Low";
+        color = "red";
+        category = "Moderate Hypoxemia";
+        description = "Low oxygen saturation";
+      } else if (value >= 90 && value < 95) {
+        level = "Low";
+        color = "orange";
+        category = "Mild Hypoxemia";
+        description = "Below normal oxygen";
+      } else if (value >= 95 && value <= 100) {
+        level = "Normal";
+        color = "green";
+        category = "Normal Range";
+        description = "Normal oxygen saturation";
+      } else if (value > 100) {
+        level = "High";
+        color = "orange";
+        category = "Hyperoxemia";
+        description = "Above normal range";
       }
     }
 
-    return { level, color };
+    return { level, color, category, description };
   };
 
   const handleChange = (e) => {
@@ -378,7 +541,7 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
             <div className="selected-customer">
               <div className="customer-info">
                 <p><strong>{selectedCustomer.fullName}</strong></p>
-                <p>ID: {selectedCustomer.id}</p>
+                <p>ID: {selectedCustomer.userId || selectedCustomer.id}</p>
                 <p>Email: {selectedCustomer.email}</p>
               </div>
               <button
@@ -464,6 +627,9 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
                             <div className="customer-info-inline">
                               <p className="customer-name-inline">{customer.fullName}</p>
                               <p className="customer-details-inline">
+                                ID: {customer.userId || customer.id}
+                              </p>
+                              <p className="customer-details-inline">
                                 Email: {customer.email}
                               </p>
                               {customer.phone && (
@@ -502,9 +668,10 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
                 className="form-input"
               />
               {alerts.systolicBP && (
-                <span className={`risk-alert risk-${alerts.systolicBP.color}`}>
-                  {alerts.systolicBP.level}
-                </span>
+                <div className={`risk-alert risk-${alerts.systolicBP.color}`} title={alerts.systolicBP.description}>
+                  <span className="risk-level">{alerts.systolicBP.level}</span>
+                  <span className="risk-category">{alerts.systolicBP.category}</span>
+                </div>
               )}
             </div>
           </div>
@@ -522,9 +689,10 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
                 className="form-input"
               />
               {alerts.diastolicBP && (
-                <span className={`risk-alert risk-${alerts.diastolicBP.color}`}>
-                  {alerts.diastolicBP.level}
-                </span>
+                <div className={`risk-alert risk-${alerts.diastolicBP.color}`} title={alerts.diastolicBP.description}>
+                  <span className="risk-level">{alerts.diastolicBP.level}</span>
+                  <span className="risk-category">{alerts.diastolicBP.category}</span>
+                </div>
               )}
             </div>
           </div>
@@ -542,9 +710,10 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
                 className="form-input"
               />
               {alerts.heartRate && (
-                <span className={`risk-alert risk-${alerts.heartRate.color}`}>
-                  {alerts.heartRate.level}
-                </span>
+                <div className={`risk-alert risk-${alerts.heartRate.color}`} title={alerts.heartRate.description}>
+                  <span className="risk-level">{alerts.heartRate.level}</span>
+                  <span className="risk-category">{alerts.heartRate.category}</span>
+                </div>
               )}
             </div>
           </div>
@@ -563,9 +732,10 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
                 className="form-input"
               />
               {alerts.bmi && (
-                <span className={`risk-alert risk-${alerts.bmi.color}`}>
-                  {alerts.bmi.level}
-                </span>
+                <div className={`risk-alert risk-${alerts.bmi.color}`} title={alerts.bmi.description}>
+                  <span className="risk-level">{alerts.bmi.level}</span>
+                  <span className="risk-category">{alerts.bmi.category}</span>
+                </div>
               )}
             </div>
           </div>
@@ -583,9 +753,10 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
                 className="form-input"
               />
               {alerts.glucose && (
-                <span className={`risk-alert risk-${alerts.glucose.color}`}>
-                  {alerts.glucose.level}
-                </span>
+                <div className={`risk-alert risk-${alerts.glucose.color}`} title={alerts.glucose.description}>
+                  <span className="risk-level">{alerts.glucose.level}</span>
+                  <span className="risk-category">{alerts.glucose.category}</span>
+                </div>
               )}
             </div>
           </div>
@@ -604,9 +775,10 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
                 className="form-input"
               />
               {alerts.temperature && (
-                <span className={`risk-alert risk-${alerts.temperature.color}`}>
-                  {alerts.temperature.level}
-                </span>
+                <div className={`risk-alert risk-${alerts.temperature.color}`} title={alerts.temperature.description}>
+                  <span className="risk-level">{alerts.temperature.level}</span>
+                  <span className="risk-category">{alerts.temperature.category}</span>
+                </div>
               )}
             </div>
           </div>
@@ -624,11 +796,10 @@ function VitalsEntry({ customerId, appointmentId, onSuccess, onNavigateToWellnes
                 className="form-input"
               />
               {alerts.oxygenSaturation && (
-                <span
-                  className={`risk-alert risk-${alerts.oxygenSaturation.color}`}
-                >
-                  {alerts.oxygenSaturation.level}
-                </span>
+                <div className={`risk-alert risk-${alerts.oxygenSaturation.color}`} title={alerts.oxygenSaturation.description}>
+                  <span className="risk-level">{alerts.oxygenSaturation.level}</span>
+                  <span className="risk-category">{alerts.oxygenSaturation.category}</span>
+                </div>
               )}
             </div>
           </div>

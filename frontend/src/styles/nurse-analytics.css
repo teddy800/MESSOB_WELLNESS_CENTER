@@ -268,3 +268,135 @@
     width: 100%;
   }
 }
+
+/* Health Conditions Bar Chart Hover Effects */
+.condition-bar-container:hover .condition-tooltip {
+  opacity: 1 !important;
+}
+
+.condition-bar-container:hover .condition-bar {
+  filter: brightness(1.1);
+  transform: scale(1.02);
+}
+
+.condition-bar {
+  transition: all 0.3s ease;
+}
+
+.condition-tooltip {
+  transition: opacity 0.2s ease;
+}
+
+/* Trend Chart Styling */
+.trend-chart-card {
+  background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.trend-chart-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.trend-chart-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.trend-chart-title::before {
+  content: '📈';
+  font-size: 1.5rem;
+}
+
+/* Delta Cards Styling */
+.delta-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.delta-card {
+  padding: 1rem;
+  background: #ffffff;
+  border-radius: 6px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.delta-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Monthly Comparison Table Styling */
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.comparison-table thead tr {
+  background: linear-gradient(135deg, #284394 0%, #1e3a8a 100%);
+  color: #ffffff;
+}
+
+.comparison-table th {
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.comparison-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.comparison-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.comparison-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.trend-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.trend-badge:hover {
+  transform: scale(1.1);
+}
+
+.trend-up {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.trend-down {
+  background-color: #d1fae5;
+  color: #10b981;
+}
+
+.trend-stable {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+/* Highlighted point styling */
+.chart-highlight-label {
+  font-weight: 700 !important;
+  color: #f59e0b !important;
+}

@@ -95,7 +95,7 @@ function CustomerSearch({ onSelectCustomer }) {
                 <div className="customer-info">
                   <p className="customer-name">{customer.fullName}</p>
                   <p className="customer-details">
-                    ID: {customer.id}
+                    ID: {customer.userId || customer.id}
                   </p>
                   <p className="customer-details">
                     Email: {customer.email}

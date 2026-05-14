@@ -26,6 +26,26 @@ function Dashboard() {
     setActiveTab("appointments");
   }, [searchParams]);
 
+  // Listen for profile click from dropdown
+  useEffect(() => {
+    const handleProfileClick = () => {
+      setActiveTab('profile');
+    };
+    
+    window.addEventListener('profileClicked', handleProfileClick);
+    return () => window.removeEventListener('profileClicked', handleProfileClick);
+  }, []);
+
+  // Listen for navigate to appointments event
+  useEffect(() => {
+    const handleNavigateToAppointments = () => {
+      setActiveTab('appointments');
+    };
+    
+    window.addEventListener('navigateToAppointments', handleNavigateToAppointments);
+    return () => window.removeEventListener('navigateToAppointments', handleNavigateToAppointments);
+  }, []);
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">

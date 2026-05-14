@@ -1,0 +1,17 @@
+/* Tooltip Fix - Force Override */
+.recharts-tooltip-wrapper {
+  cursor: pointer !important;
+  z-index: 10000 !important;
+}
+
+.recharts-default-tooltip {
+  background: #1f2937 !important;
+  border: 2px solid #284394 !important;
+  color: #ffffff !important;
+}
+
+.recharts-tooltip-label,
+.recharts-tooltip-item {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}

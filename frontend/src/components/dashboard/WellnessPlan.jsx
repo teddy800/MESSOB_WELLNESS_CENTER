@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -52,6 +53,7 @@ function normalizePlan(plan) {
 
 function WellnessPlan() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -104,9 +106,22 @@ function WellnessPlan() {
     return Math.round((completed / plan.goals.length) * 100);
   };
 
+  const handleBackToHealthJourney = () => {
+    navigate('/dashboard?tab=health');
+  };
+
   return (
     <div className="card wellness-plan">
-      <h2>🎯 Wellness Plans</h2>
+      <div className="wellness-plan-header">
+        <h2>🎯 Wellness Plans</h2>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={handleBackToHealthJourney}
+        >
+          ← Back to Health Journey
+        </button>
+      </div>
 
       {error && <div className="alert alert-error">{error}</div>}
 

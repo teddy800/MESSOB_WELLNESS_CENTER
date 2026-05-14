@@ -22,11 +22,15 @@ export const AuthProvider = ({ children }) => {
       const token = authService.getToken();
       if (token) {
         try {
+          // Set the auth header before making the request
+          authService.setAuthHeader();
           const userData = await authService.getCurrentUser();
           setUser(userData);
         } catch (err) {
           // Token is invalid or expired
+          console.log('Failed to get current user, clearing auth data');
           authService.logout();
+          setUser(null);
         }
       }
       setLoading(false);

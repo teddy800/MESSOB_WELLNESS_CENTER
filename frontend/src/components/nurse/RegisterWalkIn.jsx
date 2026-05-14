@@ -215,7 +215,7 @@ function RegisterWalkIn({ onSuccess }) {
                       📧 {patient.email || 'N/A'} | 📱 {patient.phone}
                     </p>
                     <p style={{ margin: '0.25rem 0', fontSize: '0.875rem', color: '#6B7280' }}>
-                      ID: {patient.id}
+                      ID: {patient.userId || patient.id}
                     </p>
                     <span style={{
                       display: 'inline-block',

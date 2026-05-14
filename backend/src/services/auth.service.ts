@@ -3,6 +3,9 @@ import * as jwt from "jsonwebtoken";
 import { UserRole, Gender } from "../generated/prisma";
 import { env } from "../config/env";
 import { prisma } from "../config/prisma";
+import { NotificationService } from "./notifications.service";
+import SettingsService from "./settings.service";
+import { generateNextDisplayId } from "../utils/sequentialId";
 
 // Constants
 const SALT_ROUNDS = 12;
@@ -34,6 +37,8 @@ export interface AuthResponse {
     fullName: string;
     role: UserRole;
     isActive: boolean;
+    profilePicture?: string | null;
+    userId?: string;
   };
   token: string;
 }
@@ -119,6 +124,11 @@ export class AuthService {
       throw new Error("Full name must be at least 2 characters long");
     }
 
+    // Require centerId for STAFF role registration
+    if (input.role === UserRole.STAFF && !input.centerId) {
+      throw new Error("Center ID is required for staff registration");
+    }
+
     // Step B: Check for Duplicates
     const existingUser = await prisma.user.findUnique({
       where: { email: input.email.toLowerCase() },
@@ -133,19 +143,27 @@ export class AuthService {
 
     // Step D: Atomic Transaction - Create User and HealthProfile
     const user = await prisma.$transaction(async (tx) => {
+      // Generate sequential display ID
+      const displayId = await generateNextDisplayId();
+      
       // Create user
+      const role = input.role || UserRole.STAFF;
       const newUser = await tx.user.create({
         data: {
           email: input.email.toLowerCase(),
           password: hashedPassword,
           fullName: input.fullName.trim(),
-          role: input.role || UserRole.STAFF,
+          role,
+          userId: displayId, // Sequential display ID
           centerId: input.centerId,
           dateOfBirth: input.dateOfBirth,
           gender: input.gender,
           phone: input.phone,
           emergencyContactName: input.emergencyContactName,
           emergencyContactPhone: input.emergencyContactPhone,
+          // Only external patients are unverified (need email verification)
+          // STAFF and other roles are verified by default
+          isVerified: role !== UserRole.EXTERNAL_PATIENT,
         },
       });
 
@@ -174,6 +192,28 @@ export class AuthService {
       return newUser;
     });
 
+    // Create notification for system admin about new registration
+    try {
+      const admins = await prisma.user.findMany({
+        where: { role: UserRole.SYSTEM_ADMIN },
+        select: { id: true },
+      });
+
+      for (const admin of admins) {
+        await NotificationService.createNotification(
+          admin.id,
+          "USER_REGISTRATION",
+          "HIGH",
+          "New User Registration",
+          `New ${input.role} registered: ${input.fullName} (${input.email})`,
+          user.id
+        );
+      }
+    } catch (notificationError) {
+      // Log but don't fail registration if notification creation fails
+      console.warn("Failed to create registration notification:", notificationError);
+    }
+
     // Generate JWT token
     const token = this.generateToken(user.id, user.role);
 
@@ -191,6 +231,7 @@ export class AuthService {
         fullName: user.fullName,
         role: user.role,
         isActive: user.isActive,
+        userId: user.userId, // Include display ID
       },
       token,
     };
@@ -211,6 +252,8 @@ export class AuthService {
       throw new Error("Invalid email or password");
     }
 
+    // Account lock check removed for now
+
     if (!user.isActive) {
       throw new Error("Account is deactivated. Please contact support.");
     }
@@ -228,16 +271,6 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(input.password, user.password);
 
     if (!isPasswordValid) {
-      // Log failed login attempt
-      await this.createAuditLog({
-        userId: user.id,
-        action: "LOGIN_FAILED",
-        resource: "USER",
-        details: { reason: "invalid_password" },
-        ipAddress: auditContext?.ipAddress,
-        userAgent: auditContext?.userAgent,
-      });
-
       throw new Error("Invalid email or password");
     }
 
@@ -248,7 +281,9 @@ export class AuthService {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: user.id },
-        data: { lastLoginAt: new Date() },
+        data: { 
+          lastLoginAt: new Date(),
+        },
       }),
       prisma.auditLog.create({
         data: {
@@ -279,6 +314,8 @@ export class AuthService {
         fullName: user.fullName,
         role: user.role,
         isActive: user.isActive,
+        profilePicture: user.profilePicture,
+        userId: user.userId, // Include display ID
       },
       token,
     };
@@ -331,6 +368,53 @@ export class AuthService {
   }
 
   /**
+   * Change user password
+   */
+  static async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    // Get user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Verify current password
+    if (!user.password) {
+      throw new Error("User does not have a password set");
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new Error("Current password is incorrect");
+    }
+
+    // Validate new password
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.valid) {
+      throw new Error(passwordValidation.message || "Invalid password");
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    // Create audit log
+    await this.createAuditLog({
+      userId,
+      action: "PASSWORD_CHANGED",
+      resource: "USER",
+      details: { method: "self_service" },
+    });
+  }
+
+  /**
    * Get user by ID (for middleware)
    */
   static async getUserById(userId: string) {
@@ -346,6 +430,8 @@ export class AuthService {
         dateOfBirth: true,
         gender: true,
         phone: true,
+        profilePicture: true,
+        userId: true, // Include display ID
       },
     });
   }

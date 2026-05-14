@@ -8,11 +8,19 @@ import { env } from "./env";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient; pool: Pool };
 
-// Create PostgreSQL connection pool with explicit configuration
+// Use discrete credentials for node-pg (avoids URL-encoding bugs and drift vs DB_*).
+// Prisma Migrate still uses DATABASE_URL from prisma.config.ts; env.ts ensures they match.
 const pool =
   globalForPrisma.pool ||
   new Pool({
-    connectionString: env.DATABASE_URL,
+    host: env.DB_HOST,
+    port: env.DB_PORT,
+    user: env.DB_USER,
+    password: env.DB_PASS,
+    database: env.DB_NAME,
+    max: Number.parseInt(process.env.DATABASE_POOL_MAX || "10", 10) || 10,
+    connectionTimeoutMillis:
+      Number.parseInt(process.env.DATABASE_POOL_TIMEOUT || "10000", 10) || 10000,
   });
 
 const adapter = new PrismaPg(pool);

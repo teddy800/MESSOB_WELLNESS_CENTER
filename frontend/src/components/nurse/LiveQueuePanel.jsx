@@ -66,8 +66,7 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
       item.customerId?.includes(searchTerm);
     
     if (filter === 'all') {
-      // Show all statuses except COMPLETED by default
-      return matchesSearch && item.status !== 'COMPLETED';
+      return matchesSearch;
     }
     return matchesSearch && item.status === filter;
   });
@@ -78,6 +77,7 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
       IN_PROGRESS: 'status-in-progress',
       IN_SERVICE: 'status-in-service',
       COMPLETED: 'status-completed',
+      NO_SHOW: 'status-no-show',
     };
     return colors[status] || 'status-waiting';
   };
@@ -135,7 +135,7 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
             className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            All ({queue.filter(q => q.status !== 'COMPLETED').length})
+            All ({queue.length})
           </button>
           <button 
             className={`filter-btn ${filter === 'WAITING' ? 'active' : ''}`}
@@ -161,6 +161,12 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
           >
             Completed ({queue.filter(q => q.status === 'COMPLETED').length})
           </button>
+          <button 
+            className={`filter-btn ${filter === 'NO_SHOW' ? 'active' : ''}`}
+            onClick={() => setFilter('NO_SHOW')}
+          >
+            No Show ({queue.filter(q => q.status === 'NO_SHOW').length})
+          </button>
         </div>
       </div>
 
@@ -176,7 +182,7 @@ function LiveQueuePanel({ refreshTrigger, onNavigateToHistory }) {
                 <span className="queue-number">#{idx + 1}</span>
                 <span className="customer-name">{item.customerName}</span>
                 <span className="customer-id" style={{ fontSize: '0.85rem', color: '#666' }}>
-                  ID: {item.customerId?.substring(0, 8)}...
+                  ID: {item.userId || item.customerId?.substring(0, 8) + '...'}
                 </span>
                 <span className="appointment-type">{getAppointmentType(item.type)}</span>
                 <span className={`status-badge ${getStatusColor(item.status)}`}>

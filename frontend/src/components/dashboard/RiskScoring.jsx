@@ -32,8 +32,18 @@ function RiskScoring() {
 
   const calculateLocalRiskScores = async () => {
     try {
-      const response = await api.get(`/api/v1/vitals`);
-      const vitals = response.data.data;
+      const response = await api.get(`/api/v1/vitals/history/${user.id}?limit=1`);
+      const data = response.data.data;
+      
+      // Handle different response formats
+      let vitals = [];
+      if (Array.isArray(data)) {
+        vitals = data;
+      } else if (data?.records && Array.isArray(data.records)) {
+        vitals = data.records;
+      } else if (data?.vitals && Array.isArray(data.vitals)) {
+        vitals = data.vitals;
+      }
       
       if (!vitals || vitals.length === 0) {
         setRiskScores(null);

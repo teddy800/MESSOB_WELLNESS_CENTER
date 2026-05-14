@@ -60,6 +60,7 @@ function UsersList({ filters, onEdit, onDelete, onCreateClick }) {
       <table className="data-table">
         <thead>
           <tr>
+            <th>ID</th>
             <th>Name</th>
             <th>Email</th>
             <th>Role</th>
@@ -71,11 +72,12 @@ function UsersList({ filters, onEdit, onDelete, onCreateClick }) {
         <tbody>
           {users.length === 0 ? (
             <tr>
-              <td colSpan="6" className="table-empty">No users found</td>
+              <td colSpan="7" className="table-empty">No users found</td>
             </tr>
           ) : (
             users.map((user) => (
               <tr key={user.id}>
+                <td className="cell-id">{user.userId || "N/A"}</td>
                 <td className="cell-name">{user.fullName}</td>
                 <td className="cell-email">{user.email || "N/A"}</td>
                 <td className="cell-role">

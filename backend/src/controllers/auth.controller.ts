@@ -16,6 +16,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       dateOfBirth,
       gender,
       phone,
+      centerId,
       emergencyContactName,
       emergencyContactPhone,
     } = req.body;
@@ -44,6 +45,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       password,
       fullName,
       role: UserRole.STAFF,
+      centerId,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
       gender,
       phone,
@@ -66,6 +68,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       data: result,
     });
   } catch (error) {
+    console.error("Registration error:", error);
+    
     if (error instanceof Error) {
       if (
         error.message.includes("email") ||
@@ -80,7 +84,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       }
     }
 
-    console.error("Registration error:", error);
     res.status(500).json({
       status: "error",
       message: "Registration failed. Please try again later.",
@@ -138,7 +141,7 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
     
     // SYSTEM_ADMIN can create any role
     if (creatorRole === UserRole.SYSTEM_ADMIN) {
-      // Can create any role
+      // Can create any role - centerId is optional
     }
     // MANAGER can only create NURSE_OFFICER and STAFF
     else if (creatorRole === UserRole.MANAGER) {
@@ -268,7 +271,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     if (error instanceof Error) {
       // Handle known errors
-      if (error.message.includes("Invalid") || error.message.includes("deactivated")) {
+      if (error.message.includes("Invalid") || error.message.includes("deactivated") || error.message.includes("locked") || error.message.includes("cannot login")) {
         res.status(401).json({
           status: "error",
           message: error.message,
@@ -311,7 +314,16 @@ export const getCurrentUser = async (req: AuthRequest, res: Response): Promise<v
 
     res.status(200).json({
       status: "success",
-      data: { user },
+      data: { 
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          profilePicture: user.profilePicture,
+        }
+      },
     });
   } catch (error) {
     console.error("Get current user error:", error);
@@ -391,6 +403,62 @@ export const verifyToken = async (req: Request, res: Response): Promise<void> =>
     res.status(401).json({
       status: "error",
       message: "Invalid or expired token",
+    });
+  }
+};
+
+/**
+ * POST /api/v1/auth/change-password
+ * Change user password (requires authentication)
+ */
+export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        status: "error",
+        message: "Authentication required",
+      });
+      return;
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    // Validate required fields
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({
+        status: "error",
+        message: "Current password and new password are required",
+      });
+      return;
+    }
+
+    // Change password
+    await AuthService.changePassword(req.user.userId, currentPassword, newPassword);
+
+    res.status(200).json({
+      status: "success",
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (
+        error.message.includes("incorrect") ||
+        error.message.includes("not found") ||
+        error.message.includes("Invalid password") ||
+        error.message.includes("does not have a password")
+      ) {
+        res.status(400).json({
+          status: "error",
+          message: error.message,
+        });
+        return;
+      }
+    }
+
+    console.error("Change password error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to change password",
     });
   }
 };
