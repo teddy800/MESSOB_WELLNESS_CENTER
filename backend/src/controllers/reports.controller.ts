@@ -84,7 +84,7 @@ const generateHealthReport = async (patientId: string | string[], nurseId: strin
     
     doc.roundedRect(50, y, 495, 60, 5).lineWidth(1).stroke('#E5E7EB');
     doc.fontSize(9).font('Helvetica').fillColor('#6B7280').text('Patient ID', 60, y + 10);
-    doc.fontSize(10).font('Helvetica').fillColor('#1F2937').text(patient.id, 60, y + 28, { width: 475 });
+    doc.fontSize(10).font('Helvetica').fillColor('#1F2937').text(patient.userId, 60, y + 28, { width: 475 });
     
     y += 85;
 

@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma";
 import { UserRole, Gender } from "../generated/prisma";
+import { generateNextDisplayId } from "../utils/sequentialId";
 
 interface CreateExternalPatientInput {
   fullName: string;
@@ -26,6 +27,9 @@ export async function createExternalPatient(input: CreateExternalPatientInput) {
       throw new Error(`Invalid gender value: ${input.gender}. Must be one of: ${validGenders.join(', ')}`);
     }
 
+    // Generate sequential userId for external patients
+    const userId = await generateNextDisplayId();
+
     const patient = await prisma.user.create({
       data: {
         fullName: input.fullName,
@@ -36,7 +40,7 @@ export async function createExternalPatient(input: CreateExternalPatientInput) {
         role: UserRole.EXTERNAL_PATIENT,
         isExternal: true,
         canLogin: false,
-        employeeId: null,
+        userId: userId,
         centerId: null,
         password: null,
         isActive: true,

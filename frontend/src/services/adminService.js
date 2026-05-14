@@ -25,8 +25,10 @@ export { api };
 
 export const adminService = {
   // Dashboard
-  getDashboardMetrics: async () => {
-    const response = await api.get("/admin/dashboard/metrics");
+  getDashboardMetrics: async (timePeriod) => {
+    const params = new URLSearchParams();
+    if (timePeriod) params.append("timePeriod", timePeriod);
+    const response = await api.get(`/admin/dashboard/metrics?${params}`);
     return response.data.data;
   },
 

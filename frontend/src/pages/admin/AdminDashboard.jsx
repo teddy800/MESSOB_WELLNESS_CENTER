@@ -8,7 +8,6 @@ import CenterManagement from "./CenterManagement";
 import AppointmentManagement from "./AppointmentManagement";
 import HealthData from "./HealthData";
 import FeedbackQuality from "./FeedbackQuality";
-import Analytics from "./Analytics";
 import AuditLogs from "./AuditLogs";
 import SystemSettings from "./SystemSettings";
 import AdminProfile from "./AdminProfile";
@@ -18,7 +17,6 @@ import "../../styles/admin-filters.css";
 import "../../styles/admin-tables.css";
 import "../../styles/admin-health.css";
 import "../../styles/admin-feedback.css";
-import "../../styles/admin-analytics.css";
 import "../../styles/admin-audit.css";
 import "../../styles/admin-settings.css";
 import "../../styles/admin-modals.css";
@@ -49,8 +47,6 @@ function AdminDashboard() {
         return <HealthData />;
       case "feedback":
         return <FeedbackQuality />;
-      case "analytics":
-        return <Analytics />;
       case "audit":
         return <AuditLogs />;
       case "settings":

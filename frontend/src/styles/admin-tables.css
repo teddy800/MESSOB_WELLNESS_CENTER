@@ -342,3 +342,52 @@
     font-size: 0.75rem;
   }
 }
+
+
+/* Cancel Button Styles */
+.btn-icon.cancel {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  margin: 0 0.25rem;
+}
+
+.btn-icon.cancel:hover {
+  background: #ff5252;
+  transform: scale(1.05);
+}
+
+.btn-icon.cancel:active {
+  transform: scale(0.95);
+}
+
+
+/* Cancel Button Styles */
+.btn-icon.cancel {
+  background: #ef4444;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-icon.cancel:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-icon.cancel:active {
+  transform: translateY(0);
+}
+
+/* Modal auto-scroll enhancement */
+.modal-overlay {
+  scroll-behavior: smooth;
+}

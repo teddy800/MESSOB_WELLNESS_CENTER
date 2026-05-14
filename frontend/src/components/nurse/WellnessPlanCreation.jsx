@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import WellnessPlanTemplates from './WellnessPlanTemplates';
+import { fetchPatientConditions } from '../../services/conditionsService';
 
 function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQueue, onStatusChanged }) {
   const [loading, setLoading] = useState(false);
@@ -18,6 +19,10 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
   const [suggestedPlan, setSuggestedPlan] = useState(null);
   const [createdPlanId, setCreatedPlanId] = useState(null);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [conditions, setConditions] = useState([]);
+  const [conditionsAutoFilled, setConditionsAutoFilled] = useState(false);
+  const [conditionsLoading, setConditionsLoading] = useState(false);
+  const [newCondition, setNewCondition] = useState('');
   const successRef = React.useRef(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -54,9 +59,10 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
   }, []);
 
   useEffect(() => {
-    // Fetch latest vitals when customer is selected
+    // Fetch latest vitals and conditions when customer is selected
     if (selectedCustomerId && !latestVitals) {
       fetchLatestVitals();
+      fetchConditions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCustomerId]);
@@ -80,6 +86,21 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
       console.error('Failed to fetch vitals:', err);
     } finally {
       setVitalsLoading(false);
+    }
+  };
+
+  const fetchConditions = async () => {
+    try {
+      setConditionsLoading(true);
+      const fetchedConditions = await fetchPatientConditions(selectedCustomerId);
+      if (fetchedConditions && fetchedConditions.length > 0) {
+        setConditions(fetchedConditions);
+        setConditionsAutoFilled(true);
+      }
+    } catch (err) {
+      console.error('Failed to fetch conditions:', err);
+    } finally {
+      setConditionsLoading(false);
     }
   };
 
@@ -115,11 +136,15 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
     setSearchResults([]);
     setSearchTerm('');
     setError('');
+    setConditions([]);
+    setConditionsAutoFilled(false);
   };
 
   const handleClearCustomer = () => {
     setSelectedCustomerId('');
     setSelectedCustomerName('');
+    setConditions([]);
+    setConditionsAutoFilled(false);
   };
 
   const handleTemplateSelect = (template) => {
@@ -163,6 +188,7 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
         stressManagementAdvice: formData.stressManagementAdvice,
         goals: goalsArray,
         duration: parseInt(formData.duration),
+        conditions: conditions, // Include conditions in submission
         isActive: true,
       });
 
@@ -282,6 +308,8 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
           setSelectedCustomerId('');
           setSelectedCustomerName('');
           setCreatedPlanId(null);
+          setConditions([]);
+          setConditionsAutoFilled(false);
           setFormData({
             title: '',
             nutritionRecommendations: '',
@@ -298,6 +326,17 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAddCondition = () => {
+    if (newCondition && !conditions.includes(newCondition)) {
+      setConditions([...conditions, newCondition]);
+      setNewCondition('');
+    }
+  };
+
+  const handleRemoveCondition = (index) => {
+    setConditions(conditions.filter((_, i) => i !== index));
   };
 
   return (
@@ -443,6 +482,123 @@ function WellnessPlanCreation({ customerId, onSuccess, appointmentId, onBackToQu
       {vitalsLoading && (
         <div style={{ padding: '1rem', textAlign: 'center', color: '#6B7280' }}>
           Loading vitals...
+        </div>
+      )}
+
+      {/* Health Conditions Section */}
+      {selectedCustomerId && (
+        <div style={{
+          marginBottom: '1.5rem',
+          padding: '1rem',
+          backgroundColor: '#FEF3C7',
+          border: '2px solid #F59E0B',
+          borderRadius: '8px',
+        }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', color: '#92400E', fontSize: '1rem', fontWeight: 600 }}>
+            🏥 Health Conditions
+          </h4>
+          
+          {conditionsAutoFilled && (
+            <p style={{ margin: '0 0 1rem 0', fontSize: '0.85rem', color: '#92400E', backgroundColor: '#FDE68A', padding: '0.5rem', borderRadius: '4px' }}>
+              ✓ Auto-filled from latest vitals. You can edit these conditions.
+            </p>
+          )}
+          
+          {conditionsLoading ? (
+            <p style={{ margin: 0, color: '#92400E' }}>Loading conditions...</p>
+          ) : (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
+                {conditions.length === 0 ? (
+                  <p style={{ margin: 0, color: '#92400E', fontSize: '0.9rem' }}>
+                    No conditions detected. Add conditions below.
+                  </p>
+                ) : (
+                  conditions.map((condition, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 0.75rem',
+                        backgroundColor: '#FFFFFF',
+                        border: '1px solid #F59E0B',
+                        borderRadius: '6px',
+                        fontSize: '0.9rem',
+                        color: '#92400E',
+                        fontWeight: 500,
+                      }}
+                    >
+                      <span>{condition.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                      <button
+                        type="button"
+                        onClick={() => setConditions(conditions.filter((_, i) => i !== index))}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: '#DC2626',
+                          fontSize: '1rem',
+                          padding: 0,
+                          lineHeight: 1,
+                        }}
+                        title="Remove condition"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <select
+                  value={newCondition}
+                  onChange={(e) => setNewCondition(e.target.value)}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem',
+                    border: '1px solid #D97706',
+                    borderRadius: '4px',
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  <option value="">Select a condition to add...</option>
+                  <option value="hypertension">Hypertension</option>
+                  <option value="obesity">Obesity</option>
+                  <option value="overweight">Overweight</option>
+                  <option value="diabetes">Diabetes</option>
+                  <option value="heart_issues">Heart Issues</option>
+                  <option value="respiratory_issues">Respiratory Issues</option>
+                  <option value="normal">Normal</option>
+                  <option value="other">Other</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (newCondition && !conditions.includes(newCondition)) {
+                      setConditions([...conditions, newCondition]);
+                      setNewCondition('');
+                    }
+                  }}
+                  disabled={!newCondition || conditions.includes(newCondition)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: newCondition && !conditions.includes(newCondition) ? '#F59E0B' : '#D1D5DB',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: newCondition && !conditions.includes(newCondition) ? 'pointer' : 'not-allowed',
+                    fontSize: '0.9rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  + Add
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 

@@ -85,21 +85,9 @@ function AdminHeader({
             color: 'white'
           }}>
             <div style={{ 
-              fontSize: '1.1rem', 
-              fontWeight: 700, 
-              fontVariantNumeric: 'tabular-nums',
-              letterSpacing: '0.05em'
-            }}>
-              {currentTime.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
-              })}
-            </div>
-            <div style={{ 
-              fontSize: '0.75rem', 
-              opacity: 0.8,
-              marginTop: '-0.125rem'
+              fontSize: '0.95rem', 
+              fontWeight: 700,
+              letterSpacing: '0.02em'
             }}>
               {currentTime.toLocaleDateString('en-US', { 
                 weekday: 'short', 
