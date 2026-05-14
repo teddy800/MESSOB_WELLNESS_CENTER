@@ -18,6 +18,10 @@ function MyAppointments() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
@@ -115,6 +119,50 @@ function MyAppointments() {
     }
   };
 
+  const openCancelModal = (appointmentId) => {
+    setSelectedAppointmentId(appointmentId);
+    setCancellationReason("");
+    setShowCancelModal(true);
+    // Auto-scroll to modal after a brief delay to ensure it's rendered
+    setTimeout(() => {
+      const modal = document.querySelector(".modal-overlay");
+      if (modal) {
+        modal.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+  };
+
+  const closeCancelModal = () => {
+    setShowCancelModal(false);
+    setSelectedAppointmentId(null);
+    setCancellationReason("");
+  };
+
+  const confirmCancelAppointment = async () => {
+    if (!cancellationReason.trim()) {
+      alert("Please provide a cancellation reason");
+      return;
+    }
+
+    try {
+      setCancelling(true);
+      await api.delete(`/api/v1/appointments/${selectedAppointmentId}/cancel`, {
+        data: {
+          cancellationReason,
+        },
+      });
+      setError("");
+      closeCancelModal();
+      fetchAppointments();
+      alert("✅ Appointment cancelled successfully!");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to cancel appointment");
+      console.error(err);
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const filteredAppointments = appointments.filter((apt) => {
     if (filter === "all") return true;
     return apt.status === filter;
@@ -173,9 +221,20 @@ function MyAppointments() {
                     })}
                   </span>
                 </div>
-                <span className={`status-badge ${getStatusColor(apt.status)}`}>
-                  {apt.status}
-                </span>
+                <div className="appointment-status-section">
+                  <span className={`status-badge ${getStatusColor(apt.status)}`}>
+                    {apt.status}
+                  </span>
+                  {(apt.status === "CONFIRMED" || apt.status === "WAITING" || apt.status === "IN_PROGRESS") && (
+                    <button
+                      className="btn btn-cancel-small"
+                      onClick={() => openCancelModal(apt.id)}
+                      title="Cancel this appointment"
+                    >
+                      ❌ Cancel
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="appointment-body">
@@ -214,24 +273,55 @@ function MyAppointments() {
 
               <div className="appointment-footer">
                 {apt.status === "CONFIRMED" && (
-                  <>
-                    <button
-                      className="btn btn-primary"
-                      onClick={() => handleSendReminder(apt.id)}
-                    >
-                      📱 Send SMS Reminder
-                    </button>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => handleCancelAppointment(apt.id)}
-                    >
-                      Cancel Appointment
-                    </button>
-                  </>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleSendReminder(apt.id)}
+                  >
+                    📱 Send SMS Reminder
+                  </button>
                 )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {showCancelModal && (
+        <div className="modal-overlay" onClick={closeCancelModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Cancel Appointment</h3>
+              <button className="modal-close" onClick={closeCancelModal}>
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <p>Please provide a reason for cancelling this appointment:</p>
+              <textarea
+                className="cancel-reason-input"
+                placeholder="e.g., Staff unavailable, Schedule conflict, etc."
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                rows="4"
+              />
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={closeCancelModal}
+                disabled={cancelling}
+              >
+                Keep Appointment
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={confirmCancelAppointment}
+                disabled={cancelling || !cancellationReason.trim()}
+              >
+                {cancelling ? "Cancelling..." : "Confirm Cancellation"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

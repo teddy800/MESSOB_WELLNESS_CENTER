@@ -18,6 +18,7 @@ export async function getUserProfile(userId: string) {
       isActive: true,
       isVerified: true,
       isExternal: true,
+      userId: true,
       createdAt: true,
       updatedAt: true,
     },
@@ -123,6 +124,12 @@ export async function searchUsers(searchTerm: string) {
             mode: 'insensitive',
           },
         },
+        {
+          userId: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
       ],
       isActive: true,
     },
@@ -135,6 +142,7 @@ export async function searchUsers(searchTerm: string) {
       dateOfBirth: true,
       gender: true,
       isExternal: true,
+      userId: true,
     },
     take: 20, // Limit results
     orderBy: {

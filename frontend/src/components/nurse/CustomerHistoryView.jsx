@@ -141,7 +141,7 @@ function CustomerHistoryView({ customerId }) {
                     <div className="customer-info-inline">
                       <p className="customer-name-inline">{customer.fullName}</p>
                       <p className="customer-details-inline">Email: {customer.email}</p>
-                      <p className="customer-details-inline">ID: {customer.id}</p>
+                      <p className="customer-details-inline">ID: {customer.userId || customer.id}</p>
                     </div>
                     <button
                       type="button"
@@ -176,7 +176,7 @@ function CustomerHistoryView({ customerId }) {
       <div className="customer-id-display" style={{ marginBottom: '1rem' }}>
         <strong>Customer:</strong> {selectedCustomerName}
         <br />
-        <small style={{ color: '#666' }}>ID: {selectedCustomerId}</small>
+        <small style={{ color: '#666' }}>ID: {selectedCustomerId.length === 4 ? selectedCustomerId : selectedCustomerId.substring(0, 8) + '...'}</small>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}

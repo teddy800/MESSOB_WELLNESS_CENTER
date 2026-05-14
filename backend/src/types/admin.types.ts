@@ -133,12 +133,40 @@ export interface FeedbackStats {
   byRegion: Record<string, number>;
 }
 
+export interface RegionStats {
+  total: number;
+  regions: string[];
+}
+
+export interface PatientStats {
+  total: number;
+}
+
+export interface WalkInStats {
+  total: number;
+}
+
+export interface PatientsServedStats {
+  total: number;
+}
+
+export interface WellnessStats {
+  total: number;
+  active: number;
+  inactive: number;
+}
+
 export interface DashboardMetrics {
   users: UserStats;
   centers: CenterStats;
   appointments: AppointmentStats;
   vitals: VitalStats;
   feedback: FeedbackStats;
+  regions: RegionStats;
+  patients: PatientStats;
+  walkIns: WalkInStats;
+  patientsServed: PatientsServedStats;
+  wellness: WellnessStats;
   lastUpdated: Date;
 }
 

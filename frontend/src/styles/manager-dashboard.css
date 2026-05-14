@@ -161,7 +161,7 @@
 
 .mgr-kpi-sub {
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #374151;
   margin-top: 0.1rem;
 }
 
@@ -284,7 +284,7 @@
 
 .mgr-capacity-stat small {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -312,7 +312,7 @@
 
 .mgr-mini-stat small {
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -652,14 +652,16 @@
 .mgr-period-btn:hover  { background: rgba(16,185,129,0.12); color: #10b981; }
 .mgr-period-btn.active { background: linear-gradient(135deg, #10b981, #06b6d4); color: #ffffff; box-shadow: 0 2px 10px rgba(16,185,129,0.45); }
 
-/* ── Dark Chart Cards ── */
+/* ── Outstanding White Chart Cards ── */
 .mgr-dark-card {
-  background: linear-gradient(145deg, #0f2744 0%, #0a1628 100%);
-  border-radius: 14px;
-  padding: 1.25rem 1.5rem;
-  border: 1px solid rgba(16,185,129,0.15);
-  border-top: 1px solid rgba(6,182,212,0.2);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(6,182,212,0.08);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  border: 2px solid rgba(0,0,0,0.08);
+  border-top: 2px solid rgba(59,130,246,0.15);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+  position: relative;
+  overflow: hidden;
 }
 
 .mgr-dark-header {
@@ -671,9 +673,9 @@
 }
 
 .mgr-dark-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #e2e8f0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #1f2937;
   flex: 1;
   letter-spacing: 0.01em;
 }
@@ -706,32 +708,35 @@
 
 .mgr-dark-stats {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   margin-top: 1rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(255,255,255,0.07);
+  border-top: 2px solid rgba(0,0,0,0.08);
 }
 
 .mgr-dark-stat {
   flex: 1;
   text-align: center;
-  padding: 0.4rem 0.25rem;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.03);
+  padding: 0.6rem 0.4rem;
+  border-radius: 10px;
+  background: rgba(59,130,246,0.05);
+  border: 1px solid rgba(59,130,246,0.1);
 }
 
 .mgr-dark-stat span {
   display: block;
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-size: 1.4rem;
+  font-weight: 900;
   line-height: 1.1;
+  color: #1f2937;
 }
 
 .mgr-dark-stat small {
-  font-size: 0.68rem;
-  color: #64748b;
+  font-size: 0.7rem;
+  color: #374151;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
 /* ============================================================
@@ -1551,35 +1556,33 @@
 
 /* Ultra-Professional Tooltip Content Styling */
 .recharts-tooltip-content {
-  background: linear-gradient(135deg, #000000 0%, #1a1a1a 50%, #2d2d2d 100%) !important;
-  border: 3px solid rgba(255, 255, 255, 0.4) !important;
-  border-radius: 16px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 50%, #f1f5f9 100%) !important;
+  border: 2px solid rgba(0, 0, 0, 0.15) !important;
+  border-radius: 12px !important;
   box-shadow: 
-    0 25px 50px rgba(0, 0, 0, 0.8),
-    0 0 40px rgba(255, 255, 255, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
-  backdrop-filter: blur(20px) !important;
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(10px) !important;
   padding: 16px 20px !important;
-  min-width: 200px !important;
+  min-width: 180px !important;
 }
 
 /* Outstanding Tooltip Label Enhancements */
 .recharts-tooltip-label {
-  color: #ffffff !important;
+  color: #1f2937 !important;
   font-weight: 900 !important;
   font-size: 16px !important;
   margin-bottom: 12px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.1em !important;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.15) !important;
   padding-bottom: 8px !important;
   display: block !important;
 }
 
 /* Ultra-Visible Tooltip Item Styling */
 .recharts-tooltip-item {
-  color: #ffffff !important;
+  color: #1f2937 !important;
   font-weight: 700 !important;
   font-size: 14px !important;
   margin: 8px 0 !important;
@@ -1587,20 +1590,18 @@
   align-items: center !important;
   gap: 12px !important;
   padding: 4px 0 !important;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3) !important;
 }
 
 .recharts-tooltip-item-name {
-  color: #e0e0e0 !important;
+  color: #374151 !important;
   font-weight: 600 !important;
   text-transform: capitalize !important;
 }
 
 .recharts-tooltip-item-value {
-  color: #ffffff !important;
+  color: #1f2937 !important;
   font-weight: 900 !important;
   font-size: 15px !important;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
 }
 
 /* Outstanding Tooltip Separator */
@@ -1681,10 +1682,9 @@
 }
 
 .recharts-legend-item-text {
-  color: #ffffff !important;
+  color: #1f2937 !important;
   font-weight: 700 !important;
   font-size: 13px !important;
-  text-shadow: 0 0 5px rgba(255, 255, 255, 0.3) !important;
 }
 
 /* Ultra-Advanced Bar Chart Hover Effects */
@@ -1728,8 +1728,7 @@
 
 /* Ultra-Visible Text for All Tooltip Elements */
 .recharts-tooltip-content * {
-  color: #ffffff !important;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3) !important;
+  color: #1f2937 !important;
 }
 
 /* Outstanding Responsive Tooltip Adjustments */
@@ -1778,15 +1777,15 @@
 /* Ultra-High Contrast Mode Support */
 @media (prefers-contrast: high) {
   .recharts-tooltip-content {
-    background: #000000 !important;
-    border: 4px solid #ffffff !important;
-    color: #ffffff !important;
+    background: #ffffff !important;
+    border: 4px solid #000000 !important;
+    color: #000000 !important;
   }
   
   .recharts-tooltip-label,
   .recharts-tooltip-item-value,
   .recharts-tooltip-item-name {
-    color: #ffffff !important;
+    color: #000000 !important;
     text-shadow: none !important;
   }
 }
@@ -1854,10 +1853,33 @@
 .recharts-tooltip-wrapper .recharts-tooltip-item,
 .recharts-tooltip-wrapper .recharts-tooltip-item-name,
 .recharts-tooltip-wrapper .recharts-tooltip-item-value {
-  color: #ffffff !important;
+  color: #1f2937 !important;
   opacity: 1 !important;
   visibility: visible !important;
   display: block !important;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.4) !important;
   font-weight: 700 !important;
+}
+
+
+/* ── Metric Selector Dropdown — Force light theme (white bg, black text) ── */
+.performance-metric-selector {
+  color-scheme: light !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.performance-metric-selector option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  padding: 0.5rem 1rem !important;
+}
+
+.performance-metric-selector option:hover,
+.performance-metric-selector option:focus,
+.performance-metric-selector option:checked {
+  background-color: #e0e7ff !important;
+  color: #1e1b4b !important;
 }

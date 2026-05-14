@@ -14,6 +14,7 @@ router.get("/capacity",             authenticate, authorizeMinRole(UserRole.NURS
 router.get("/appointments/stats",   authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getBookingStats);
 router.get("/queue/analytics",      authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getQueueAnalytics);
 router.get("/health/analytics",     authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getHealthAnalytics);
+router.get("/health",               authenticate, authorizeMinRole(UserRole.NURSE_OFFICER), analyticsController.getHealthAnalytics);
 
 // ─── Staff / User management ─────────────────────────────────────────────────
 router.get("/users/staff",          authenticate, authorizeMinRole(UserRole.MANAGER), analyticsController.getStaffUsers);

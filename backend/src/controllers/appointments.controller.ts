@@ -5,6 +5,10 @@ import {
   getAppointmentById,
   updateAppointmentStatus,
   getQueueAppointments,
+  getAvailableTimeSlots,
+  checkStaffActiveAppointment,
+  getStaffActiveAppointment,
+  cancelAppointment,
 } from "../services/appointments.service";
 import { sendAppointmentReminder } from "../services/email.service";
 import { AppointmentStatus } from "../generated/prisma";
@@ -296,6 +300,133 @@ export async function getQueueHandler(req: AuthRequest, res: Response): Promise<
     res.status(500).json({
       status: "error",
       message: "Failed to retrieve queue",
+    });
+  }
+}
+
+
+/**
+ * GET /api/v1/appointments/available-slots?date=YYYY-MM-DD
+ * Get available time slots for a specific date
+ */
+export async function getAvailableSlotsHandler(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const date = req.query.date as string;
+
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Valid date parameter is required (YYYY-MM-DD format)',
+      });
+      return;
+    }
+
+    const availableSlots = await getAvailableTimeSlots(date);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        date,
+        availableSlots,
+        totalSlots: availableSlots.length,
+      },
+    });
+  } catch (error) {
+    console.error('Get available slots error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to get available time slots',
+    });
+  }
+}
+
+/**
+ * GET /api/v1/appointments/staff/:staffId/active
+ * Check if staff has an active appointment
+ */
+export async function checkStaffActiveHandler(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const staffId = req.params.staffId;
+
+    if (!staffId || typeof staffId !== "string") {
+      res.status(400).json({
+        status: "error",
+        message: "Staff ID is required",
+      });
+      return;
+    }
+
+    const hasActive = await checkStaffActiveAppointment(staffId);
+    const activeAppointment = hasActive ? await getStaffActiveAppointment(staffId) : null;
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        staffId,
+        hasActiveAppointment: hasActive,
+        activeAppointment,
+      },
+    });
+  } catch (error) {
+    console.error('Check staff active error:', error);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to check staff active appointment",
+    });
+  }
+}
+
+/**
+ * DELETE /api/v1/appointments/:id/cancel
+ * Cancel an appointment
+ */
+export async function cancelAppointmentHandler(req: AuthRequest, res: Response): Promise<void> {
+  try {
+    const id = req.params.id;
+    const { cancellationReason } = req.body as { cancellationReason?: unknown };
+
+    if (!id || typeof id !== "string") {
+      res.status(400).json({
+        status: "error",
+        message: "Appointment ID is required",
+      });
+      return;
+    }
+
+    if (!isNonEmptyString(cancellationReason)) {
+      res.status(400).json({
+        status: "error",
+        message: "Cancellation reason is required",
+      });
+      return;
+    }
+
+    const appointment = await cancelAppointment(id, cancellationReason);
+
+    res.status(200).json({
+      status: "success",
+      message: "Appointment cancelled successfully",
+      data: appointment,
+    });
+  } catch (error) {
+    console.error('Cancel appointment error:', error);
+    if (error instanceof Error && error.message.includes("not found")) {
+      res.status(404).json({
+        status: "error",
+        message: "Appointment not found",
+      });
+      return;
+    }
+    if (error instanceof Error && error.message.includes("Cannot cancel")) {
+      res.status(400).json({
+        status: "error",
+        message: error.message,
+      });
+      return;
+    }
+    res.status(500).json({
+      status: "error",
+      message: "Failed to cancel appointment",
     });
   }
 }

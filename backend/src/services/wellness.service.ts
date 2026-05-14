@@ -1,22 +1,42 @@
 import { prisma } from "../config/prisma";
 import { env } from "../config/env";
+import { Prisma } from "../generated/prisma";
+import { upsertPatientConditions } from "./patientConditions.service";
 
 export interface CreateWellnessPlanInput {
   userId: string;
   planText: string;
   goals?: string;
   duration?: number;
+  conditions?: string[];
 }
 
-export async function createWellnessPlan(input: CreateWellnessPlanInput) {
-  return prisma.wellnessPlan.create({
-    data: {
-      userId: input.userId,
-      planText: input.planText,
-      goals: input.goals,
-      duration: input.duration,
-      isActive: true,
-    },
+export async function createWellnessPlan(input: CreateWellnessPlanInput, nurseId?: string) {
+  // Use transaction to ensure both wellness plan and conditions are saved atomically
+  return prisma.$transaction(async (tx) => {
+    const plan = await tx.wellnessPlan.create({
+      data: {
+        userId: input.userId,
+        planText: input.planText,
+        goals: input.goals,
+        duration: input.duration,
+        conditions: input.conditions || [],
+        isActive: true,
+      },
+    });
+
+    // If conditions are provided, update patient_conditions with nurse approval
+    if (input.conditions && input.conditions.length > 0 && nurseId) {
+      await upsertPatientConditions(
+        input.userId,
+        input.conditions,
+        true, // Nurse approved
+        nurseId,
+        tx as Prisma.TransactionClient
+      );
+    }
+
+    return plan;
   });
 }
 
@@ -78,5 +98,17 @@ export async function updateWellnessPlan(
 export async function deleteWellnessPlan(id: string) {
   return prisma.wellnessPlan.delete({
     where: { id },
+  });
+}
+
+export async function getAllWellnessPlans() {
+  return prisma.wellnessPlan.findMany({
+    orderBy: { createdAt: 'asc' },
+    select: {
+      id: true,
+      userId: true,
+      createdAt: true,
+      conditions: true,
+    },
   });
 }

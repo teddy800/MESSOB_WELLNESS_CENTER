@@ -6,6 +6,9 @@ import {
   updateAppointment,
   sendReminderHandler,
   getQueueHandler,
+  getAvailableSlotsHandler,
+  checkStaffActiveHandler,
+  cancelAppointmentHandler,
 } from "../controllers/appointments.controller";
 import { authenticate, authorizeMinRole } from "../middleware/auth.middleware";
 import { UserRole } from "../generated/prisma";
@@ -19,6 +22,14 @@ router.get(
   authenticate,
   authorizeMinRole(UserRole.STAFF),
   getAppointments,
+);
+
+// Get available time slots for a date - STAFF and above
+router.get(
+  "/available-slots",
+  authenticate,
+  authorizeMinRole(UserRole.STAFF),
+  getAvailableSlotsHandler,
 );
 
 // Get queue - NURSE_OFFICER and above
@@ -36,6 +47,30 @@ router.post(
   postAppointment,
 );
 
+// Cancel appointment - STAFF and above can cancel (must be before /:id routes)
+router.delete(
+  "/:id/cancel",
+  authenticate,
+  authorizeMinRole(UserRole.STAFF),
+  cancelAppointmentHandler,
+);
+
+// Send SMS reminder - STAFF and above can request reminders (must be before /:id routes)
+router.post(
+  "/:id/send-reminder",
+  authenticate,
+  authorizeMinRole(UserRole.STAFF),
+  sendReminderHandler,
+);
+
+// Check if staff has active appointment - STAFF and above (must be before /:id routes)
+router.get(
+  "/staff/:staffId/active",
+  authenticate,
+  authorizeMinRole(UserRole.STAFF),
+  checkStaffActiveHandler,
+);
+
 router.get(
   "/:id",
   authenticate,
@@ -49,14 +84,6 @@ router.patch(
   authenticate,
   authorizeMinRole(UserRole.NURSE_OFFICER),
   updateAppointment,
-);
-
-// Send SMS reminder - STAFF and above can request reminders
-router.post(
-  "/:id/send-reminder",
-  authenticate,
-  authorizeMinRole(UserRole.STAFF),
-  sendReminderHandler,
 );
 
 export default router;
