@@ -10,6 +10,8 @@ import {
 import { AuthRequest } from "../middleware/auth.middleware";
 import prisma from "../config/prisma";
 import { BmiCategory, BloodPressureCategory } from "../generated/prisma";
+import { calculateConditionsFromVitals } from "../utils/conditionCalculator";
+import { upsertPatientConditions } from "../services/patientConditions.service";
 
 interface BmiRequestBody {
   weightKg: unknown;
@@ -220,6 +222,26 @@ export async function postVitals(
         notes: combinedNotes || undefined,
       },
     });
+
+    // Calculate and store health conditions
+    try {
+      const conditions = calculateConditionsFromVitals({
+        systolic,
+        diastolic,
+        bmi: bmiValue,
+        glucose: glucoseValue,
+        heartRate: heartRateValue,
+        oxygenSaturation: oxygenValue,
+      });
+
+      if (conditions.length > 0) {
+        await upsertPatientConditions(patientId, conditions, false);
+        console.log(`Auto-calculated conditions for patient ${patientId}:`, conditions);
+      }
+    } catch (conditionError) {
+      // Log error but don't fail the vitals submission
+      console.error('Failed to calculate/store conditions:', conditionError);
+    }
 
     res.status(201).json({
       status: "success",

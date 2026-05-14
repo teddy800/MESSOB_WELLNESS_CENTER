@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -13,7 +14,6 @@ function normalizeVitalRecord(record) {
     ...record,
     systolicBP: record.systolic ?? null,
     diastolicBP: record.diastolic ?? null,
-    weight: record.weightKg ?? null,
     glucose: extractGlucoseFromNotes(record.notes),
   };
 }
@@ -340,48 +340,64 @@ function DualTrendChart({ title, points }) {
 
 function HealthJourney() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [vitals, setVitals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [dateRange, setDateRange] = useState("30");
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const ITEMS_PER_PAGE = 10;
 
-  const exportHistoryCsv = () => {
-    if (!vitals.length) return;
+  const handleViewWellnessPlan = async () => {
+    try {
+      const response = await api.get(`/api/v1/plans/${user.id}`);
+      const plans = response.data.data;
+      const activePlan = Array.isArray(plans) ? plans.find(p => p.isActive) : null;
+      
+      if (activePlan) {
+        navigate('/dashboard?tab=wellness');
+      } else {
+        setError("No active wellness plan found. Visit a nurse to create one.");
+      }
+    } catch (err) {
+      console.error('Error fetching wellness plan:', err);
+      setError("Failed to load wellness plan");
+    }
+  };
 
-    const headers = [
-      "RecordedAt",
-      "WeightKg",
-      "BMI",
-      "Systolic",
-      "Diastolic",
-      "HeartRate",
-      "Glucose",
-      "Temperature",
-      "OxygenSaturation",
-    ];
-    const rows = vitals.map((v) => [
-      v.recordedAt,
-      v.weight ?? "",
-      v.bmi ?? "",
-      v.systolicBP ?? "",
-      v.diastolicBP ?? "",
-      v.heartRate ?? "",
-      v.glucose ?? "",
-      v.temperature ?? "",
-      v.oxygenSaturation ?? "",
-    ]);
-
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `health-journey-${dateRange}d.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  // Calculate health summary metrics
+  const calculateHealthSummary = () => {
+    if (!vitals.length) return null;
+    
+    const latest = vitals[0];
+    let healthScore = 100;
+    
+    // Deduct points based on risk factors
+    if (latest.systolicBP >= 140) healthScore -= 20;
+    else if (latest.systolicBP >= 130) healthScore -= 10;
+    
+    if (latest.glucose >= 126) healthScore -= 20;
+    else if (latest.glucose >= 100) healthScore -= 10;
+    
+    if (latest.bmi >= 30) healthScore -= 20;
+    else if (latest.bmi >= 25) healthScore -= 10;
+    
+    if (latest.temperature > 37.5) healthScore -= 15;
+    if (latest.oxygenSaturation < 95) healthScore -= 15;
+    
+    healthScore = Math.max(0, Math.min(100, healthScore));
+    
+    const recordedDate = new Date(latest.recordedAt);
+    const now = new Date();
+    const hoursDiff = Math.floor((now - recordedDate) / (1000 * 60 * 60));
+    
+    return {
+      score: healthScore,
+      lastCheckIn: recordedDate,
+      hoursSince: hoursDiff,
+      status: healthScore >= 80 ? 'Healthy' : healthScore >= 60 ? 'Monitor' : 'Attention Needed',
+      statusColor: healthScore >= 80 ? 'green' : healthScore >= 60 ? 'yellow' : 'red'
+    };
   };
 
   const exportAsPdf = async () => {
@@ -422,25 +438,43 @@ function HealthJourney() {
     try {
       setLoading(true);
       const response = await api.get(`/api/v1/vitals/history/${user.id}`);
+      console.log('Vitals response:', response.data);
+      
       const data = response.data.data;
-      const records = Array.isArray(data?.records) ? data.records : [];
+      
+      // Handle different response formats
+      let records = [];
+      if (Array.isArray(data)) {
+        records = data;
+      } else if (data?.records && Array.isArray(data.records)) {
+        records = data.records;
+      } else if (data?.vitals && Array.isArray(data.vitals)) {
+        records = data.vitals;
+      }
+      
+      console.log('Records found:', records.length);
+      
       const now = new Date();
       const cutoff = new Date(now);
       cutoff.setDate(now.getDate() - Number(dateRange));
 
+      console.log('Filtering records from', cutoff, 'to', now);
+
       const filtered = records.filter((record) => {
         const recordedDate = new Date(record.recordedAt);
-        return Number.isNaN(recordedDate.getTime())
-          ? false
-          : recordedDate >= cutoff;
+        const isValid = !Number.isNaN(recordedDate.getTime());
+        const isInRange = isValid && recordedDate >= cutoff;
+        console.log('Record:', record.recordedAt, 'Valid:', isValid, 'InRange:', isInRange);
+        return isInRange;
       });
 
+      console.log('Filtered records:', filtered.length);
       setVitals(filtered.map(normalizeVitalRecord));
       setError("");
     } catch (err) {
+      console.error('Error fetching vitals:', err);
       setVitals([]);
       setError("Failed to load vitals");
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -448,6 +482,55 @@ function HealthJourney() {
 
   const getLatestVital = () => {
     return vitals.length > 0 ? vitals[0] : null;
+  };
+
+  const getPreviousVital = () => {
+    return vitals.length > 1 ? vitals[1] : null;
+  };
+
+  const calculateComparison = (current, previous, field) => {
+    if (!current || !previous || current[field] == null || previous[field] == null) {
+      return null;
+    }
+    const diff = current[field] - previous[field];
+    const percent = ((diff / previous[field]) * 100).toFixed(1);
+    return { diff: diff.toFixed(1), percent, direction: diff > 0 ? 'up' : diff < 0 ? 'down' : 'stable' };
+  };
+
+  const getHealthScore = () => {
+    const latest = getLatestVital();
+    if (!latest) return 0;
+    
+    let score = 100;
+    if (latest.systolicBP) {
+      if (latest.systolicBP >= 140) score -= 20;
+      else if (latest.systolicBP >= 130) score -= 10;
+    }
+    if (latest.glucose) {
+      if (latest.glucose >= 200) score -= 20;
+      else if (latest.glucose >= 126) score -= 10;
+    }
+    if (latest.bmi) {
+      if (latest.bmi >= 30) score -= 20;
+      else if (latest.bmi >= 25) score -= 10;
+    }
+    return Math.max(0, score);
+  };
+
+  const getHealthStatus = () => {
+    const score = getHealthScore();
+    if (score >= 80) return { label: 'Healthy', color: 'green', icon: '✓' };
+    if (score >= 60) return { label: 'Monitor', color: 'yellow', icon: '⚠' };
+    return { label: 'Attention Needed', color: 'red', icon: '!' };
+  };
+
+  const getDaysSinceLastVital = () => {
+    const latest = getLatestVital();
+    if (!latest) return null;
+    const lastDate = new Date(latest.recordedAt);
+    const today = new Date();
+    const days = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+    return days;
   };
 
   const getRiskLevel = (value, type) => {
@@ -472,10 +555,6 @@ function HealthJourney() {
 
   const latest = getLatestVital();
   const chronologicalVitals = [...vitals].reverse();
-
-  const weightTrendData = chronologicalVitals
-    .filter((v) => v.weight != null)
-    .map((v) => ({ date: v.recordedAt, value: Number(v.weight) }));
 
   const bpTrendData = chronologicalVitals
     .filter((v) => v.systolicBP != null && v.diastolicBP != null)
@@ -521,6 +600,8 @@ function HealthJourney() {
 
       {error && <div className="alert alert-error">{error}</div>}
 
+
+
       <div className="date-range-filter">
         <label>View last:</label>
         <select
@@ -536,18 +617,17 @@ function HealthJourney() {
           <button
             type="button"
             className="btn btn-secondary"
-            onClick={exportHistoryCsv}
-            disabled={!vitals.length}
-          >
-            Export CSV
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
             onClick={exportAsPdf}
             disabled={generatingPDF || !vitals.length}
           >
             {generatingPDF ? '📄 Generating PDF...' : '📄 Download PDF'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleViewWellnessPlan}
+          >
+            🎯 View My Plan
           </button>
         </div>
       </div>
@@ -557,19 +637,73 @@ function HealthJourney() {
       ) : (
         <>
           {latest && (
+            <>
+              <div className="health-summary-card">
+                <div className="summary-header">
+                  <h3>📊 Your Health Summary</h3>
+                </div>
+                <div className="summary-content">
+                  <div className="summary-score">
+                    <div className={`score-circle score-${getHealthStatus().color}`}>
+                      <span className="score-number">{getHealthScore()}</span>
+                      <span className="score-label">Health Score</span>
+                    </div>
+                    <div className="summary-info">
+                      <p className="summary-status">
+                        Status: <span className={`status-badge status-${getHealthStatus().color}`}>
+                          {getHealthStatus().icon} {getHealthStatus().label}
+                        </span>
+                      </p>
+                      <p className="summary-date">Last Check-in: {new Date(latest.recordedAt).toLocaleDateString()}</p>
+                      <p className="summary-days">Days Since Last Vitals: {getDaysSinceLastVital()} days</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="vital-comparison-grid">
+                <h3>📈 Progress Metrics</h3>
+                <div className="comparison-cards">
+                  {latest.systolicBP && latest.diastolicBP && (
+                    <div className="comparison-card">
+                      <span className="comparison-label">Blood Pressure</span>
+                      <span className="comparison-current">{latest.systolicBP}/{latest.diastolicBP}</span>
+                      {calculateComparison(latest, getPreviousVital(), 'systolicBP') && (
+                        <span className={`comparison-change change-${calculateComparison(latest, getPreviousVital(), 'systolicBP').direction}`}>
+                          {calculateComparison(latest, getPreviousVital(), 'systolicBP').direction === 'up' ? '↑' : '↓'} {Math.abs(calculateComparison(latest, getPreviousVital(), 'systolicBP').diff)} mmHg
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {latest.glucose && (
+                    <div className="comparison-card">
+                      <span className="comparison-label">Glucose</span>
+                      <span className="comparison-current">{latest.glucose} mg/dL</span>
+                      {calculateComparison(latest, getPreviousVital(), 'glucose') && (
+                        <span className={`comparison-change change-${calculateComparison(latest, getPreviousVital(), 'glucose').direction}`}>
+                          {calculateComparison(latest, getPreviousVital(), 'glucose').direction === 'up' ? '↑' : '↓'} {Math.abs(calculateComparison(latest, getPreviousVital(), 'glucose').percent)}%
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {latest.bmi && (
+                    <div className="comparison-card">
+                      <span className="comparison-label">BMI</span>
+                      <span className="comparison-current">{latest.bmi.toFixed(1)}</span>
+                      <span className={`vital-status status-${getRiskLevel(latest.bmi, "BMI").color}`}>
+                        {getRiskLevel(latest.bmi, "BMI").level}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {latest && (
             <div className="latest-vitals">
               <h3>Latest Vital Signs</h3>
               <div className="vitals-grid">
-                {latest.weight != null && (
-                  <div className="vital-card">
-                    <span className="vital-label">Weight</span>
-                    <span className="vital-value">
-                      {latest.weight.toFixed(1)}
-                    </span>
-                    <span className="vital-unit">kg</span>
-                  </div>
-                )}
-
                 {latest.bmi && (
                   <div className="vital-card">
                     <span className="vital-label">BMI</span>
@@ -637,92 +771,63 @@ function HealthJourney() {
                 {new Date(latest.recordedAt).toLocaleDateString()}
               </p>
 
-              <div className="risk-indicators">
-                <h4>Health Risk Indicators</h4>
-                {riskIndicators.length === 0 ? (
-                  <p className="risk-empty">
-                    No risk indicators available for this latest record.
-                  </p>
-                ) : (
-                  <div className="risk-grid">
-                    {riskIndicators.map((risk, idx) => (
-                      <div key={idx} className={`risk-card risk-${risk.color}`}>
-                        <span className="risk-title">{risk.label}</span>
-                        <span className="risk-value">{risk.value}</span>
-                        <span className="risk-level">{risk.level}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+
             </div>
           )}
 
-          <div className="trend-charts">
-            <h3>Trend Graphs</h3>
-            <p className="trend-legend">
-              <span className="legend-dot legend-weight"></span> Weight
-              <span className="legend-dot legend-bp"></span> Blood Pressure
-              (Systolic/Diastolic)
-              <span className="legend-dot legend-glucose"></span> Glucose
-            </p>
-            <div className="trend-grid">
-              <TrendChart
-                title="Weight Trend"
-                unit=" kg"
-                points={weightTrendData}
-                colorClass="trend-weight"
-                thresholds={[]}
-              />
-              <DualTrendChart
-                title="Blood Pressure Trend"
-                points={bpTrendData}
-              />
-              <TrendChart
-                title="Glucose Trend"
-                unit=" mg/dL"
-                points={glucoseTrendData}
-                colorClass="trend-glucose"
-                thresholds={[
-                  { value: 100, label: "100", className: "threshold-glucose" },
-                  {
-                    value: 126,
-                    label: "126",
-                    className: "threshold-glucose-high",
-                  },
-                ]}
-              />
-            </div>
-          </div>
-
-          {vitals.length > 0 && (
-            <div className="vitals-history">
-              <h3>Vital Signs History</h3>
-              <div className="history-list">
-                {vitals.map((vital, idx) => (
-                  <div key={idx} className="history-item">
-                    <span className="history-date">
-                      {new Date(vital.recordedAt).toLocaleDateString()}
-                    </span>
-                    <div className="history-values">
-                      {vital.bmi && <span>BMI: {vital.bmi.toFixed(1)}</span>}
-                      {vital.systolicBP && vital.diastolicBP && (
-                        <span>
-                          BP: {vital.systolicBP}/{vital.diastolicBP}
+          {/* Comparison Metrics Section */}
+          {!loading && vitals.length > 1 && (() => {
+            const comparison = calculateComparison();
+            return comparison ? (
+              <div className="comparison-metrics">
+                <h3>Progress & Comparison</h3>
+                <div className="comparison-grid">
+                  {comparison.bp.systolicChange !== null && (
+                    <div className="comparison-card">
+                      <span className="comparison-label">Blood Pressure Change</span>
+                      <div className="comparison-value">
+                        <span className={`change-amount ${comparison.bp.trend}`}>
+                          {comparison.bp.trend === 'down' ? '↓' : comparison.bp.trend === 'up' ? '↑' : '→'} {Math.abs(comparison.bp.systolicChange)} mmHg
                         </span>
-                      )}
-                      {vital.glucose && <span>Glucose: {vital.glucose}</span>}
+                        <span className="change-percent">(Systolic)</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )}
+                  {comparison.glucose.change !== null && (
+                    <div className="comparison-card">
+                      <span className="comparison-label">Glucose Change</span>
+                      <div className="comparison-value">
+                        <span className={`change-amount ${comparison.glucose.trend}`}>
+                          {comparison.glucose.trend === 'down' ? '↓' : comparison.glucose.trend === 'up' ? '↑' : '→'} {Math.abs(comparison.glucose.change)} mg/dL
+                        </span>
+                        <span className="change-percent">({comparison.glucose.percent}%)</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            ) : null;
+          })()}
+
+          {/* Health Recommendations Section - REMOVED */}
+
+          {/* Trend Graphs Section - REMOVED */}
 
           {vitals.length === 0 && !error && (
-            <p className="empty-text">
-              No vital signs recorded yet. Visit a nurse to get started!
-            </p>
+            <div className="empty-state-card">
+              <p className="empty-text">
+                📊 No vital signs recorded in the selected range
+              </p>
+              <p className="empty-subtext">
+                Visit a nurse to record your health vitals and start tracking your health journey!
+              </p>
+              <button 
+                className="btn btn-primary"
+                onClick={() => setDateRange('365')}
+              >
+                View All Time Data
+              </button>
+            </div>
           )}
         </>
       )}

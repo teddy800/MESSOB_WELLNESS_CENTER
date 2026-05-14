@@ -1,6 +1,5 @@
 import { AppointmentStatus } from "../generated/prisma";
 import { prisma } from "../config/prisma";
-import { env } from "../config/env";
 
 interface AppointmentInput {
   patientId: string; // UUID string
@@ -17,82 +16,113 @@ interface Appointment {
   createdAt: string;
 }
 
+export async function checkStaffActiveAppointment(staffId: string): Promise<boolean> {
+  const activeAppointment = await prisma.appointment.findFirst({
+    where: {
+      userId: staffId,
+      status: {
+        in: [AppointmentStatus.WAITING, AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS, AppointmentStatus.IN_SERVICE],
+      },
+    },
+  });
+  return !!activeAppointment;
+}
+
+export async function getStaffActiveAppointment(staffId: string) {
+  return prisma.appointment.findFirst({
+    where: {
+      userId: staffId,
+      status: {
+        in: [AppointmentStatus.WAITING, AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS, AppointmentStatus.IN_SERVICE],
+      },
+    },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+        },
+      },
+    },
+  });
+}
+
 export async function createAppointment(input: AppointmentInput): Promise<Appointment> {
-  // Parse the date from scheduledAt - handle both YYYY-MM-DD and ISO formats
-  let appointmentDate: Date;
+  // Check if staff already has an active appointment
+  const hasActiveAppointment = await checkStaffActiveAppointment(input.patientId);
+  if (hasActiveAppointment) {
+    throw new Error('Staff member already has an active appointment. Please cancel the existing appointment before booking a new one.');
+  }
+
+  // Parse the date and time from scheduledAt
+  let appointmentDateTime: Date;
   
   console.log(`[createAppointment] Input scheduledAt: ${input.scheduledAt}`);
   
-  if (input.scheduledAt.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    // Date string format (YYYY-MM-DD) - create UTC date to avoid timezone issues
+  // Handle ISO format with time (e.g., "2026-05-15T08:30:00+03:00")
+  if (input.scheduledAt.includes('T')) {
+    appointmentDateTime = new Date(input.scheduledAt);
+    console.log(`[createAppointment] Parsed ISO format with time`);
+  } 
+  // Handle date-only format (YYYY-MM-DD) - legacy support
+  else if (input.scheduledAt.match(/^\d{4}-\d{2}-\d{2}$/)) {
     const [year, month, day] = input.scheduledAt.split('-').map(Number);
-    appointmentDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-    console.log(`[createAppointment] Parsed YYYY-MM-DD format: year=${year}, month=${month}, day=${day}`);
+    appointmentDateTime = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    
+    // Auto-assign next available slot for date-only bookings
+    const SERVICE_START_HOUR = 5;
+    const SERVICE_START_MINUTE = 30;
+    appointmentDateTime.setUTCHours(SERVICE_START_HOUR, SERVICE_START_MINUTE, 0, 0);
+    console.log(`[createAppointment] Date-only format - assigning first slot`);
   } else {
-    // ISO format - parse normally
-    appointmentDate = new Date(input.scheduledAt);
-    appointmentDate.setUTCHours(0, 0, 0, 0);
-    console.log(`[createAppointment] Parsed ISO format`);
+    throw new Error('Invalid date format. Use ISO format with time or YYYY-MM-DD');
   }
 
-  // Service hours: 2:30 AM to 11:30 AM (UTC)
-  const SERVICE_START_HOUR = 2; // 2:30 AM
+  // Service hours in Ethiopia (UTC+3): 8:30 AM to 5:30 PM EAT
+  // Converted to UTC: 5:30 AM to 2:30 PM UTC
+  const SERVICE_START_HOUR = 5; // 5:30 AM UTC = 8:30 AM EAT
   const SERVICE_START_MINUTE = 30;
-  const SERVICE_END_HOUR = 11; // 11:30 AM
+  const SERVICE_END_HOUR = 14; // 2:30 PM UTC = 5:30 PM EAT
   const SERVICE_END_MINUTE = 30;
-  const TIME_PER_CUSTOMER_MINUTES = 15; // 15 minutes per customer
 
-  // Get all appointments for THIS SPECIFIC DATE to find the next available slot
-  const startOfDay = new Date(appointmentDate);
-  startOfDay.setUTCHours(0, 0, 0, 0);
-  
-  const endOfDay = new Date(appointmentDate);
-  endOfDay.setUTCHours(23, 59, 59, 999);
-  
-  console.log(`[createAppointment] Appointment date (UTC): ${appointmentDate.toISOString()}`);
-  console.log(`[createAppointment] Date range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+  // Validate that the requested time is within service hours
+  const hours = appointmentDateTime.getUTCHours();
+  const minutes = appointmentDateTime.getUTCMinutes();
+  const totalMinutes = hours * 60 + minutes;
+  const serviceStartMinutes = SERVICE_START_HOUR * 60 + SERVICE_START_MINUTE;
+  const serviceEndMinutes = SERVICE_END_HOUR * 60 + SERVICE_END_MINUTE;
 
-  const existingAppointments = await prisma.appointment.findMany({
+  if (totalMinutes < serviceStartMinutes || totalMinutes >= serviceEndMinutes) {
+    throw new Error('Appointment time must be between 8:30 AM and 5:30 PM (Ethiopia time)');
+  }
+
+  // Validate that the time is on a 15-minute interval
+  if (minutes % 15 !== 0) {
+    throw new Error('Appointment time must be on 15-minute intervals (e.g., 8:30, 8:45, 9:00)');
+  }
+
+  // Check if this exact time slot is already booked
+  const existingAppointment = await prisma.appointment.findFirst({
     where: {
-      scheduledAt: {
-        gte: startOfDay,
-        lte: endOfDay,
+      scheduledAt: appointmentDateTime,
+      status: {
+        notIn: [AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW],
       },
     },
-    orderBy: { scheduledAt: 'asc' },
   });
 
-  console.log(`[createAppointment] Found ${existingAppointments.length} existing appointments on this date`);
-
-  // Calculate next available time slot
-  let nextSlotTime = new Date(appointmentDate);
-  nextSlotTime.setUTCHours(SERVICE_START_HOUR, SERVICE_START_MINUTE, 0, 0);
-
-  // If there are existing appointments, find the next available slot after the last one
-  if (existingAppointments.length > 0) {
-    const lastAppointment = existingAppointments[existingAppointments.length - 1];
-    nextSlotTime = new Date(lastAppointment.scheduledAt);
-    nextSlotTime.setUTCMinutes(nextSlotTime.getUTCMinutes() + TIME_PER_CUSTOMER_MINUTES);
-    console.log(`[createAppointment] Last appointment at: ${lastAppointment.scheduledAt.toISOString()}, next slot: ${nextSlotTime.toISOString()}`);
+  if (existingAppointment) {
+    throw new Error('This time slot is already booked. Please choose another time.');
   }
 
-  // Check if the calculated time is within service hours
-  const hours = nextSlotTime.getUTCHours();
-  const minutes = nextSlotTime.getUTCMinutes();
-  const totalMinutes = hours * 60 + minutes;
-  const serviceEndTotalMinutes = SERVICE_END_HOUR * 60 + SERVICE_END_MINUTE;
-
-  // If time exceeds service hours, reject the booking (day is full)
-  if (totalMinutes > serviceEndTotalMinutes) {
-    throw new Error('No available slots for this date. Please choose another date.');
-  }
-
-  console.log(`[createAppointment] Booking appointment at: ${nextSlotTime.toISOString()}`);
+  console.log(`[createAppointment] Booking appointment at: ${appointmentDateTime.toISOString()}`);
 
   const appointment = await prisma.appointment.create({
     data: {
       userId: input.patientId,
-      scheduledAt: nextSlotTime,
+      scheduledAt: appointmentDateTime,
       reason: input.reason,
       status: AppointmentStatus.WAITING,
     },
@@ -106,6 +136,71 @@ export async function createAppointment(input: AppointmentInput): Promise<Appoin
     status: appointment.status.toLowerCase(),
     createdAt: appointment.createdAt.toISOString(),
   };
+}
+
+export async function getAvailableTimeSlots(dateString: string): Promise<string[]> {
+  // Parse the date (YYYY-MM-DD format)
+  const [year, month, day] = dateString.split('-').map(Number);
+  const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+  const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+
+  console.log(`[getAvailableTimeSlots] Querying for date: ${dateString}`);
+  console.log(`[getAvailableTimeSlots] UTC range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+
+  // Get all booked appointments for this date
+  const bookedAppointments = await prisma.appointment.findMany({
+    where: {
+      scheduledAt: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+      status: {
+        notIn: [AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW],
+      },
+    },
+    select: {
+      scheduledAt: true,
+      userId: true,
+    },
+  });
+
+  console.log(`[getAvailableTimeSlots] Found ${bookedAppointments.length} booked appointments`);
+  bookedAppointments.forEach(apt => {
+    console.log(`  - Appointment at ${apt.scheduledAt.toISOString()} for user ${apt.userId}`);
+  });
+
+  // Create set of booked times for quick lookup
+  const bookedTimes = new Set(
+    bookedAppointments.map(apt => apt.scheduledAt.toISOString())
+  );
+
+  // Generate all possible time slots (8:30 AM - 5:15 PM Ethiopia time)
+  // In UTC: 5:30 AM - 2:15 PM
+  const SERVICE_START_HOUR = 5;
+  const SERVICE_START_MINUTE = 30;
+  const SERVICE_END_HOUR = 14;
+  const SERVICE_END_MINUTE = 15; // Last slot at 5:15 PM (14:15 UTC)
+  const SLOT_INTERVAL = 15;
+
+  const availableSlots: string[] = [];
+  const slotDate = new Date(Date.UTC(year, month - 1, day, SERVICE_START_HOUR, SERVICE_START_MINUTE, 0, 0));
+
+  while (
+    slotDate.getUTCHours() < SERVICE_END_HOUR ||
+    (slotDate.getUTCHours() === SERVICE_END_HOUR && slotDate.getUTCMinutes() <= SERVICE_END_MINUTE)
+  ) {
+    const slotISO = slotDate.toISOString();
+    
+    if (!bookedTimes.has(slotISO)) {
+      availableSlots.push(slotISO);
+    }
+
+    slotDate.setUTCMinutes(slotDate.getUTCMinutes() + SLOT_INTERVAL);
+  }
+
+  console.log(`[getAvailableTimeSlots] Available slots: ${availableSlots.length}`);
+
+  return availableSlots;
 }
 
 export async function listAppointments(userId?: string, status?: string): Promise<Appointment[]> {
@@ -200,9 +295,14 @@ export async function updateAppointmentStatus(
       if (prescription) updateData.prescription = prescription;
       break;
     case AppointmentStatus.CANCELLED:
-    case AppointmentStatus.NO_SHOW:
       updateData.cancelledAt = new Date();
       if (cancellationReason) updateData.cancellationReason = cancellationReason;
+      break;
+    case AppointmentStatus.NO_SHOW:
+      // NO_SHOW automatically cancels the appointment
+      updateData.status = AppointmentStatus.CANCELLED;
+      updateData.cancelledAt = new Date();
+      updateData.cancellationReason = cancellationReason || 'No-show';
       break;
   }
 
@@ -228,42 +328,101 @@ export async function updateAppointmentStatus(
 
 
 export async function getQueueAppointments(dateString?: string) {
-  let startDate: Date;
-  let endDate: Date;
+  let whereClause: any = {
+    status: {
+      in: [
+        AppointmentStatus.WAITING,
+        AppointmentStatus.IN_PROGRESS,
+        AppointmentStatus.IN_SERVICE,
+        AppointmentStatus.NO_SHOW,
+        AppointmentStatus.COMPLETED,
+        // Legacy support
+        AppointmentStatus.PENDING,
+        AppointmentStatus.CONFIRMED,
+      ],
+    },
+  };
 
   if (dateString) {
     // Parse the provided date string (YYYY-MM-DD format)
     const [year, month, day] = dateString.split('-').map(Number);
-    startDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-    endDate = new Date(Date.UTC(year, month - 1, day + 1, 0, 0, 0, 0));
+    const startDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    const endDate = new Date(Date.UTC(year, month - 1, day + 1, 0, 0, 0, 0));
+    
+    console.log(`Fetching queue appointments for date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+    
+    whereClause.scheduledAt = {
+      gte: startDate,
+      lt: endDate,
+    };
   } else {
-    // Use today's date in UTC
-    const now = new Date();
-    startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-    endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
+    // No date provided - fetch all appointments (all time)
+    console.log('Fetching all queue appointments (all time)');
   }
 
-  console.log(`Fetching queue appointments for date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
-
   const appointments = await prisma.appointment.findMany({
-    where: {
-      scheduledAt: {
-        gte: startDate,
-        lt: endDate,
-      },
-      status: {
-        in: [
-          AppointmentStatus.WAITING,
-          AppointmentStatus.IN_PROGRESS,
-          AppointmentStatus.IN_SERVICE,
-          AppointmentStatus.COMPLETED,
-          // Legacy support
-          AppointmentStatus.PENDING,
-          AppointmentStatus.CONFIRMED,
-        ],
+    where: whereClause,
+    orderBy: { scheduledAt: 'asc' },
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          userId: true,
+          isExternal: true,
+        },
       },
     },
-    orderBy: { scheduledAt: 'asc' },
+  });
+
+  console.log(`Found ${appointments.length} appointments in queue`);
+
+  // All appointments in this list are appointment-based (they have appointment records)
+  // Walk-ins (whether external patients or staff coming for emergency) don't have appointment records
+  // So we only return appointments that exist in the appointments table
+  return appointments.map((apt) => ({
+    id: apt.id,
+    appointmentId: apt.id,
+    customerName: apt.user.fullName,
+    customerId: apt.userId,
+    userId: apt.user.userId,
+    customerEmail: apt.user.email,
+    checkInTime: apt.scheduledAt.toISOString(),
+    scheduledAt: apt.scheduledAt.toISOString(),
+    reason: apt.reason,
+    status: apt.status === AppointmentStatus.PENDING ? 'WAITING' : apt.status, // Map legacy PENDING to WAITING
+    type: 'ONLINE', // Default to ONLINE, can be enhanced later
+    notes: apt.notes || undefined,
+  }));
+}
+
+export async function cancelAppointment(
+  id: string,
+  cancellationReason: string
+) {
+  const appointment = await prisma.appointment.findUnique({
+    where: { id },
+  });
+
+  if (!appointment) {
+    throw new Error('Appointment not found');
+  }
+
+  // Check if appointment can be cancelled (not already completed or cancelled)
+  if (appointment.status === AppointmentStatus.COMPLETED || appointment.status === AppointmentStatus.CANCELLED) {
+    throw new Error(`Cannot cancel appointment with status ${appointment.status}`);
+  }
+
+  return prisma.appointment.update({
+    where: { id },
+    data: {
+      status: AppointmentStatus.CANCELLED,
+      cancelledAt: new Date(),
+      cancellationReason,
+      updatedAt: new Date(),
+    },
     include: {
       user: {
         select: {
@@ -275,20 +434,4 @@ export async function getQueueAppointments(dateString?: string) {
       },
     },
   });
-
-  console.log(`Found ${appointments.length} appointments in queue`);
-
-  return appointments.map((apt) => ({
-    id: apt.id,
-    appointmentId: apt.id,
-    customerName: apt.user.fullName,
-    customerId: apt.userId,
-    customerEmail: apt.user.email,
-    checkInTime: apt.scheduledAt.toISOString(),
-    scheduledAt: apt.scheduledAt.toISOString(),
-    reason: apt.reason,
-    status: apt.status === AppointmentStatus.PENDING ? 'WAITING' : apt.status, // Map legacy PENDING to WAITING
-    type: 'ONLINE', // Default to ONLINE, can be enhanced later
-    notes: apt.notes || undefined,
-  }));
 }

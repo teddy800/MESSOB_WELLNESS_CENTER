@@ -5,6 +5,7 @@ import { env } from "../config/env";
 import { prisma } from "../config/prisma";
 import { NotificationService } from "./notifications.service";
 import SettingsService from "./settings.service";
+import { generateNextDisplayId } from "../utils/sequentialId";
 
 // Constants
 const SALT_ROUNDS = 12;
@@ -37,6 +38,7 @@ export interface AuthResponse {
     role: UserRole;
     isActive: boolean;
     profilePicture?: string | null;
+    userId?: string;
   };
   token: string;
 }
@@ -141,6 +143,9 @@ export class AuthService {
 
     // Step D: Atomic Transaction - Create User and HealthProfile
     const user = await prisma.$transaction(async (tx) => {
+      // Generate sequential display ID
+      const displayId = await generateNextDisplayId();
+      
       // Create user
       const role = input.role || UserRole.STAFF;
       const newUser = await tx.user.create({
@@ -149,6 +154,7 @@ export class AuthService {
           password: hashedPassword,
           fullName: input.fullName.trim(),
           role,
+          userId: displayId, // Sequential display ID
           centerId: input.centerId,
           dateOfBirth: input.dateOfBirth,
           gender: input.gender,
@@ -225,6 +231,7 @@ export class AuthService {
         fullName: user.fullName,
         role: user.role,
         isActive: user.isActive,
+        userId: user.userId, // Include display ID
       },
       token,
     };
@@ -308,6 +315,7 @@ export class AuthService {
         role: user.role,
         isActive: user.isActive,
         profilePicture: user.profilePicture,
+        userId: user.userId, // Include display ID
       },
       token,
     };
@@ -423,6 +431,7 @@ export class AuthService {
         gender: true,
         phone: true,
         profilePicture: true,
+        userId: true, // Include display ID
       },
     });
   }

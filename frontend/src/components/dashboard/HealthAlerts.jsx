@@ -17,8 +17,18 @@ function HealthAlerts() {
   const fetchAlerts = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/v1/vitals`);
-      const vitals = response.data.data;
+      const response = await api.get(`/api/v1/vitals/history/${user.id}?limit=1`);
+      const data = response.data.data;
+      
+      // Handle different response formats
+      let vitals = [];
+      if (Array.isArray(data)) {
+        vitals = data;
+      } else if (data?.records && Array.isArray(data.records)) {
+        vitals = data.records;
+      } else if (data?.vitals && Array.isArray(data.vitals)) {
+        vitals = data.vitals;
+      }
       
       if (!vitals || vitals.length === 0) {
         setAlerts([]);
@@ -187,6 +197,11 @@ function HealthAlerts() {
     setDismissedAlerts([...dismissedAlerts, alertId]);
   };
 
+  const handleContactDoctor = () => {
+    // Emit event to navigate to appointments tab
+    window.dispatchEvent(new CustomEvent('navigateToAppointments'));
+  };
+
   const visibleAlerts = alerts.filter(a => !dismissedAlerts.includes(a.id));
 
   if (loading) return <p className="loading-text">Checking health alerts...</p>;
@@ -220,7 +235,10 @@ function HealthAlerts() {
               </button>
             </div>
             <p className="alert-message">{alert.message}</p>
-            <button className="btn btn-small btn-primary">
+            <button 
+              className="btn btn-small btn-primary"
+              onClick={handleContactDoctor}
+            >
               {alert.action}
             </button>
           </div>

@@ -36,6 +36,16 @@ function Dashboard() {
     return () => window.removeEventListener('profileClicked', handleProfileClick);
   }, []);
 
+  // Listen for navigate to appointments event
+  useEffect(() => {
+    const handleNavigateToAppointments = () => {
+      setActiveTab('appointments');
+    };
+    
+    window.addEventListener('navigateToAppointments', handleNavigateToAppointments);
+    return () => window.removeEventListener('navigateToAppointments', handleNavigateToAppointments);
+  }, []);
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">

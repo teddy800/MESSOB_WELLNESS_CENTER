@@ -67,7 +67,6 @@ function LongitudinalRecords() {
   };
 
   const metrics = [
-    { key: 'weight', label: 'Weight (kg)', unit: 'kg' },
     { key: 'bmi', label: 'BMI', unit: '' },
     { key: 'systolicBP', label: 'Systolic BP (mmHg)', unit: 'mmHg' },
     { key: 'diastolicBP', label: 'Diastolic BP (mmHg)', unit: 'mmHg' },
@@ -166,7 +165,7 @@ function LongitudinalRecords() {
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Weight</th>
+                
                 <th>BMI</th>
                 <th>BP</th>
                 <th>HR</th>
@@ -179,7 +178,7 @@ function LongitudinalRecords() {
               {records.map((record, idx) => (
                 <tr key={idx}>
                   <td>{formatDate(record.recordedAt)}</td>
-                  <td>{record.weight ? record.weight.toFixed(1) : '-'}</td>
+                  
                   <td>{record.bmi ? record.bmi.toFixed(1) : '-'}</td>
                   <td>{record.systolicBP && record.diastolicBP ? `${record.systolicBP}/${record.diastolicBP}` : '-'}</td>
                   <td>{record.heartRate || '-'}</td>

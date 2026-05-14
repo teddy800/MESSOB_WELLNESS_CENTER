@@ -15,6 +15,7 @@ import adminRoutes from "./admin.routes";
 import notificationsRoutes from "./notifications.routes";
 import settingsRoutes from "./settings.routes";
 import testRoutes from "./test.routes";
+import patientConditionsRoutes from "./patientConditions.routes";
 
 const router = Router();
 
@@ -32,6 +33,7 @@ router.use("/admin", adminRoutes); // Admin dashboard endpoints
 router.use("/notifications", notificationsRoutes); // Notifications endpoints
 router.use("/settings", settingsRoutes); // System settings endpoints
 router.use("/test", testRoutes); // Test endpoints for notifications
+router.use("/conditions", patientConditionsRoutes); // Patient conditions endpoints
 router.use("/", regionsRoutes); // Regions and centers at root level
 router.use("/hr", hrRoutes); // HR integration endpoints
 
